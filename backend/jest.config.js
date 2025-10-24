@@ -15,5 +15,12 @@ module.exports = {
   forceExit: true,
   clearMocks: true,
   resetMocks: true,
-  restoreMocks: true
+  restoreMocks: true,
+  moduleDirectories: ['node_modules', '<rootDir>'],
+  modulePaths: ['<rootDir>'],
+  roots: ['<rootDir>'],
+  moduleNameMapper: {
+    '^src/(.*)$': '<rootDir>/src/$1',
+    '^tests/(.*)$': '<rootDir>/tests/$1'
+  }
 };

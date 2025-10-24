@@ -1,4 +1,5 @@
 // TODO: PostgreSQL database connection and configuration
+require('dotenv').config();
 const { Pool } = require('pg');
 const pino = require('pino');
 

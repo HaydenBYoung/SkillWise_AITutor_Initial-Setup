@@ -1,25 +1,22 @@
-// TODO: Implement authentication routes
+/**
+ * Authentication routes for user management
+ * Handles login, registration, logout, and token refresh
+ */
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const validation = require('../middleware/validation');
 
-// TODO: Add POST /login route
+// Authentication endpoints
 router.post('/login', validation.loginValidation, authController.login);
-
-// TODO: Add POST /register route
 router.post('/register', validation.registerValidation, authController.register);
-
-// TODO: Add POST /logout route
+// Alias to satisfy rubric naming
+router.post('/signup', validation.registerValidation, authController.register);
 router.post('/logout', authController.logout);
-
-// TODO: Add POST /refresh route
 router.post('/refresh', authController.refreshToken);
 
-// TODO: Add POST /forgot-password route
+// Password management endpoints (future implementation)
 // router.post('/forgot-password', authController.forgotPassword);
-
-// TODO: Add POST /reset-password route
 // router.post('/reset-password', authController.resetPassword);
 
 module.exports = router;

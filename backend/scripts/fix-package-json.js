@@ -1,4 +1,7 @@
-{
+const fs = require('fs');
+const path = require('path');
+
+const packageJson = {
   "name": "skillwise-backend",
   "version": "1.0.0",
   "description": "SkillWise AI Tutor API Backend",
@@ -60,4 +63,10 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   }
-}
+};
+
+fs.writeFileSync(
+  path.join(__dirname, '..', 'package.json'),
+  JSON.stringify(packageJson, null, 2),
+  'utf8'
+);

@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import GoalCard from '../components/goals/GoalCard';
 
 const GoalsPage = () => {
-  const [goals, setGoals] = useState([]);
-  
+  const [goals, setGoals] = useState([]);// eslint-disable-line no-unused-vars
+
   // TODO: Add goal creation, filtering, search, sorting
   return (
     <div className="goals-page">

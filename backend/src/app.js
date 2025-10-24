@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
 
@@ -93,6 +94,9 @@ app.use(express.urlencoded({
   extended: true,
   limit: '10mb'
 }));
+
+// Cookie parser for reading httpOnly refresh tokens
+app.use(cookieParser());
 
 // Health check endpoint
 app.get('/healthz', (req, res) => {

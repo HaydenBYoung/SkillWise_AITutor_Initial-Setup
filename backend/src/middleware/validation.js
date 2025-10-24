@@ -4,14 +4,11 @@ const { AppError } = require('./errorHandler');
 
 // TODO: Validation schemas
 const loginSchema = z.object({
-  body: z.object({
-    email: z.string().email('Invalid email format'),
-    password: z.string().min(1, 'Password is required')
-  })
+  email: z.string().email('Invalid email format'),
+  password: z.string().min(1, 'Password is required')
 });
 
 const registerSchema = z.object({
-  body: z.object({
     email: z.string().email('Invalid email format'),
     password: z.string()
       .min(8, 'Password must be at least 8 characters')
@@ -19,10 +16,9 @@ const registerSchema = z.object({
     firstName: z.string().min(1, 'First name is required').max(50, 'First name too long'),
     lastName: z.string().min(1, 'Last name is required').max(50, 'Last name too long'),
     confirmPassword: z.string()
-  }).refine((data) => data.password === data.confirmPassword, {
+}).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"]
-  })
 });
 
 const goalSchema = z.object({
@@ -51,34 +47,22 @@ const challengeSchema = z.object({
 // TODO: Generic validation middleware
 const validate = (schema) => {
   return (req, res, next) => {
-    try {
-      const validationData = {
-        body: req.body,
-        query: req.query,
-        params: req.params
-      };
-
-      const result = schema.safeParse(validationData);
-
-      if (!result.success) {
-        const errors = result.error.errors.map(err => ({
-          field: err.path.join('.'),
-          message: err.message
-        }));
-
-        return next(new AppError(
-          `Validation error: ${errors.map(e => e.message).join(', ')}`,
-          400,
-          'VALIDATION_ERROR'
-        ));
-      }
-
-      // Attach validated data to request
-      req.validated = result.data;
-      next();
-    } catch (error) {
-      next(new AppError('Validation error', 400, 'VALIDATION_ERROR'));
+    console.log('Request body:', req.body);  // <-- log incoming body
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      console.log('Validation errors:', result.error.errors);
+      const errors = result.error.errors.map(err => ({
+        field: err.path.join('.'),
+        message: err.message
+      }));
+      return next(new AppError(
+        `Validation error: ${errors.map(e => e.message).join(', ')}`,
+        400,
+        'VALIDATION_ERROR'
+      ));
     }
+    req.validated = result.data;
+    next();
   };
 };
 

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 const LoginForm = () => {
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
 
   // TODO: Add form validation, error handling, loading state
@@ -16,7 +16,7 @@ const LoginForm = () => {
   return (
     <form onSubmit={handleSubmit} className="login-form">
       <h2>Login to SkillWise</h2>
-      
+
       <div className="form-group">
         <label htmlFor="email">Email</label>
         <input

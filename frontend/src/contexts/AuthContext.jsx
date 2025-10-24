@@ -22,51 +22,51 @@ const AUTH_ACTIONS = {
 // Reducer function
 const authReducer = (state, action) => {
   switch (action.type) {
-    case AUTH_ACTIONS.SET_LOADING:
-      return {
-        ...state,
-        isLoading: action.payload,
-      };
+  case AUTH_ACTIONS.SET_LOADING:
+    return {
+      ...state,
+      isLoading: action.payload,
+    };
 
-    case AUTH_ACTIONS.LOGIN_SUCCESS:
-      return {
-        ...state,
-        user: action.payload.user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      };
+  case AUTH_ACTIONS.LOGIN_SUCCESS:
+    return {
+      ...state,
+      user: action.payload.user,
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+    };
 
-    case AUTH_ACTIONS.LOGOUT:
-      return {
-        ...state,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      };
+  case AUTH_ACTIONS.LOGOUT:
+    return {
+      ...state,
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    };
 
-    case AUTH_ACTIONS.UPDATE_USER:
-      return {
-        ...state,
-        user: { ...state.user, ...action.payload },
-      };
+  case AUTH_ACTIONS.UPDATE_USER:
+    return {
+      ...state,
+      user: { ...state.user, ...action.payload },
+    };
 
-    case AUTH_ACTIONS.SET_ERROR:
-      return {
-        ...state,
-        error: action.payload,
-        isLoading: false,
-      };
+  case AUTH_ACTIONS.SET_ERROR:
+    return {
+      ...state,
+      error: action.payload,
+      isLoading: false,
+    };
 
-    case AUTH_ACTIONS.CLEAR_ERROR:
-      return {
-        ...state,
-        error: null,
-      };
+  case AUTH_ACTIONS.CLEAR_ERROR:
+    return {
+      ...state,
+      error: null,
+    };
 
-    default:
-      return state;
+  default:
+    return state;
   }
 };
 
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = getAccessToken();
-      
+
       if (token) {
         try {
           // Validate token by fetching user profile
@@ -90,13 +90,32 @@ export const AuthProvider = ({ children }) => {
             type: AUTH_ACTIONS.LOGIN_SUCCESS,
             payload: { user: response.data },
           });
+          return;
         } catch (error) {
           console.error('Token validation failed:', error);
-          // Token is invalid, clear it
+          // Token is invalid, clear it and fall through to refresh attempt
           clearTokens();
-          dispatch({ type: AUTH_ACTIONS.LOGOUT });
         }
-      } else {
+      }
+
+      // No token or invalid token -> attempt refresh using httpOnly cookie
+      try {
+        const refreshRes = await apiService.auth.refresh();
+        const { accessToken } = refreshRes.data || {};
+        if (accessToken) {
+          setAccessToken(accessToken);
+          // Fetch profile after refreshing
+          const profileRes = await apiService.user.getProfile();
+          dispatch({
+            type: AUTH_ACTIONS.LOGIN_SUCCESS,
+            payload: { user: profileRes.data },
+          });
+        } else {
+          dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
+        }
+      } catch (refreshErr) {
+        // Refresh failed; remain logged out
+        console.warn('No valid session on load (refresh failed).');
         dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
       }
     };
@@ -112,7 +131,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     window.addEventListener('auth:logout', handleLogout);
-    
+
     return () => {
       window.removeEventListener('auth:logout', handleLogout);
     };
@@ -308,11 +327,11 @@ export const AuthProvider = ({ children }) => {
 // Custom hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
+
   return context;
 };
 

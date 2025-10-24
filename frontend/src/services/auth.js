@@ -1,71 +1,112 @@
-// TODO: Implement authentication API service
 import api from './api';
 
-export const authService = {
-  // TODO: Login user
+const TOKEN_KEY = 'token';
+const USER_KEY = 'user';
+
+const authService = {
   async login(email, password) {
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { token, refreshToken, user } = response.data;
-      
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      return { token, refreshToken, user };
+      const { token, user } = response.data;
+      return { token, user };
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Login failed');
     }
   },
 
-  // TODO: Register new user
-  async register(userData) {
+  async register({ firstName, lastName, email, password, confirmPassword }) {
     try {
-      const response = await api.post('/auth/register', userData);
-      return response.data;
+      console.log('Auth service register payload:', {
+        firstName,
+        lastName,
+        email,
+        password,
+        confirmPassword,
+      });
+      const response = await api.post('/auth/register', {
+        firstName,
+        lastName,
+        email,
+        password,
+        confirmPassword,
+      });
+      const { token, user } = response.data;
+      return { token, user };
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Registration failed');
     }
   },
 
-  // TODO: Logout user
   async logout() {
     try {
-      await api.post('/auth/logout');
+      const token = this.getToken();
+      if (token) {
+        await api.post('/auth/logout', null, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
     } catch (error) {
-      // Continue with local cleanup even if API call fails
       console.warn('Logout API call failed:', error);
     } finally {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
+      this.clearAuth();
     }
   },
 
-  // TODO: Refresh token
-  async refreshToken() {
+  async validateToken(token) {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      const response = await api.post('/auth/refresh', { refreshToken });
-      const { token } = response.data;
-      
-      localStorage.setItem('authToken', token);
-      return token;
+      const response = await api.get('/auth/validate-token', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data.user;
     } catch (error) {
-      throw new Error('Token refresh failed');
+      throw new Error('Invalid token');
     }
   },
 
-  // TODO: Get current user
-  getCurrentUser() {
-    const userStr = localStorage.getItem('user');
+  async updateProfile(userData) {
+    try {
+      const token = this.getToken();
+      const response = await api.put('/auth/profile', userData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const updatedUser = response.data.user;
+      this.setUser(updatedUser);
+      return updatedUser;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Profile update failed');
+    }
+  },
+
+  setToken(token, rememberMe = false) {
+    if (rememberMe) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      sessionStorage.setItem(TOKEN_KEY, token);
+    }
+  },
+
+  getToken() {
+    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+  },
+
+  setUser(user) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  },
+
+  getUser() {
+    const userStr = localStorage.getItem(USER_KEY);
     return userStr ? JSON.parse(userStr) : null;
   },
 
-  // TODO: Check if user is authenticated
+  clearAuth() {
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+  },
+
   isAuthenticated() {
-    return !!localStorage.getItem('authToken');
-  }
+    return !!this.getToken();
+  },
 };
 
 export default authService;

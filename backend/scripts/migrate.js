@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // TODO: Implement database migration script
 
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');

@@ -1,4 +1,8 @@
-{
+const { execSync } = require('child_process');
+
+console.log('Updating package.json...');
+
+const packageJson = {
   "name": "skillwise-backend",
   "version": "1.0.0",
   "description": "SkillWise AI Tutor API Backend",
@@ -60,4 +64,13 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   }
-}
+};
+
+const fs = require('fs');
+const path = require('path');
+
+fs.writeFileSync(
+  path.join(__dirname, 'package.json'),
+  JSON.stringify(packageJson, null, 2),
+  'utf8'
+);
