@@ -7,14 +7,15 @@ services:
       POSTGRES_DB: skillwise_db
       POSTGRES_USER: skillwise_user
       POSTGRES_PASSWORD: skillwise_pass
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8'
     ports:
-      - "5433:5432"
+      - '5433:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/database/migrations:/docker-entrypoint-initdb.d
+      #- mongo_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U skillwise_user -d skillwise_db"]
+      test: ['CMD-SHELL', 'pg_isready -U skillwise_user -d skillwise_db']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,15 +28,34 @@ services:
     image: redis:7-alpine
     container_name: skillwise_redis
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 3s
       retries: 5
+    networks:
+      - skillwise_network
+
+  # MongoDB (optional developer database)
+  mongodb:
+    image: mongo:6
+    container_name: skillwise_mongo
+    ports:
+      - '27018:27017'
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: skillwise_db
+    healthcheck:
+      test: ['CMD', 'mongo', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - skillwise_network
 
@@ -46,7 +66,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: skillwise_backend
     ports:
-      - "3001:3001"
+      - '3001:3001'
     environment:
       # Server Configuration
       - NODE_ENV=development
@@ -95,6 +115,7 @@ services:
       - ./backend:/app
       - /app/node_modules
       - backend_logs:/app/logs
+      #added by me
     depends_on:
       database:
         condition: service_healthy
@@ -112,7 +133,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: skillwise_frontend
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - REACT_APP_API_URL=http://localhost:3001/api
       - REACT_APP_ENVIRONMENT=development
@@ -137,6 +158,8 @@ volumes:
   redis_data:
     driver: local
   backend_logs:
+    driver: local
+  mongo_data:
     driver: local
 
 networks:

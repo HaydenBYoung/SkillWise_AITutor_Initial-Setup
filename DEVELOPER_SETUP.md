@@ -447,3 +447,41 @@ After getting everything running:
    - Contributing guidelines
 
 Happy coding! 🚀
+
+## Optional: running a local MongoDB for development
+
+This repository primarily uses PostgreSQL (see `docker-compose.yml`). If you'd like a local MongoDB instance for experimenting
+or for the JS-based migrations, `docker-compose.yml` includes a `mongodb` service that exposes port 27018 on the host.
+
+To start the service:
+
+```powershell
+cd 'c:\CSC 425 Projects\SkillWise_AITutor_Initial-Setup'
+docker-compose up -d mongodb
+```
+
+Create the `users` collection (with validation and a unique index on `email`):
+
+```powershell
+# From project root - uses port 27018 exposed by docker-compose
+MONGO_URL="mongodb://localhost:27018/skillwise_db" node backend/scripts/create_mongo_users.js
+```
+
+The script will create a `users` collection (if missing) with the following fields stored for each account:
+
+- \_id (ObjectId)
+- email (string, unique)
+- password_hash (string)
+- role (string)
+- is_active (bool)
+- createdAt, updatedAt (dates)
+
+You can open a Mongo shell to inspect the collection:
+
+```powershell
+docker exec -it skillwise_mongo mongosh --eval "use skillwise_db; db.users.find().pretty();"
+```
+
+Note: The backend currently uses PostgreSQL by default. If you want the backend to connect to MongoDB you will need to set
+`DATABASE_URL` (or `MONGO_URL`) in the backend environment and adapt the code paths that access the database. The create script
+above is intended as a developer convenience to provision the `users` collection in a local Mongo instance.
