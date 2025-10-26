@@ -13,7 +13,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/database/migrations:/docker-entrypoint-initdb.d
-      #- mongo_data:/data/db
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U skillwise_user -d skillwise_db']
       interval: 10s
@@ -115,7 +114,6 @@ services:
       - ./backend:/app
       - /app/node_modules
       - backend_logs:/app/logs
-      #added by me
     depends_on:
       database:
         condition: service_healthy
