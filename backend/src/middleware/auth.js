@@ -2,6 +2,7 @@
 const { AppError } = require('./errorHandler');
 const jwtUtils = require('../utils/jwt');
 const authService = require('../services/authService');
+//const jwt = require('jsonsebtoken');
 
 // Helper to read refresh token from cookie/header/body/query
 function getRefreshTokenFromRequest(req) {

@@ -1,29 +1,45 @@
-// TODO: Implement authentication routes
+// Authentication routes
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const validation = require('../middleware/validation');
 
-// TODO: Add POST /login route
+// POST /api/auth/login
+// Validates input and forwards to authController.login
 router.post('/login', validation.loginValidation, authController.login);
 
-// TODO: Add POST /register route
+// POST /api/auth/register
+// The validation schema expects camelCase fields (firstName/lastName). The controller
+// expects snake_case (first_name/last_name) in some code paths; normalize here so both
+// styles are accepted without changing controller implementation.
+const normalizeRegisterBody = (req, res, next) => {
+  if (req.body) {
+    if (req.body.firstName && !req.body.first_name)
+      req.body.first_name = req.body.firstName;
+    if (req.body.lastName && !req.body.last_name)
+      req.body.last_name = req.body.lastName;
+    // allow either confirmPassword or confirm_password
+    if (req.body.confirmPassword && !req.body.confirm_password)
+      req.body.confirm_password = req.body.confirmPassword;
+  }
+  next();
+};
+
 router.post(
   '/register',
   validation.registerValidation,
+  normalizeRegisterBody,
   authController.register
 );
 
-// TODO: Add POST /logout route
+// POST /api/auth/logout
 router.post('/logout', authController.logout);
 
-// TODO: Add POST /refresh route
+// POST /api/auth/refresh
 router.post('/refresh', authController.refreshToken);
 
-// TODO: Add POST /forgot-password route
+// Optional endpoints (not yet implemented in controller):
 // router.post('/forgot-password', authController.forgotPassword);
-
-// TODO: Add POST /reset-password route
 // router.post('/reset-password', authController.resetPassword);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 // Authentication business logic
+//make sure logic matches other files
 const jwtUtils = require('../utils/jwt');
 const bcrypt = require('bcryptjs');
 const db = require('../database/connection');
