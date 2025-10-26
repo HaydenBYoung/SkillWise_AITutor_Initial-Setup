@@ -1,43 +1,105 @@
-// TODO: JWT authentication middleware
-const jwt = require('jsonwebtoken');
+// JWT authentication middleware with refresh-token support
 const { AppError } = require('./errorHandler');
+const authService = require('../services/authService');
+const jwtUtils = require('../utils/jwt');
+
+const tryRefreshWithCookie = async (req, res) => {
+  const refreshToken =
+    req.cookies?.refreshToken ||
+    req.headers['x-refresh-token'] ||
+    req.body?.refreshToken;
+  if (!refreshToken) return null;
+
+  const result = await authService.refreshToken(refreshToken);
+  if (result && result.data && result.data.accessToken) {
+    // attach new access token in response header for frontend to pick up if needed
+    res.setHeader('X-Access-Token', result.data.accessToken);
+    return result.data.accessToken;
+  }
+
+  return null;
+};
 
 const auth = async (req, res, next) => {
   try {
-    // TODO: Get token from header
     let token;
-    
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
       token = req.headers.authorization.split(' ')[1];
     }
 
+    // If token missing, try to refresh using cookie
     if (!token) {
-      return next(new AppError('You are not logged in! Please log in to get access.', 401, 'NO_TOKEN'));
+      try {
+        const newAccess = await tryRefreshWithCookie(req, res);
+        if (newAccess) {
+          const decoded = jwtUtils.verifyToken(newAccess);
+          req.user = decoded;
+          req.accessToken = newAccess;
+          return next();
+        }
+      } catch (err) {
+        // fall through to not authorized
+      }
+
+      return next(
+        new AppError(
+          'You are not logged in! Please log in to get access.',
+          401,
+          'NO_TOKEN'
+        )
+      );
     }
 
-    // TODO: Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    try {
+      const decoded = jwtUtils.verifyToken(token);
+      req.user = decoded;
+      return next();
+    } catch (err) {
+      // Token might be expired - attempt refresh using cookie
+      if (err.name === 'TokenExpiredError') {
+        try {
+          const newAccess = await tryRefreshWithCookie(req, res);
+          if (newAccess) {
+            const decoded = jwtUtils.verifyToken(newAccess);
+            req.user = decoded;
+            req.accessToken = newAccess;
+            return next();
+          }
+          return next(
+            new AppError(
+              'Your token has expired! Please log in again.',
+              401,
+              'TOKEN_EXPIRED'
+            )
+          );
+        } catch (refreshErr) {
+          return next(
+            new AppError(
+              'Your token has expired! Please log in again.',
+              401,
+              'TOKEN_EXPIRED'
+            )
+          );
+        }
+      }
 
-    // TODO: Check if user still exists (optional - requires database query)
-    // const currentUser = await User.findById(decoded.id);
-    // if (!currentUser) {
-    //   return next(new AppError('The user belonging to this token does no longer exist.', 401));
-    // }
+      if (err.name === 'JsonWebTokenError') {
+        return next(
+          new AppError(
+            'Invalid token. Please log in again.',
+            401,
+            'INVALID_TOKEN'
+          )
+        );
+      }
 
-    // TODO: Check if user changed password after token was issued (optional)
-    // if (currentUser.changedPasswordAfter(decoded.iat)) {
-    //   return next(new AppError('User recently changed password! Please log in again.', 401));
-    // }
-
-    // Grant access to protected route
-    req.user = decoded;
-    next();
+      return next(err);
+    }
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return next(new AppError('Invalid token. Please log in again.', 401, 'INVALID_TOKEN'));
-    } else if (error.name === 'TokenExpiredError') {
-      return next(new AppError('Your token has expired! Please log in again.', 401, 'TOKEN_EXPIRED'));
-    }
     return next(error);
   }
 };
@@ -46,7 +108,13 @@ const auth = async (req, res, next) => {
 const restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return next(new AppError('You do not have permission to perform this action', 403, 'INSUFFICIENT_PERMISSIONS'));
+      return next(
+        new AppError(
+          'You do not have permission to perform this action',
+          403,
+          'INSUFFICIENT_PERMISSIONS'
+        )
+      );
     }
     next();
   };

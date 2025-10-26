@@ -1,88 +1,63 @@
-// TODO: Implement login page with form handling
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import LoginForm from '../components/auth/LoginForm';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-
 const LoginPage = () => {
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Redirect to intended page after login
-  const from = location.state?.from?.pathname || '/dashboard';
-
-  const handleLogin = async (formData) => {
-    try {
-      setIsLoading(true);
-      setError('');
-      
-      const result = await login({
-        email: formData.email,
-        password: formData.password
-      });
-      
-      if (result.success) {
-        navigate(from, { replace: true });
-      } else {
-        setError(result.error || 'Login failed. Please try again.');
-      }
-    } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="login-page">
-      <div className="auth-container">
-        <div className="auth-card">
-          <div className="auth-header">
-            <Link to="/" className="auth-logo">
-              <h1>SkillWise</h1>
-            </Link>
-            <h2>Welcome Back</h2>
-            <p>Sign in to continue your learning journey</p>
-          </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <Link to="/" className="flex justify-center">
+          <h1 className="text-3xl font-bold text-blue-600">SkillWise</h1>
+        </Link>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Sign in to your account
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Welcome back to your learning journey
+        </p>
+      </div>
 
-          {error && (
-            <div className="error-message">
-              <p>{error}</p>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <LoginForm />
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or</span>
+              </div>
             </div>
-          )}
 
-          {isLoading ? (
-            <LoadingSpinner message="Signing you in..." />
-          ) : (
-            <LoginForm onSubmit={handleLogin} />
-          )}
-
-          <div className="auth-footer">
-            <p>
-              Don't have an account?{' '}
-              <Link to="/signup" className="auth-link">
-                Sign up here
-              </Link>
-            </p>
-            
-            <p>
-              <Link to="/forgot-password" className="auth-link">
-                Forgot your password?
-              </Link>
-            </p>
+            <div className="mt-6 text-center text-sm">
+              <p className="text-gray-600">
+                New to SkillWise?{' '}
+                <Link
+                  to="/signup"
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Create an account
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="auth-background">
-          <div className="auth-testimonial">
-            <blockquote>
-              "SkillWise transformed how I learn. The AI feedback is incredibly helpful!"
+        <div className="mt-6 bg-white shadow sm:rounded-lg p-6">
+          <div className="space-y-4">
+            <blockquote className="text-lg text-gray-700 italic">
+              "SkillWise transformed how I learn. The AI feedback is incredibly
+              helpful!"
             </blockquote>
-            <cite>— Sarah K., Software Developer</cite>
+            <cite className="text-sm text-gray-600 flex items-center space-x-3">
+              <img
+                src="https://ui-avatars.com/api/?name=Sarah+K&background=0366D6&color=fff"
+                alt="Sarah K."
+                className="w-10 h-10 rounded-full"
+              />
+              <div>
+                <div className="font-medium text-gray-900">Sarah K.</div>
+                <div className="text-gray-600">Software Developer</div>
+              </div>
+            </cite>
           </div>
         </div>
       </div>
