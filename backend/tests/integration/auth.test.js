@@ -1,4 +1,5 @@
 // Authentication Integration (Mongo-first test expectations)
+jest.setTimeout(30000);
 const request = require('supertest');
 const app = require('../../src/app'); // app is at backend/src/app.js
 const { clearTestData, usingMongoForTests } = require('../setup');

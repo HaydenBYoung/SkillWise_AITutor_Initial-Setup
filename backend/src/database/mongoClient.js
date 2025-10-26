@@ -4,7 +4,12 @@ const pino = require('pino');
 
 const logger = pino({ name: 'skillwise-mongo' });
 
+// Prefer explicit test DB URL for test runs, then MONGO_URL, then DATABASE_URL.
+// Some environments (docker-compose) set DATABASE_URL to a Postgres URL; we
+// must not attempt to pass that to the Mongo client. Falling back to a sane
+// localhost default when none provided.
 const url =
+  process.env.TEST_DATABASE_URL ||
   process.env.MONGO_URL ||
   process.env.DATABASE_URL ||
   'mongodb://localhost:27018/skillwise_db';

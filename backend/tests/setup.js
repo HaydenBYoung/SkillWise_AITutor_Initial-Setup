@@ -65,10 +65,17 @@ beforeAll(async () => {
 
   if (usingMongoForTests) {
     try {
+      // Add short server selection and connect timeouts so Jest's beforeAll
+      // doesn't hang for long when the DB is unreachable. These values are
+      // intentionally small for developer CI runs; adjust if your network is
+      // slower.
       mongoClient = new MongoClient(TEST_DATABASE_URL, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 4000,
+        connectTimeoutMS: 4000,
       });
+      // Connect will reject quickly if the DB is not reachable.
       await mongoClient.connect();
       // If DB name is not included in URL, fall back to 'skillwise_test_db'
       const url = new URL(TEST_DATABASE_URL);
@@ -78,7 +85,10 @@ beforeAll(async () => {
       mongoDb = mongoClient.db(dbName);
       console.log('✅ Test MongoDB connected:', dbName);
     } catch (err) {
-      console.error('❌ Test MongoDB connection failed:', err.message);
+      // Log full error to help diagnose connectivity issues in CI/container
+      console.error('❌ Test MongoDB connection failed:', err && err.message);
+      if (err && err.stack) console.error(err.stack);
+      // Re-throw to fail the beforeAll quickly
       throw err;
     }
     return;
