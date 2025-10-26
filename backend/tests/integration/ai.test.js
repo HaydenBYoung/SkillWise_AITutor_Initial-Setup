@@ -1,11 +1,14 @@
 // TODO: Implement AI integration tests
 const request = require('supertest');
-const app = require('../src/app');
+const app = require('../../src/app');
+const { clearTestData, usingMongoForTests } = require('../setup');
 
 describe('AI Integration Tests', () => {
   let authToken;
 
   beforeEach(async () => {
+    // Ensure clean test DB between tests
+    await clearTestData();
     // TODO: Set up authenticated user and token
     // TODO: Mock OpenAI API responses
   });

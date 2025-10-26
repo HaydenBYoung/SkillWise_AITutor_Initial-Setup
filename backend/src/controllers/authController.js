@@ -54,6 +54,7 @@ const authController = {
         .status(200)
         .json({ user: result.user, accessToken: result.accessToken });
     } catch (err) {
+      // Handle and map known errors
       // Map errors
       if (err.code === 'INVALID_CREDENTIALS')
         return res.status(401).json({ message: err.message });
@@ -80,6 +81,7 @@ const authController = {
         .status(201)
         .json({ user: result.user, accessToken: result.accessToken });
     } catch (err) {
+      // Handle known errors
       if (err.code === 'EMAIL_CONFLICT')
         return res.status(409).json({ message: err.message });
       return next(err);

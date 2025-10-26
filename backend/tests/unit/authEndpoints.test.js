@@ -8,7 +8,6 @@ const authService = require('../../src/services/authService');
 let app;
 beforeAll(() => {
   // Clear module cache and require fresh app
-  jest.resetModules();
   app = require('../../src/app');
 });
 

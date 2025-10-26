@@ -1,6 +1,6 @@
 // TODO: Implement authentication controller unit tests
 const request = require('supertest');
-const authController = require('../../src/controllers/authController');
+const authController = require('../../../src/controllers/authController');
 
 describe('AuthController', () => {
   describe('POST /login', () => {

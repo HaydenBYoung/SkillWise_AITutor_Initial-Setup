@@ -1,11 +1,14 @@
 // TODO: Implement goals API integration tests
 const request = require('supertest');
-const app = require('../src/app');
+const app = require('../../src/app');
+const { clearTestData, usingMongoForTests } = require('../setup');
 
 describe('Goals API Integration', () => {
   let authToken;
 
   beforeEach(async () => {
+    // Ensure tests run against a clean Mongo test DB
+    await clearTestData();
     // TODO: Set up authenticated user and token
   });
 
