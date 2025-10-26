@@ -1,25 +1,49 @@
-// TODO: Implement user management controller for profile, settings, statistics
 const userService = require('../services/userService');
 
 const userController = {
-  // TODO: Get user profile
   getProfile: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const userId = req.user && req.user.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      const user = await userService.getUserById(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      return res.json(user);
+    } catch (err) {
+      return next(err);
+    }
   },
 
-  // TODO: Update user profile
   updateProfile: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const userId = req.user && req.user.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      const updated = await userService.updateProfile(userId, req.body);
+      return res.json(updated);
+    } catch (err) {
+      return next(err);
+    }
   },
 
-  // TODO: Get user statistics
   getStatistics: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const userId = req.user && req.user.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      const stats = await userService.getUserStats(userId);
+      return res.json(stats || {});
+    } catch (err) {
+      return next(err);
+    }
   },
 
-  // TODO: Delete user account
   deleteAccount: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const userId = req.user && req.user.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      await userService.deleteUser(userId);
+      return res.status(204).send();
+    } catch (err) {
+      return next(err);
+    }
   }
 };
 

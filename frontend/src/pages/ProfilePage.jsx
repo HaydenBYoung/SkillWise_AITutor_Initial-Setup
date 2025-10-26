@@ -1,5 +1,6 @@
 // TODO: Implement user profile management and settings
 import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
 
@@ -9,64 +10,47 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
-  const { user, updateProfile } = useAuth();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { user, updateProfile, logout } = useAuth();
+  const location = useLocation();
+
+  const navigationItems = [
+    { path: '/dashboard', label: 'Overview', icon: '📊' },
+    { path: '/goals', label: 'Goals', icon: '🎯' },
+    { path: '/challenges', label: 'Challenges', icon: '🚀' },
+    { path: '/progress', label: 'Progress', icon: '📈' },
+    { path: '/peer-review', label: 'Peer Review', icon: '👥' },
+    { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
+    { path: '/profile', label: 'Profile', icon: '👤' },
+  ];
 
   // Mock data - TODO: Replace with API call
   useEffect(() => {
     const mockProfileData = {
       id: user?.id || 1,
-      firstName: user?.firstName || 'John',
-      lastName: user?.lastName || 'Doe',
-      email: user?.email || 'john.doe@example.com',
+      firstName: user?.firstName || 'User',
+      lastName: user?.lastName || 'Name',
+      email: user?.email || 'user@example.com',
       avatar: '👤',
-      bio: 'Passionate full-stack developer with a love for learning new technologies.',
-      location: 'San Francisco, CA',
-      website: 'https://johndoe.dev',
-      joinedDate: '2024-01-01T00:00:00Z',
-      level: 6,
-      totalPoints: 1850,
-      completedChallenges: 28,
-      goalsAchieved: 5,
-      currentStreak: 12,
-      longestStreak: 25,
+      bio: '',
+      location: '',
+      website: '',
+      joinedDate: user?.createdAt || new Date().toISOString(),
+      level: 1,
+      totalPoints: 0,
+      completedChallenges: 0,
+      goalsAchieved: 0,
+      currentStreak: 0,
+      longestStreak: 0,
       badges: [
-        { id: 1, name: 'First Steps', icon: '🚀', description: 'Completed first challenge', earned: true },
-        { id: 2, name: 'Streak Master', icon: '🔥', description: '7-day learning streak', earned: true },
-        { id: 3, name: 'Goal Crusher', icon: '🎯', description: 'Completed 5 learning goals', earned: true },
-        { id: 4, name: 'Code Reviewer', icon: '👥', description: 'Provided 10 peer reviews', earned: false },
-        { id: 5, name: 'Challenge Master', icon: '💪', description: 'Completed 50 challenges', earned: false }
+        { id: 1, name: 'First Steps', icon: '🚀', description: 'Complete your first challenge', earned: false },
+        { id: 2, name: 'Streak Master', icon: '🔥', description: 'Maintain a 7-day learning streak', earned: false },
+        { id: 3, name: 'Goal Crusher', icon: '🎯', description: 'Complete 5 learning goals', earned: false },
+        { id: 4, name: 'Code Reviewer', icon: '👥', description: 'Provide 10 peer reviews', earned: false },
+        { id: 5, name: 'Challenge Master', icon: '💪', description: 'Complete 50 challenges', earned: false }
       ],
-      skills: [
-        { name: 'JavaScript', level: 85, category: 'Programming' },
-        { name: 'React', level: 78, category: 'Frontend' },
-        { name: 'Node.js', level: 72, category: 'Backend' },
-        { name: 'CSS', level: 88, category: 'Frontend' },
-        { name: 'Python', level: 65, category: 'Programming' },
-        { name: 'SQL', level: 70, category: 'Database' }
-      ],
-      recentActivity: [
-        { 
-          id: 1, 
-          type: 'challenge', 
-          title: 'Completed React Hooks Challenge', 
-          date: '2024-01-15T14:30:00Z',
-          points: 50 
-        },
-        { 
-          id: 2, 
-          type: 'goal', 
-          title: 'Achieved Frontend Fundamentals Goal', 
-          date: '2024-01-14T10:15:00Z',
-          points: 100 
-        },
-        { 
-          id: 3, 
-          type: 'review', 
-          title: 'Reviewed peer submission', 
-          date: '2024-01-13T16:45:00Z',
-          points: 25 
-        }
-      ],
+      skills: [],
+      recentActivity: [],
       preferences: {
         emailNotifications: true,
         pushNotifications: false,
@@ -137,12 +121,66 @@ const ProfilePage = () => {
     return `${Math.floor(diffInHours / 24)}d ago`;
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('accessToken');
+      
+      const response = await fetch('http://localhost:3001/api/users/account', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        // Logout and redirect to home
+        await logout();
+        window.location.href = '/';
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to delete account');
+      }
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      alert('Failed to delete account. Please try again.');
+    } finally {
+      setLoading(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   if (loading && !profileData) {
     return <LoadingSpinner message="Loading profile..." />;
   }
 
   return (
     <div className="profile-page">
+      <div className="dashboard-layout">
+        <aside className="dashboard-sidebar">
+          <div className="sidebar-header">
+            <h2>SkillWise</h2>
+            <p>Welcome, {user?.firstName || 'Student'}!</p>
+          </div>
+          
+          <nav className="sidebar-navigation">
+            <ul>
+              {navigationItems.map((item) => (
+                <li key={item.path}>
+                  <Link 
+                    to={item.path}
+                    className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+                  >
+                    <span className="nav-icon">{item.icon}</span>
+                    <span className="nav-label">{item.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </aside>
+
+        <main className="dashboard-main profile-content-wrapper">
       <div className="profile-header">
         <div className="profile-banner">
           <div className="profile-info">
@@ -255,7 +293,7 @@ const ProfilePage = () => {
                   value={formData.bio || ''}
                   onChange={handleInputChange}
                   rows="3"
-                  placeholder="Tell us about yourself..."
+                  placeholder="Share a bit about yourself and your learning journey..."
                 />
               </div>
               
@@ -278,6 +316,7 @@ const ProfilePage = () => {
                     name="website"
                     value={formData.website || ''}
                     onChange={handleInputChange}
+                    placeholder="https://LadyStarWell.com"
                   />
                 </div>
               </div>
@@ -458,8 +497,50 @@ const ProfilePage = () => {
                 {loading ? 'Saving...' : 'Save Settings'}
               </button>
             </div>
+
+            <div className="settings-section danger-zone">
+              <h3>⚠️ Danger Zone</h3>
+              <p>Once you delete your account, there is no going back. Please be certain.</p>
+              <button 
+                className="btn-danger"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={loading}
+              >
+                Delete Account
+              </button>
+            </div>
           </div>
         )}
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>⚠️ Delete Account?</h2>
+            <p>Are you absolutely sure you want to delete your account?</p>
+            <p><strong>This action cannot be undone.</strong> All your data, progress, and achievements will be permanently deleted.</p>
+            
+            <div className="modal-actions">
+              <button 
+                className="btn-danger"
+                onClick={handleDeleteAccount}
+                disabled={loading}
+              >
+                {loading ? 'Deleting...' : 'Yes, Delete My Account'}
+              </button>
+              <button 
+                className="btn-secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+        </main>
       </div>
     </div>
   );

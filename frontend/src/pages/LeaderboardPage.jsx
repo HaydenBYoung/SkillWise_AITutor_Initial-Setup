@@ -1,5 +1,6 @@
 // TODO: Implement leaderboard and rankings page
 import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
 
@@ -9,6 +10,17 @@ const LeaderboardPage = () => {
   const [timeframe, setTimeframe] = useState('all-time');
   const [category, setCategory] = useState('overall');
   const { user } = useAuth();
+  const location = useLocation();
+
+  const navigationItems = [
+    { path: '/dashboard', label: 'Overview', icon: '📊' },
+    { path: '/goals', label: 'Goals', icon: '🎯' },
+    { path: '/challenges', label: 'Challenges', icon: '🚀' },
+    { path: '/progress', label: 'Progress', icon: '📈' },
+    { path: '/peer-review', label: 'Peer Review', icon: '👥' },
+    { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
+    { path: '/profile', label: 'Profile', icon: '👤' },
+  ];
 
   // Mock data - TODO: Replace with API call
   useEffect(() => {
@@ -104,6 +116,31 @@ const LeaderboardPage = () => {
 
   return (
     <div className="leaderboard-page">
+      <div className="dashboard-layout">
+        <aside className="dashboard-sidebar">
+          <div className="sidebar-header">
+            <h2>SkillWise</h2>
+            <p>Welcome, {user?.firstName || 'Student'}!</p>
+          </div>
+          
+          <nav className="sidebar-navigation">
+            <ul>
+              {navigationItems.map((item) => (
+                <li key={item.path}>
+                  <Link 
+                    to={item.path}
+                    className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+                  >
+                    <span className="nav-icon">{item.icon}</span>
+                    <span className="nav-label">{item.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </aside>
+
+        <main className="dashboard-main">
       <div className="page-header">
         <h1>Leaderboard</h1>
         <p>See how you compare with other learners</p>
@@ -249,6 +286,8 @@ const LeaderboardPage = () => {
             </div>
           </>
         )}
+      </div>
+        </main>
       </div>
     </div>
   );

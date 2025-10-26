@@ -1,13 +1,15 @@
 // TODO: Implement goals management page
 import React, { useState } from 'react';
 import GoalCard from '../components/goals/GoalCard';
+import DashboardLayout from '../components/common/DashboardLayout';
 
 const GoalsPage = () => {
   const [goals, setGoals] = useState([]);
   
   // TODO: Add goal creation, filtering, search, sorting
   return (
-    <div className="goals-page">
+    <DashboardLayout>
+      <div className="goals-page">
       <div className="page-header">
         <h1>My Learning Goals</h1>
         <button className="btn-primary">Create New Goal</button>
@@ -35,6 +37,7 @@ const GoalsPage = () => {
         )}
       </div>
     </div>
+    </DashboardLayout>
   );
 };
 

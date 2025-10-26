@@ -4,25 +4,22 @@ const { AppError } = require('./errorHandler');
 
 // TODO: Validation schemas
 const loginSchema = z.object({
-  body: z.object({
-    email: z.string().email('Invalid email format'),
-    password: z.string().min(1, 'Password is required')
-  })
+  email: z.string().email('Invalid email format'),
+  password: z.string().min(1, 'password is required')
 });
 
 const registerSchema = z.object({
-  body: z.object({
-    email: z.string().email('Invalid email format'),
-    password: z.string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
-    firstName: z.string().min(1, 'First name is required').max(50, 'First name too long'),
-    lastName: z.string().min(1, 'Last name is required').max(50, 'Last name too long'),
-    confirmPassword: z.string()
-  }).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"]
-  })
+  email: z.string().email('Invalid email format'),
+  password: z.string()
+    .min(8, 'password too short')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'password must contain lowercase, uppercase, and number'),
+  confirmPassword: z.string()
+    .min(1, 'confirm password is required'),
+  firstName: z.string().min(1, 'first name is required').max(50, 'first name too long'),
+  lastName: z.string().min(1, 'last name is required').max(50, 'last name too long')
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "passwords don't match",
+  path: ["confirmPassword"]
 });
 
 const goalSchema = z.object({
@@ -52,13 +49,7 @@ const challengeSchema = z.object({
 const validate = (schema) => {
   return (req, res, next) => {
     try {
-      const validationData = {
-        body: req.body,
-        query: req.query,
-        params: req.params
-      };
-
-      const result = schema.safeParse(validationData);
+      const result = schema.safeParse(req.body);
 
       if (!result.success) {
         const errors = result.error.errors.map(err => ({
@@ -66,11 +57,11 @@ const validate = (schema) => {
           message: err.message
         }));
 
-        return next(new AppError(
-          `Validation error: ${errors.map(e => e.message).join(', ')}`,
-          400,
-          'VALIDATION_ERROR'
-        ));
+        // Format validation error response with all error details
+        const error = new AppError('Validation failed', 400, 'VALIDATION_ERROR');
+        error.errors = errors;
+        error.message = errors.map(e => e.message).join('; ');
+        return next(error);
       }
 
       // Attach validated data to request

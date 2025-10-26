@@ -6,7 +6,7 @@ const path = require('path');
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://skillwise_user:skillwise_pass@localhost:5432/skillwise_db'
+  connectionString: process.env.DATABASE_URL || 'postgresql://skillwise_user:skillwise_pass@localhost:5433/skillwise_db'
 });
 
 const migrationsDir = path.join(__dirname, '../database/migrations');
