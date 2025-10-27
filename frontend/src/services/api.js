@@ -194,10 +194,10 @@ export const apiService = {
 
   // User methods
   user: {
-    getProfile: () => api.get('/user/profile'),
-    updateProfile: (data) => api.put('/user/profile', data),
-    deleteAccount: () => api.delete('/user/profile'),
-    changePassword: (data) => api.put('/user/change-password', data),
+    getProfile: () => api.get('/users/profile'),
+    updateProfile: (data) => api.put('/users/profile', data),
+    deleteAccount: () => api.delete('/users/account'),
+    changePassword: (data) => api.put('/users/change-password', data),
   },
 
   // Goals methods

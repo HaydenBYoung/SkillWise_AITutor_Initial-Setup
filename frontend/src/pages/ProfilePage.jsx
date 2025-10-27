@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
+import { apiService } from '../services/api';
 
 const ProfilePage = () => {
   const [profileData, setProfileData] = useState(null);
@@ -124,31 +125,21 @@ const ProfilePage = () => {
   const handleDeleteAccount = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
       
-      const response = await fetch('http://localhost:3001/api/users/account', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Use the API service instead of manual fetch
+      await apiService.user.deleteAccount();
 
-      if (response.ok) {
-        // Logout and redirect to landing page
-        // Attempt server logout, but always clear local session and redirect
-        try {
-          await logout();
-        } catch (e) {
-          // ignore logout errors - ensure client-side cleanup proceeds
-          console.warn('Logout after delete failed:', e);
-        }
-
-        // Redirect user back to the landing page
-        window.location.href = '/';
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Failed to delete account');
+      // Logout and redirect to landing page
+      // Attempt server logout, but always clear local session and redirect
+      try {
+        await logout();
+      } catch (e) {
+        // ignore logout errors - ensure client-side cleanup proceeds
+        console.warn('Logout after delete failed:', e);
       }
+
+      // Redirect user back to the landing page
+      window.location.href = '/';
     } catch (error) {
       console.error('Failed to delete account:', error);
       alert('Failed to delete account. Please try again.');
