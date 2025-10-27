@@ -1,7 +1,7 @@
 // TODO: Implement user profile management and settings
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import DashboardLayout from '../components/common/DashboardLayout';
 import { useAuth } from '../hooks/useAuth';
 import { apiService } from '../services/api';
 
@@ -13,17 +13,6 @@ const ProfilePage = () => {
   const [formData, setFormData] = useState({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { user, updateProfile, logout } = useAuth();
-  const location = useLocation();
-
-  const navigationItems = [
-    { path: '/dashboard', label: 'Overview', icon: '📊' },
-    { path: '/goals', label: 'Goals', icon: '🎯' },
-    { path: '/challenges', label: 'Challenges', icon: '🚀' },
-    { path: '/progress', label: 'Progress', icon: '📈' },
-    { path: '/peer-review', label: 'Peer Review', icon: '👥' },
-    { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
-    { path: '/profile', label: 'Profile', icon: '👤' },
-  ];
 
   // Mock data - TODO: Replace with API call
   useEffect(() => {
@@ -154,32 +143,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="profile-page">
-      <div className="dashboard-layout">
-        <aside className="dashboard-sidebar">
-          <div className="sidebar-header">
-            <h2>SkillWise</h2>
-            <p>Welcome, {user?.firstName || 'Student'}!</p>
-          </div>
-          
-          <nav className="sidebar-navigation">
-            <ul>
-              {navigationItems.map((item) => (
-                <li key={item.path}>
-                  <Link 
-                    to={item.path}
-                    className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
-                  >
-                    <span className="nav-icon">{item.icon}</span>
-                    <span className="nav-label">{item.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </aside>
-
-        <main className="dashboard-main profile-content-wrapper">
+    <DashboardLayout>
       <div className="profile-header">
         <div className="profile-banner">
           <div className="profile-info">
@@ -539,9 +503,7 @@ const ProfilePage = () => {
           </div>
         </div>
       )}
-        </main>
-      </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

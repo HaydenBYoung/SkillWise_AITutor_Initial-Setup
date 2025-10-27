@@ -51,16 +51,7 @@ const userService = {
       // Delete all refresh tokens first (to prevent logout issues)
       await query('DELETE FROM refresh_tokens WHERE user_id = $1', [userId]);
       
-      // Delete related data in proper order (respecting foreign key constraints)
-      await query('DELETE FROM ai_feedback WHERE user_id = $1', [userId]);
-      await query('DELETE FROM peer_reviews WHERE reviewer_id = $1 OR reviewee_id = $1', [userId]);
-      await query('DELETE FROM submissions WHERE user_id = $1', [userId]);
-      await query('DELETE FROM progress_events WHERE user_id = $1', [userId]);
-      await query('DELETE FROM user_statistics WHERE user_id = $1', [userId]);
-      await query('DELETE FROM achievements WHERE user_id = $1', [userId]);
-      await query('DELETE FROM goals WHERE user_id = $1', [userId]);
-      
-      // Finally delete the user
+      // Delete the user (start simple, add other tables as they're implemented)
       const result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [userId]);
       
       if (result.rowCount === 0) {
