@@ -4,10 +4,12 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import LoginForm from '../components/auth/LoginForm';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import ConfettiCelebration from '../components/common/ConfettiCelebration';
 
 const LoginPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,7 +28,11 @@ const LoginPage = () => {
       });
       
       if (result.success) {
-        navigate(from, { replace: true });
+        setShowConfetti(true);
+        // Navigate after a short delay to show the celebration
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 1500);
       } else {
         setError(result.error || 'Login failed. Please try again.');
       }
@@ -86,6 +92,10 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
+      
+      {showConfetti && (
+        <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
+      )}
     </div>
   );
 };
