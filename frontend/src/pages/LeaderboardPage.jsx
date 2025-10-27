@@ -1,7 +1,10 @@
 // TODO: Implement leaderboard and rankings page
 import { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import LoadingSpinner from '../components/common/LoadingSpinner';
+// eslint-disable-next-line no-unused-vars
 import TrophyCelebration from '../components/common/TrophyCelebration';
+// eslint-disable-next-line no-unused-vars
 import DashboardLayout from '../components/common/DashboardLayout';
 import { useAuth } from '../hooks/useAuth';
 
