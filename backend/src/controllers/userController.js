@@ -39,7 +39,18 @@ const userController = {
     try {
       const userId = req.user && req.user.id;
       if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      
       await userService.deleteUser(userId);
+      
+      // Clear refresh token cookie to prevent logout issues
+      const COOKIE_NAME = process.env.REFRESH_COOKIE_NAME || 'refreshToken';
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      };
+      res.clearCookie(COOKIE_NAME, cookieOptions);
+      
       return res.status(204).send();
     } catch (err) {
       return next(err);

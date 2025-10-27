@@ -134,8 +134,16 @@ const ProfilePage = () => {
       });
 
       if (response.ok) {
-        // Logout and redirect to home
-        await logout();
+        // Logout and redirect to landing page
+        // Attempt server logout, but always clear local session and redirect
+        try {
+          await logout();
+        } catch (e) {
+          // ignore logout errors - ensure client-side cleanup proceeds
+          console.warn('Logout after delete failed:', e);
+        }
+
+        // Redirect user back to the landing page
         window.location.href = '/';
       } else {
         const data = await response.json();
