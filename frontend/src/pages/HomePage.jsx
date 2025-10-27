@@ -1,5 +1,4 @@
 // TODO: Implement home/landing page
-import React from 'react';
 
 const HomePage = () => {
   // TODO: Add hero section, features, testimonials, call-to-action

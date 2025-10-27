@@ -1,6 +1,3 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-
 const ErrorPage = () => {
   // Get error information from router state or props
   const error = new Error('Something went wrong');
@@ -16,10 +13,10 @@ const ErrorPage = () => {
           <div className="error-icon">⚠️</div>
           <h1>Oops! Something went wrong</h1>
           <p>
-            We're sorry, but something unexpected happened. 
-            Our team has been notified and is working to fix the issue.
+            We're sorry, but something unexpected happened. Our team has been
+            notified and is working to fix the issue.
           </p>
-          
+
           <div className="error-details">
             <details>
               <summary>Technical Details</summary>
@@ -32,7 +29,7 @@ const ErrorPage = () => {
               </div>
             </details>
           </div>
-          
+
           <div className="error-actions">
             <button onClick={resetError} className="btn-primary">
               Try Again
@@ -41,7 +38,7 @@ const ErrorPage = () => {
               Go Home
             </Link>
           </div>
-          
+
           <div className="error-suggestions">
             <h3>What you can try:</h3>
             <ul>
@@ -52,7 +49,7 @@ const ErrorPage = () => {
             </ul>
           </div>
         </div>
-        
+
         <div className="error-illustration">
           <div className="broken-robot">🤖💥</div>
           <div className="error-message-bubble">

@@ -1,10 +1,9 @@
 // TODO: Implement goals management page
-import React, { useState } from 'react';
-import GoalCard from '../components/goals/GoalCard';
+import { useState } from 'react';
 
 const GoalsPage = () => {
-  const [goals, setGoals] = useState([]);
-  
+  const [goals] = useState([]);
+
   // TODO: Add goal creation, filtering, search, sorting
   return (
     <div className="goals-page">
@@ -25,9 +24,7 @@ const GoalsPage = () => {
 
       <div className="goals-grid">
         {goals.length > 0 ? (
-          goals.map(goal => (
-            <GoalCard key={goal.id} goal={goal} />
-          ))
+          goals.map((goal) => <GoalCard key={goal.id} goal={goal} />)
         ) : (
           <div className="empty-state">
             <p>No goals yet. Create your first learning goal!</p>
