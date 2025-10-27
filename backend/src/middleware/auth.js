@@ -1,10 +1,8 @@
-// TODO: JWT authentication middleware
-const jwt = require('jsonwebtoken');
+const { verifyToken } = require('../utils/jwt');
 const { AppError } = require('./errorHandler');
 
 const auth = async (req, res, next) => {
   try {
-    // TODO: Get token from header
     let token;
     
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -15,8 +13,8 @@ const auth = async (req, res, next) => {
       return next(new AppError('You are not logged in! Please log in to get access.', 401, 'NO_TOKEN'));
     }
 
-    // TODO: Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Verify token
+    const decoded = await verifyToken(token);
 
     // TODO: Check if user still exists (optional - requires database query)
     // const currentUser = await User.findById(decoded.id);
@@ -30,7 +28,16 @@ const auth = async (req, res, next) => {
     // }
 
     // Grant access to protected route
-    req.user = decoded;
+    // Ensure the decoded token has the required user fields
+    if (!decoded || !decoded.id) {
+      return next(new AppError('Invalid user data in token', 401, 'INVALID_TOKEN'));
+    }
+
+    // Set user info on request
+    req.user = {
+      id: decoded.id,
+      email: decoded.email
+    };
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {

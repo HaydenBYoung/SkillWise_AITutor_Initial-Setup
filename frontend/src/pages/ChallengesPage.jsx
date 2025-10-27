@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import ChallengeCard from '../components/challenges/ChallengeCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import DashboardLayout from '../components/common/DashboardLayout';
 
 const ChallengesPage = () => {
   const [challenges, setChallenges] = useState([]);
@@ -90,6 +91,7 @@ const ChallengesPage = () => {
   };
 
   return (
+    <DashboardLayout>
     <div className="challenges-page">
       <div className="page-header">
         <h1>Learning Challenges</h1>
@@ -168,6 +170,7 @@ const ChallengesPage = () => {
         )}
       </div>
     </div>
+    </DashboardLayout>
   );
 };
 

@@ -1,6 +1,7 @@
 // TODO: Implement peer review and collaboration features
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import DashboardLayout from '../components/common/DashboardLayout';
 import { useAuth } from '../hooks/useAuth';
 
 const PeerReviewPage = () => {
@@ -131,6 +132,7 @@ const PeerReviewPage = () => {
   };
 
   return (
+    <DashboardLayout>
     <div className="peer-review-page">
       <div className="page-header">
         <h1>Peer Review</h1>
@@ -339,6 +341,7 @@ const PeerReviewPage = () => {
         </div>
       </div>
     </div>
+    </DashboardLayout>
   );
 };
 

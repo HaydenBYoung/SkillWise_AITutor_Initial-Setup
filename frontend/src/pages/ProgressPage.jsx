@@ -1,6 +1,7 @@
 // TODO: Implement progress tracking and analytics page
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import DashboardLayout from '../components/common/DashboardLayout';
 
 const ProgressPage = () => {
   const [progressData, setProgressData] = useState(null);
@@ -72,6 +73,7 @@ const ProgressPage = () => {
   }
 
   return (
+    <DashboardLayout>
     <div className="progress-page">
       <div className="page-header">
         <h1>Your Learning Progress</h1>
@@ -210,6 +212,7 @@ const ProgressPage = () => {
         </div>
       </div>
     </div>
+    </DashboardLayout>
   );
 };
 

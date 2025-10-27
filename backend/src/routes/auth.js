@@ -7,7 +7,6 @@ const validation = require('../middleware/validation');
 // TODO: Add POST /login route
 router.post('/login', validation.loginValidation, authController.login);
 
-// TODO: Add POST /register route
 router.post('/register', validation.registerValidation, authController.register);
 
 // TODO: Add POST /logout route

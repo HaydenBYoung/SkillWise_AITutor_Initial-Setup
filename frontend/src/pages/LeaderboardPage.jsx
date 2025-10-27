@@ -1,6 +1,11 @@
 // TODO: Implement leaderboard and rankings page
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import LoadingSpinner from '../components/common/LoadingSpinner';
+// eslint-disable-next-line no-unused-vars
+import TrophyCelebration from '../components/common/TrophyCelebration';
+// eslint-disable-next-line no-unused-vars
+import DashboardLayout from '../components/common/DashboardLayout';
 import { useAuth } from '../hooks/useAuth';
 
 const LeaderboardPage = () => {
@@ -8,7 +13,8 @@ const LeaderboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [timeframe, setTimeframe] = useState('all-time');
   const [category, setCategory] = useState('overall');
-  const { user } = useAuth();
+  const [showTrophies, setShowTrophies] = useState(false);
+  const { user: authUser } = useAuth();
 
   // Mock data - TODO: Replace with API call
   useEffect(() => {
@@ -21,7 +27,7 @@ const LeaderboardPage = () => {
         points: 2450,
         level: 8,
         completedChallenges: 45,
-        isCurrentUser: false
+        isCurrentUser: false,
       },
       {
         id: 2,
@@ -31,7 +37,7 @@ const LeaderboardPage = () => {
         points: 2380,
         level: 8,
         completedChallenges: 42,
-        isCurrentUser: false
+        isCurrentUser: false,
       },
       {
         id: 3,
@@ -41,7 +47,7 @@ const LeaderboardPage = () => {
         points: 2290,
         level: 7,
         completedChallenges: 38,
-        isCurrentUser: false
+        isCurrentUser: false,
       },
       {
         id: 4,
@@ -51,17 +57,20 @@ const LeaderboardPage = () => {
         points: 2150,
         level: 7,
         completedChallenges: 35,
-        isCurrentUser: false
+        isCurrentUser: false,
       },
       {
         id: 5,
         rank: 5,
-        name: user?.firstName + ' ' + user?.lastName || 'You',
+        name: authUser
+          ? `${authUser.firstName ?? ''} ${authUser.lastName ?? ''}`.trim() ||
+            'You'
+          : 'You',
         avatar: '👤',
         points: 1850,
         level: 6,
         completedChallenges: 28,
-        isCurrentUser: true
+        isCurrentUser: true,
       },
       {
         id: 6,
@@ -71,7 +80,7 @@ const LeaderboardPage = () => {
         points: 1720,
         level: 6,
         completedChallenges: 25,
-        isCurrentUser: false
+        isCurrentUser: false,
       },
       {
         id: 7,
@@ -81,32 +90,54 @@ const LeaderboardPage = () => {
         points: 1650,
         level: 5,
         completedChallenges: 23,
-        isCurrentUser: false
-      }
+        isCurrentUser: false,
+      },
     ];
 
     setTimeout(() => {
       setLeaderboardData(mockLeaderboardData);
       setLoading(false);
     }, 1000);
-  }, [timeframe, category, user]);
+  }, [timeframe, category, authUser]);
 
   const getRankIcon = (rank) => {
     switch (rank) {
-      case 1: return '🥇';
-      case 2: return '🥈';
-      case 3: return '🥉';
-      default: return `#${rank}`;
+      case 1:
+        return '🥇';
+      case 2:
+        return '🥈';
+      case 3:
+        return '🥉';
+      default:
+        return `#${rank}`;
     }
   };
 
-  const currentUserRank = leaderboardData.find(user => user.isCurrentUser)?.rank || 0;
+  const currentUserRank =
+    leaderboardData.find((u) => u.isCurrentUser)?.rank || 0;
 
   return (
-    <div className="leaderboard-page">
+    <DashboardLayout>
       <div className="page-header">
-        <h1>Leaderboard</h1>
-        <p>See how you compare with other learners</p>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div>
+            <h1>Leaderboard</h1>
+            <p>See how you compare with other learners</p>
+          </div>
+          <button
+            className="btn-primary"
+            onClick={() => setShowTrophies(true)}
+            style={{ marginLeft: 'auto' }}
+          >
+            🏆 Celebrate Winners!
+          </button>
+        </div>
       </div>
 
       <div className="leaderboard-filters">
@@ -148,7 +179,11 @@ const LeaderboardPage = () => {
             <div className="rank-info">
               <span className="rank-number">#{currentUserRank}</span>
               <div className="rank-details">
-                <p>You're in the top {Math.round((currentUserRank / leaderboardData.length) * 100)}% of learners!</p>
+                <p>
+                  You're in the top{' '}
+                  {Math.round((currentUserRank / leaderboardData.length) * 100)}
+                  % of learners!
+                </p>
                 <small>Keep learning to climb higher!</small>
               </div>
             </div>
@@ -165,16 +200,17 @@ const LeaderboardPage = () => {
               <h2>Top Performers</h2>
               <div className="podium">
                 {leaderboardData.slice(0, 3).map((user, index) => (
-                  <div key={user.id} className={`podium-position position-${index + 1}`}>
+                  <div
+                    key={user.id}
+                    className={`podium-position position-${index + 1}`}
+                  >
                     <div className="podium-user">
                       <div className="user-avatar">{user.avatar}</div>
                       <h4>{user.name}</h4>
                       <p>{user.points} points</p>
                       <span className="level-badge">Level {user.level}</span>
                     </div>
-                    <div className="podium-rank">
-                      {getRankIcon(user.rank)}
-                    </div>
+                    <div className="podium-rank">{getRankIcon(user.rank)}</div>
                   </div>
                 ))}
               </div>
@@ -192,12 +228,16 @@ const LeaderboardPage = () => {
                 </div>
 
                 {leaderboardData.map((user) => (
-                  <div 
-                    key={user.id} 
-                    className={`table-row ${user.isCurrentUser ? 'current-user' : ''}`}
+                  <div
+                    key={user.id}
+                    className={`table-row ${
+                      user.isCurrentUser ? 'current-user' : ''
+                    }`}
                   >
                     <div className="col-rank">
-                      <span className="rank-icon">{getRankIcon(user.rank)}</span>
+                      <span className="rank-icon">
+                        {getRankIcon(user.rank)}
+                      </span>
                     </div>
                     <div className="col-user">
                       <div className="user-info">
@@ -250,7 +290,11 @@ const LeaderboardPage = () => {
           </>
         )}
       </div>
-    </div>
+
+      {showTrophies && (
+        <TrophyCelebration onComplete={() => setShowTrophies(false)} />
+      )}
+    </DashboardLayout>
   );
 };
 

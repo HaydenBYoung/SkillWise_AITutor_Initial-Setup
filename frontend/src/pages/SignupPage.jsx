@@ -1,58 +1,80 @@
-// TODO: Implement signup/registration page
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useAuth } from '../hooks/useAuth';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import ConfettiCelebration from '../components/common/ConfettiCelebration';
+
+// Signup form validation schema
+const signupSchema = z.object({
+  firstName: z
+    .string()
+    .min(1, 'First name is required')
+    .min(2, 'First name must be at least 2 characters'),
+  lastName: z
+    .string()
+    .min(1, 'Last name is required')
+    .min(2, 'Last name must be at least 2 characters'),
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  confirmPassword: z
+    .string()
+    .min(1, 'Please confirm your password')
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword']
+});
 
 const SignupPage = () => {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const [showConfetti, setShowConfetti] = useState(false);
+  const { register: registerUser } = useAuth();
   const navigate = useNavigate();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: zodResolver(signupSchema),
+    mode: 'onSubmit'
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return;
-    }
-
+  const onSubmit = async (formData) => {
+    console.log('Form submitted with data:', formData);
+    console.log('Validation errors:', errors);
     try {
       setIsLoading(true);
       setError('');
       
-      const result = await register({
+      const result = await registerUser({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        confirmPassword: formData.confirmPassword
       });
       
       if (result.success) {
-        // Registration successful - user is now logged in
-        navigate('/dashboard');
+        // Show celebration!
+        setShowConfetti(true);
+        
+        // Wait a moment for confetti, then navigate
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
       } else {
         setError(result.error || 'Registration failed. Please try again.');
       }
@@ -84,18 +106,19 @@ const SignupPage = () => {
           {isLoading ? (
             <LoadingSpinner message="Creating your account..." />
           ) : (
-            <form onSubmit={handleSubmit} className="signup-form">
+            <form onSubmit={handleSubmit(onSubmit)} className="signup-form" noValidate>
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="firstName">First Name</label>
                   <input
                     type="text"
                     id="firstName"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    required
+                    {...register('firstName')}
+                    className={errors.firstName ? 'input-error' : ''}
                   />
+                  {errors.firstName && (
+                    <span className="error-text">{errors.firstName.message}</span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -103,11 +126,12 @@ const SignupPage = () => {
                   <input
                     type="text"
                     id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    required
+                    {...register('lastName')}
+                    className={errors.lastName ? 'input-error' : ''}
                   />
+                  {errors.lastName && (
+                    <span className="error-text">{errors.lastName.message}</span>
+                  )}
                 </div>
               </div>
 
@@ -116,11 +140,12 @@ const SignupPage = () => {
                 <input
                   type="email"
                   id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
+                  {...register('email')}
+                  className={errors.email ? 'input-error' : ''}
                 />
+                {errors.email && (
+                  <span className="error-text">{errors.email.message}</span>
+                )}
               </div>
 
               <div className="form-group">
@@ -128,13 +153,13 @@ const SignupPage = () => {
                 <input
                   type="password"
                   id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  minLength={8}
-                  required
+                  {...register('password')}
+                  className={errors.password ? 'input-error' : ''}
                 />
-                <small>Must be at least 8 characters long</small>
+                {errors.password && (
+                  <span className="error-text">{errors.password.message}</span>
+                )}
+                <small>Must be at least 8 characters with uppercase, lowercase, and number</small>
               </div>
 
               <div className="form-group">
@@ -142,15 +167,20 @@ const SignupPage = () => {
                 <input
                   type="password"
                   id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  required
+                  {...register('confirmPassword')}
+                  className={errors.confirmPassword ? 'input-error' : ''}
                 />
+                {errors.confirmPassword && (
+                  <span className="error-text">{errors.confirmPassword.message}</span>
+                )}
               </div>
 
-              <button type="submit" className="btn-primary">
-                Create Account
+              <button 
+                type="submit" 
+                className="btn-primary"
+                disabled={isSubmitting || isLoading}
+              >
+                {isSubmitting || isLoading ? 'Creating Account...' : 'Create Account'}
               </button>
             </form>
           )}
@@ -178,6 +208,10 @@ const SignupPage = () => {
           </div>
         </div>
       </div>
+      
+      {showConfetti && (
+        <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
+      )}
     </div>
   );
 };

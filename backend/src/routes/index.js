@@ -27,6 +27,7 @@ const submissionRoutes = require('./submissions');
 const aiRoutes = require('./ai');
 const reviewRoutes = require('./reviews');
 const leaderboardRoutes = require('./leaderboard');
+const achievementRoutes = require('./achievements');
 
 // API Documentation endpoint
 router.get('/', (req, res) => {
@@ -61,6 +62,7 @@ router.use('/submissions', submissionRoutes);
 router.use('/ai', aiRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/leaderboard', leaderboardRoutes);
+router.use('/achievements', achievementRoutes);
 
 // API Health check endpoint
 router.get('/health', (req, res) => {

@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ThemeToggle from './components/common/ThemeToggle';
 
 // Import all pages
 import HomePage from './pages/HomePage';
@@ -16,6 +18,7 @@ import PeerReviewPage from './pages/PeerReviewPage';
 import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import ErrorPage from './pages/ErrorPage';
+import AchievementsPage from './pages/AchievementsPage';
 
 // Import layout components (TODO: Create these)
 // import Navbar from './components/layout/Navbar';
@@ -23,14 +26,15 @@ import ErrorPage from './pages/ErrorPage';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          {/* TODO: Add Navbar component */}
-          {/* <Navbar /> */}
-          
-          <main className="main-content">
-            <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <div className="App">
+            {/* TODO: Add Navbar component */}
+            {/* <Navbar /> */}
+            
+            <main className="main-content">
+              <Routes>
               {/* Public routes */}
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
@@ -79,6 +83,14 @@ function App() {
                 } 
               />
               <Route 
+                path="/achievements" 
+                element={
+                  <ProtectedRoute>
+                    <AchievementsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="/peer-review" 
                 element={
                   <ProtectedRoute>
@@ -100,11 +112,15 @@ function App() {
             </Routes>
           </main>
           
+          {/* Theme Toggle Button */}
+          <ThemeToggle />
+          
           {/* TODO: Add Footer component */}
           {/* <Footer /> */}
         </div>
       </Router>
     </AuthProvider>
+  </ThemeProvider>
   );
 }
 

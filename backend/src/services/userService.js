@@ -46,7 +46,20 @@ const userService = {
 
   // TODO: Delete user account
   deleteUser: async (userId) => {
-    await db.query('DELETE FROM users WHERE id = $1', [userId]);
+    // Use transaction to ensure all deletions succeed or fail together
+    return await db.withTransaction(async (query) => {
+      // Delete all refresh tokens first (to prevent logout issues)
+      await query('DELETE FROM refresh_tokens WHERE user_id = $1', [userId]);
+      
+      // Delete the user (start simple, add other tables as they're implemented)
+      const result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [userId]);
+      
+      if (result.rowCount === 0) {
+        throw new Error('User not found');
+      }
+      
+      return { deleted: true, userId };
+    });
   },
 
   // TODO: Get user statistics

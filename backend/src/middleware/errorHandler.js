@@ -71,12 +71,18 @@ const sendErrorProd = (err, req, res) => {
       ip: req.ip
     });
 
-    return res.status(err.statusCode).json({
+    const response = {
       status: err.status,
       message: err.message,
       code: err.code,
       timestamp: new Date().toISOString()
-    });
+    };
+
+    if (err.errors) {
+      response.errors = err.errors;
+    }
+
+    return res.status(err.statusCode).json(response);
   }
 
   // Programming or other unknown error: don't leak error details
@@ -96,11 +102,15 @@ const sendErrorProd = (err, req, res) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  err.statusCode = err.statusCode || 500;
+  // Ensure status code and status are set
+  err.statusCode = err.statusCode || err.status || 500;
   err.status = err.status || 'error';
 
-  let error = { ...err };
-  error.message = err.message;
+  // Create proper error copy that preserves prototype chain
+  let error = Object.create(
+    Object.getPrototypeOf(err),
+    Object.getOwnPropertyDescriptors(err)
+  );
 
   // Handle specific error types
   if (error.name === 'CastError') error = handleCastErrorDB(error);

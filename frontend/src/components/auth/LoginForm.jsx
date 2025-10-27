@@ -1,31 +1,44 @@
-// TODO: Implement login form component
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-const LoginForm = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+// Login form validation schema
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .min(8, 'Password must be at least 8 characters')
+});
+
+const LoginForm = ({ onSubmit }) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    mode: 'onBlur' // Validate on blur for better UX
   });
 
-  // TODO: Add form validation, error handling, loading state
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // TODO: Implement login logic
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="login-form">
-      <h2>Login to SkillWise</h2>
-      
+    <form onSubmit={handleSubmit(onSubmit)} className="login-form">
       <div className="form-group">
-        <label htmlFor="email">Email</label>
+        <label htmlFor="email">Email Address</label>
         <input
           type="email"
           id="email"
-          value={formData.email}
-          onChange={(e) => setFormData({...formData, email: e.target.value})}
-          required
+          {...register('email')}
+          className={errors.email ? 'input-error' : ''}
+          placeholder="you@example.com"
         />
+        {errors.email && (
+          <span className="error-text">{errors.email.message}</span>
+        )}
       </div>
 
       <div className="form-group">
@@ -33,14 +46,21 @@ const LoginForm = () => {
         <input
           type="password"
           id="password"
-          value={formData.password}
-          onChange={(e) => setFormData({...formData, password: e.target.value})}
-          required
+          {...register('password')}
+          className={errors.password ? 'input-error' : ''}
+          placeholder="Enter your password"
         />
+        {errors.password && (
+          <span className="error-text">{errors.password.message}</span>
+        )}
       </div>
 
-      <button type="submit" className="btn-primary">
-        Login
+      <button 
+        type="submit" 
+        className="btn-primary"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Signing in...' : 'Sign In'}
       </button>
     </form>
   );
