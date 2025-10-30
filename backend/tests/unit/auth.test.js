@@ -19,7 +19,7 @@ describe('AuthService', () => {
       password_hash: 'hashedPassword123',
       first_name: 'Test',
       last_name: 'User',
-      role: 'student'
+      role: 'student',
     };
 
     it('should successfully login with valid credentials', async () => {
@@ -30,7 +30,7 @@ describe('AuthService', () => {
       db.query.mockResolvedValueOnce({ rows: [{ id: 1 }] }); // refresh token insert
 
       const result = await authService.login('test@example.com', 'password123');
-      
+
       expect(result.user).toBeDefined();
       expect(result.accessToken).toBe('accessToken123');
       expect(result.refreshToken).toBe('refreshToken123');
@@ -59,21 +59,21 @@ describe('AuthService', () => {
       email: 'new@example.com',
       password: 'password123',
       firstName: 'New',
-      lastName: 'User'
+      lastName: 'User',
     };
 
     it('should successfully register new user', async () => {
       db.query.mockResolvedValueOnce({ rows: [] }); // no existing user
       bcrypt.hash.mockResolvedValueOnce('hashedPassword123');
-      db.query.mockResolvedValueOnce({ 
-        rows: [{ id: 1, email: mockUserData.email, first_name: mockUserData.firstName, last_name: mockUserData.lastName, role: 'student' }]
+      db.query.mockResolvedValueOnce({
+        rows: [{ id: 1, email: mockUserData.email, first_name: mockUserData.firstName, last_name: mockUserData.lastName, role: 'student' }],
       });
       jwt.generateToken.mockReturnValueOnce('accessToken123');
       jwt.generateRefreshToken.mockReturnValueOnce('refreshToken123');
       db.query.mockResolvedValueOnce({ rows: [{ id: 1 }] }); // refresh token insert
 
       const result = await authService.register(mockUserData);
-      
+
       expect(result.user).toBeDefined();
       expect(result.accessToken).toBeDefined();
       expect(result.refreshToken).toBeDefined();
@@ -96,7 +96,7 @@ describe('AuthService', () => {
       token: mockToken,
       user_id: 1,
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000), // tomorrow
-      is_revoked: false
+      is_revoked: false,
     };
 
     it('should refresh token successfully', async () => {
@@ -105,14 +105,14 @@ describe('AuthService', () => {
       jwt.generateToken.mockReturnValueOnce('newAccessToken123');
 
       const result = await authService.refreshToken(mockToken);
-      
+
       expect(result.accessToken).toBe('newAccessToken123');
       expect(jwt.verifyRefreshToken).toHaveBeenCalledWith(mockToken);
     });
 
     it('should throw error for revoked token', async () => {
-      db.query.mockResolvedValueOnce({ 
-        rows: [{ ...mockTokenRecord, is_revoked: true }]
+      db.query.mockResolvedValueOnce({
+        rows: [{ ...mockTokenRecord, is_revoked: true }],
       });
 
       await expect(authService.refreshToken(mockToken))
@@ -120,8 +120,8 @@ describe('AuthService', () => {
     });
 
     it('should throw error for expired token', async () => {
-      db.query.mockResolvedValueOnce({ 
-        rows: [{ ...mockTokenRecord, expires_at: new Date(Date.now() - 1000) }]
+      db.query.mockResolvedValueOnce({
+        rows: [{ ...mockTokenRecord, expires_at: new Date(Date.now() - 1000) }],
       });
 
       await expect(authService.refreshToken(mockToken))
@@ -134,10 +134,10 @@ describe('AuthService', () => {
       db.query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
 
       await authService.revokeRefreshToken('token123');
-      
+
       expect(db.query).toHaveBeenCalledWith(
         'UPDATE refresh_tokens SET is_revoked = true WHERE token = $1',
-        ['token123']
+        ['token123'],
       );
     });
 

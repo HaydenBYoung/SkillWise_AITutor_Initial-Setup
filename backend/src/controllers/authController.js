@@ -1,7 +1,7 @@
 const authService = require('../services/authService');
 
 // small helper to parse refreshToken from cookie header if cookie-parser isn't used
-function parseCookie(req, name) {
+function parseCookie (req, name) {
   const header = req.headers && req.headers.cookie;
   if (!header) return null;
   const pairs = header.split(';').map(p => p.trim());
@@ -24,7 +24,7 @@ const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
-  maxAge: COOKIE_MAX_AGE
+  maxAge: COOKIE_MAX_AGE,
 };
 
 const authController = {
@@ -89,7 +89,7 @@ const authController = {
       }
       return next(err);
     }
-  }
+  },
 };
 
 module.exports = authController;

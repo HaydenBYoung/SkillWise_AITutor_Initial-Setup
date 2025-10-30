@@ -139,7 +139,7 @@ const HomePage = () => {
           }
         }
       `}</style>
-      
+
       <section className="hero">
         <div className="hero-content">
           <h1>Welcome to SkillWise 🎓</h1>

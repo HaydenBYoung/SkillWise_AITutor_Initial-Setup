@@ -22,51 +22,51 @@ const AUTH_ACTIONS = {
 // Reducer function
 const authReducer = (state, action) => {
   switch (action.type) {
-    case AUTH_ACTIONS.SET_LOADING:
-      return {
-        ...state,
-        isLoading: action.payload,
-      };
+  case AUTH_ACTIONS.SET_LOADING:
+    return {
+      ...state,
+      isLoading: action.payload,
+    };
 
-    case AUTH_ACTIONS.LOGIN_SUCCESS:
-      return {
-        ...state,
-        user: action.payload.user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      };
+  case AUTH_ACTIONS.LOGIN_SUCCESS:
+    return {
+      ...state,
+      user: action.payload.user,
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+    };
 
-    case AUTH_ACTIONS.LOGOUT:
-      return {
-        ...state,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      };
+  case AUTH_ACTIONS.LOGOUT:
+    return {
+      ...state,
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    };
 
-    case AUTH_ACTIONS.UPDATE_USER:
-      return {
-        ...state,
-        user: { ...state.user, ...action.payload },
-      };
+  case AUTH_ACTIONS.UPDATE_USER:
+    return {
+      ...state,
+      user: { ...state.user, ...action.payload },
+    };
 
-    case AUTH_ACTIONS.SET_ERROR:
-      return {
-        ...state,
-        error: action.payload,
-        isLoading: false,
-      };
+  case AUTH_ACTIONS.SET_ERROR:
+    return {
+      ...state,
+      error: action.payload,
+      isLoading: false,
+    };
 
-    case AUTH_ACTIONS.CLEAR_ERROR:
-      return {
-        ...state,
-        error: null,
-      };
+  case AUTH_ACTIONS.CLEAR_ERROR:
+    return {
+      ...state,
+      error: null,
+    };
 
-    default:
-      return state;
+  default:
+    return state;
   }
 };
 
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = getAccessToken();
-      
+
       if (token) {
         try {
           // Validate token by fetching user profile
@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     window.addEventListener('auth:logout', handleLogout);
-    
+
     return () => {
       window.removeEventListener('auth:logout', handleLogout);
     };
@@ -308,11 +308,11 @@ export const AuthProvider = ({ children }) => {
 // Custom hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
+
   return context;
 };
 

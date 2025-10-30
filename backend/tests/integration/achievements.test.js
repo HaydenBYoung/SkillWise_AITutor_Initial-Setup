@@ -10,29 +10,29 @@ jest.mock('../../src/utils/jwt', () => {
   return {
     verifyToken: jest.fn().mockResolvedValue({
       id: 1,
-      email: 'test@example.com'
-    })
+      email: 'test@example.com',
+    }),
   };
 });
 
 describe('Achievements API Integration', () => {
   const baseUrl = '/api/achievements';
   let authToken;
-  
+
   beforeEach(() => {
     jest.clearAllMocks();
     authToken = 'test.jwt.token';
     // Reset all mock implementations to their defaults
     require('../../src/utils/jwt').verifyToken.mockResolvedValue({
       id: 1,
-      email: 'test@example.com'
+      email: 'test@example.com',
     });
   });
 
   describe('GET /achievements', () => {
     const sampleAchievements = [
       { id: 1, key: 'first-steps', title: 'First Steps', description: 'Started your journey', points: 10 },
-      { id: 2, key: 'level-up', title: 'Level Up', description: 'Reached level 2', points: 20 }
+      { id: 2, key: 'level-up', title: 'Level Up', description: 'Reached level 2', points: 20 },
     ];
 
     it('should return all achievements when authenticated', async () => {
@@ -59,14 +59,14 @@ describe('Achievements API Integration', () => {
 
   describe('GET /achievements/user/progress', () => {
     const sampleUserAchievements = [
-      { 
-        id: 1, 
-        key: 'first-steps', 
-        title: 'First Steps', 
-        description: 'Started your journey', 
+      {
+        id: 1,
+        key: 'first-steps',
+        title: 'First Steps',
+        description: 'Started your journey',
         points: 10,
-        achieved_at: new Date().toISOString()
-      }
+        achieved_at: new Date().toISOString(),
+      },
     ];
 
     it('should return user achievements when authenticated', async () => {
@@ -78,8 +78,8 @@ describe('Achievements API Integration', () => {
           title: 'First Steps',
           description: 'Started your journey',
           points: 10,
-          achieved_at: new Date().toISOString()
-        }]
+          achieved_at: new Date().toISOString(),
+        }],
       });
 
       const res = await request(app)
@@ -101,12 +101,12 @@ describe('Achievements API Integration', () => {
   });
 
   describe('GET /achievements/:id', () => {
-    const sampleAchievement = { 
-      id: 1, 
-      key: 'first-steps', 
-      title: 'First Steps', 
-      description: 'Started your journey', 
-      points: 10 
+    const sampleAchievement = {
+      id: 1,
+      key: 'first-steps',
+      title: 'First Steps',
+      description: 'Started your journey',
+      points: 10,
     };
 
     it('should return a specific achievement when authenticated', async () => {

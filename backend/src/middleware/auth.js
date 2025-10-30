@@ -4,7 +4,7 @@ const { AppError } = require('./errorHandler');
 const auth = async (req, res, next) => {
   try {
     let token;
-    
+
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
@@ -36,7 +36,7 @@ const auth = async (req, res, next) => {
     // Set user info on request
     req.user = {
       id: decoded.id,
-      email: decoded.email
+      email: decoded.email,
     };
     next();
   } catch (error) {
