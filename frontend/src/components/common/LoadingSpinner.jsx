@@ -1,5 +1,5 @@
 // TODO: Implement loading spinner component
-import React from 'react';
+import {} from 'react';
 
 const LoadingSpinner = ({ size = 'medium', message = 'Loading...' }) => {
   // TODO: Add different spinner sizes and animations
