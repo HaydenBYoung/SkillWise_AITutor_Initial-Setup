@@ -1,77 +1,119 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { challengeService } from '../services/challengeService';
 import ChallengeCard from '../components/challenges/ChallengeCard';
 import ChallengeForm from '../components/challenges/ChallengeForm';
+import DashboardLayout from '../components/common/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import ErrorMessage from '../components/common/ErrorMessage';
+import ConfettiCelebration from '../components/common/ConfettiCelebration';
+import { useAuth } from '../hooks/useAuth';
 
 const ChallengesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const { user } = useAuth();
 
   // Filters
   const [filters, setFilters] = useState({
     difficulty: searchParams.get('difficulty') || '',
     category: searchParams.get('category') || '',
-    status: searchParams.get('status') || 'all',
+    status: searchParams.get('status') || '',
     goalId: searchParams.get('goalId') || '',
   });
 
-  // Search
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Load challenges
+  // Load challenges on component mount
   useEffect(() => {
-    loadChallenges();
-  }, [filters]);
+    fetchChallenges();
+  }, []);
 
-  const loadChallenges = async () => {
+  const fetchChallenges = async () => {
     try {
       setLoading(true);
-      setError(null);
-
-      const queryParams = new URLSearchParams();
-      if (filters.difficulty) queryParams.append('difficulty', filters.difficulty);
-      if (filters.category) queryParams.append('category', filters.category);
-      if (filters.status !== 'all') queryParams.append('status', filters.status);
-      if (filters.goalId) queryParams.append('goalId', filters.goalId);
-
-      const response = await challengeService.getChallenges(queryParams.toString());
-      setChallenges(response.data);
-    } catch (err) {
-      console.error('Error loading challenges:', err);
-      setError('Failed to load challenges. Please try again.');
+      const response = await challengeService.getChallenges();
+      if (response.success) {
+        setChallenges(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching challenges:', error);
+      toast.error('Failed to load challenges');
     } finally {
       setLoading(false);
     }
   };
 
-  // Update URL params when filters change
-  useEffect(() => {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value && value !== 'all') {
-        params.set(key, value);
+  const handleCreateChallenge = async (challengeData) => {
+    try {
+      setSubmitting(true);
+      const response = await challengeService.createChallenge(challengeData);
+      if (response.success) {
+        setChallenges(prev => [response.data, ...prev]);
+        setShowForm(false);
+        
+        // 🎉 CELEBRATION PRESERVED! 🎉
+        setShowCelebration(true);
+        toast.success('⚡ Amazing! Your new challenge is ready to conquer!', {
+          duration: 4000,
+          icon: '🚀',
+        });
       }
-    });
-    setSearchParams(params);
-  }, [filters, setSearchParams]);
+    } catch (error) {
+      console.error('Error creating challenge:', error);
+      toast.error(error.response?.data?.message || 'Failed to create challenge');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-  // Filter challenges based on search term
-  const filteredChallenges = challenges.filter(challenge =>
-    challenge.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    challenge.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    challenge.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleUpdateChallenge = async (challengeData) => {
+    try {
+      setSubmitting(true);
+      const response = await challengeService.updateChallenge(editingChallenge.id, challengeData);
+      if (response.success) {
+        setChallenges(prev => prev.map(challenge => 
+          challenge.id === editingChallenge.id ? response.data : challenge
+        ));
+        setEditingChallenge(null);
+        
+        // Check if challenge was completed and trigger celebration 🏆
+        if (response.data.status === 'completed' && editingChallenge.status !== 'completed') {
+          setShowCelebration(true);
+          toast.success('🏆 CHALLENGE COMPLETED! You are unstoppable!', {
+            duration: 5000,
+            icon: '🎊',
+          });
+        } else {
+          toast.success('✨ Challenge updated successfully!');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating challenge:', error);
+      toast.error(error.response?.data?.message || 'Failed to update challenge');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-  const handleCreateChallenge = () => {
-    setEditingChallenge(null);
-    setShowForm(true);
+  const handleDeleteChallenge = async (challengeId) => {
+    if (!confirm('Are you sure you want to delete this challenge? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await challengeService.deleteChallenge(challengeId);
+      if (response.success) {
+        setChallenges(prev => prev.filter(challenge => challenge.id !== challengeId));
+        toast.success('Challenge deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting challenge:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete challenge');
+    }
   };
 
   const handleEditChallenge = (challenge) => {
@@ -79,159 +121,136 @@ const ChallengesPage = () => {
     setShowForm(true);
   };
 
-  const handleDeleteChallenge = async (challengeId) => {
-    if (!window.confirm('Are you sure you want to delete this challenge?')) {
-      return;
-    }
-
-    try {
-      await challengeService.deleteChallenge(challengeId);
-      setChallenges(prev => prev.filter(c => c.id !== challengeId));
-    } catch (err) {
-      console.error('Error deleting challenge:', err);
-      setError('Failed to delete challenge. Please try again.');
-    }
-  };
-
-  const handleFormSubmit = async (challengeData) => {
-    try {
-      if (editingChallenge) {
-        const response = await challengeService.updateChallenge(editingChallenge.id, challengeData);
-        setChallenges(prev => prev.map(c => 
-          c.id === editingChallenge.id ? response.data : c
-        ));
-      } else {
-        const response = await challengeService.createChallenge(challengeData);
-        setChallenges(prev => [response.data, ...prev]);
-      }
-      setShowForm(false);
-      setEditingChallenge(null);
-    } catch (err) {
-      console.error('Error saving challenge:', err);
-      throw err; // Let the form handle the error display
-    }
-  };
-
-  const handleFormCancel = () => {
+  const handleCancelForm = () => {
     setShowForm(false);
     setEditingChallenge(null);
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
+  const filteredChallenges = challenges.filter(challenge => {
+    if (filters.category && challenge.category !== filters.category) return false;
+    if (filters.difficulty && challenge.difficulty_level !== filters.difficulty) return false;
+    if (filters.status && challenge.status !== filters.status) return false;
+    return true;
+  });
 
-  const clearFilters = () => {
-    setFilters({
-      difficulty: '',
-      category: '',
-      status: 'all',
-      goalId: '',
-    });
-    setSearchTerm('');
-  };
+  const categories = [...new Set(challenges.map(challenge => challenge.category).filter(Boolean))];
+  const completedChallenges = challenges.filter(challenge => challenge.status === 'completed').length;
+  const averageProgress = challenges.length > 0 
+    ? Math.round(challenges.reduce((sum, challenge) => {
+        const progress = challenge.status === 'completed' ? 100 : 
+                        challenge.status === 'in_progress' ? 50 : 0;
+        return sum + progress;
+      }, 0) / challenges.length)
+    : 0;
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-64">
+          <LoadingSpinner />
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (
-    <div className="challenges-page min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Enhanced Header */}
-        <div className="relative mb-12">
-          <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 dark:from-purple-500 dark:via-indigo-500 dark:to-blue-500 rounded-3xl p-8 text-white shadow-2xl overflow-hidden">
-            <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
-            <div className="relative z-10">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-4xl">⚡</span>
-                    <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-100">
-                      Challenges Hub
-                    </h1>
-                  </div>
-                  <p className="text-purple-100 dark:text-purple-200 text-lg leading-relaxed max-w-2xl">
-                    🚀 Sharpen your skills with coding challenges designed to push your limits and accelerate your learning journey
-                  </p>
-                  <div className="flex items-center gap-6 mt-6 text-sm">
-                    <div className="flex items-center gap-2 bg-white/20 dark:bg-white/30 px-4 py-2 rounded-full backdrop-blur-sm">
-                      <span>📊</span>
-                      <span className="text-white">{filteredChallenges.length} Challenges Available</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-white/20 dark:bg-white/30 px-4 py-2 rounded-full backdrop-blur-sm">
-                      <span>🎯</span>
-                      <span className="text-white">Multiple Difficulty Levels</span>
-                    </div>
-                  </div>
+    <DashboardLayout>
+      {/* 🎉 CELEBRATION PRESERVED! 🎉 */}
+      {showCelebration && (
+        <ConfettiCelebration onComplete={() => setShowCelebration(false)} />
+      )}
+      
+      <div className="challenges-page relative">
+        {/* Enhanced Page Header with Gradient Background */}
+        <div className="page-header mb-8 p-8 rounded-2xl bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-500 dark:from-purple-600 dark:via-indigo-600 dark:to-blue-600 text-white shadow-xl">
+          <div className="flex justify-between items-center">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold text-white mb-2">
+                ⚡ My Challenges
+              </h1>
+              <div className="flex items-center space-x-6 text-white/90 dark:text-white/95">
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">📊</span>
+                  <span className="font-medium">{challenges.length} challenges</span>
                 </div>
-                <button
-                  onClick={handleCreateChallenge}
-                  className="bg-white text-purple-600 hover:text-purple-700 dark:bg-gray-100 dark:text-purple-600 font-bold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center gap-3"
-                >
-                  <span className="text-xl">✨</span>
-                  <span>Create Challenge</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">🏆</span>
+                  <span className="font-medium">{completedChallenges} completed</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">📈</span>
+                  <span className="font-medium">{averageProgress}% average progress</span>
+                </div>
               </div>
             </div>
-            {/* Decorative Elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
-            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-purple-400/20 rounded-full blur-2xl"></div>
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-white dark:bg-gray-100 text-purple-600 dark:text-purple-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-200 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
+              disabled={showForm}
+            >
+              <span className="text-xl">✨</span>
+              <span>Create New Challenge</span>
+            </button>
           </div>
         </div>
 
-        {error && (
-          <div className="mb-8 animate-fadeIn">
-            <ErrorMessage 
-              message={error} 
-              onDismiss={() => setError(null)}
-              className="shadow-lg"
-            />
+        {/* Enhanced Challenge Form Modal */}
+        {showForm && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-screen overflow-y-auto shadow-2xl animate-slideUp">
+              <div className="p-8">
+                <div className="flex items-center space-x-3 mb-6">
+                  <span className="text-3xl">{editingChallenge ? '✏️' : '⚡'}</span>
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                    {editingChallenge ? 'Edit Challenge' : 'Create New Challenge'}
+                  </h2>
+                </div>
+                <ChallengeForm
+                  challenge={editingChallenge}
+                  onSubmit={editingChallenge ? handleUpdateChallenge : handleCreateChallenge}
+                  onCancel={handleCancelForm}
+                  isLoading={submitting}
+                />
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Enhanced Filters and Search */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 dark:border-gray-600/50 p-8 mb-8 animate-fadeInUp">
-          <div className="flex items-center gap-3 mb-6">
+        {/* Enhanced Filters with Glass Effect */}
+        <div className="challenges-filters bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-xl shadow-lg mb-8 border border-white/20 dark:border-gray-600/20">
+          <div className="flex items-center space-x-3 mb-4">
             <span className="text-2xl">🔍</span>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Find Your Perfect Challenge</h2>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Filter Challenges</h3>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            {/* Enhanced Search */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                <span>🔎</span>
-                Search Challenges
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                📁 Category
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by title, description..."
-                  className="w-full pl-4 pr-12 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-purple-400 dark:focus:border-purple-300 focus:ring-4 focus:ring-purple-400/20 transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-              </div>
+              <select
+                value={filters.category}
+                onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+                className="form-select w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-purple-500 dark:focus:border-purple-400 transition-colors"
+              >
+                <option value="">All Categories</option>
+                {categories.map(category => (
+                  <option key={category} value={category}>
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Enhanced Difficulty Filter */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                <span>⚡</span>
-                Difficulty Level
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                ⚡ Difficulty
               </label>
               <select
                 value={filters.difficulty}
-                onChange={(e) => handleFilterChange('difficulty', e.target.value)}
-                className="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-purple-400 dark:focus:border-purple-300 focus:ring-4 focus:ring-purple-400/20 transition-all duration-200 text-gray-900 dark:text-gray-100"
+                onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value }))}
+                className="form-select w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-purple-500 dark:focus:border-purple-400 transition-colors"
               >
-                <option value="">🌟 All Levels</option>
+                <option value="">All Difficulties</option>
                 <option value="easy">🟢 Easy</option>
                 <option value="medium">🟡 Medium</option>
                 <option value="hard">🟠 Hard</option>
@@ -239,133 +258,96 @@ const ChallengesPage = () => {
               </select>
             </div>
 
-            {/* Enhanced Category Filter */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                <span>📂</span>
-                Category
-              </label>
-              <select
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-purple-400 dark:focus:border-purple-300 focus:ring-4 focus:ring-purple-400/20 transition-all duration-200 text-gray-900 dark:text-gray-100"
-              >
-                <option value="">📁 All Categories</option>
-                <option value="programming">💻 Programming</option>
-                <option value="web development">🌐 Web Development</option>
-                <option value="data science">📊 Data Science</option>
-                <option value="algorithms">🧮 Algorithms</option>
-                <option value="database">🗄️ Database</option>
-                <option value="system design">🏗️ System Design</option>
-              </select>
-            </div>
-
-            {/* Enhanced Status Filter */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                <span>📈</span>
-                Progress Status
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                📊 Status
               </label>
               <select
                 value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-purple-400 dark:focus:border-purple-300 focus:ring-4 focus:ring-purple-400/20 transition-all duration-200 text-gray-900 dark:text-gray-100"
+                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                className="form-select w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-purple-500 dark:focus:border-purple-400 transition-colors"
               >
-                <option value="all">📋 All Challenges</option>
+                <option value="">All Statuses</option>
                 <option value="not_started">🆕 Not Started</option>
                 <option value="in_progress">⏳ In Progress</option>
                 <option value="completed">✅ Completed</option>
               </select>
             </div>
-          </div>
 
-          {/* Enhanced Filter Actions */}
-          <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-600">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                <span className="text-lg">📊</span>
-                <span className="font-semibold text-gray-800 dark:text-gray-100">{filteredChallenges.length}</span>
-                <span>challenge{filteredChallenges.length !== 1 ? 's' : ''} found</span>
-              </div>
-              {(searchTerm || Object.values(filters).some(v => v && v !== 'all')) && (
-                <div className="flex items-center gap-2 text-sm bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full">
-                  <span>🔍</span>
-                  <span>Filters active</span>
-                </div>
-              )}
+            <div className="flex items-end">
+              <button
+                onClick={() => setFilters({ category: '', status: '', difficulty: '', goalId: '' })}
+                className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105"
+              >
+                🗑️ Clear Filters
+              </button>
             </div>
-            <button
-              onClick={clearFilters}
-              className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 bg-purple-50 dark:bg-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-900 px-4 py-2 rounded-xl transition-colors font-medium"
-            >
-              <span>🧹</span>
-              <span>Clear All Filters</span>
-            </button>
           </div>
         </div>
 
-        {/* Challenge Form Modal */}
-        {showForm && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-slideUp">
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="text-2xl">✨</span>
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-                    {editingChallenge ? 'Edit Challenge' : 'Create New Challenge'}
-                  </h2>
-                </div>
-                <ChallengeForm
-                  challenge={editingChallenge}
-                  onSubmit={handleFormSubmit}
-                  onCancel={handleFormCancel}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Enhanced Challenges Grid */}
-        {filteredChallenges.length === 0 ? (
-          <div className="text-center py-16 animate-fadeIn">
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-12 max-w-md mx-auto shadow-lg border border-white/50 dark:border-gray-600/50">
-              <div className="text-6xl mb-6">🎯</div>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">No challenges found</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
-                {searchTerm || Object.values(filters).some(v => v && v !== 'all')
-                  ? '🔍 Try adjusting your search criteria or clear the filters to see all available challenges.'
-                  : '🚀 Ready to start your coding journey? Create your first challenge and begin building your skills!'}
-              </p>
-              {!searchTerm && !Object.values(filters).some(v => v && v !== 'all') && (
-                <button
-                  onClick={handleCreateChallenge}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center gap-3 mx-auto"
+        <div className="challenges-grid">
+          {filteredChallenges.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredChallenges.map((challenge, index) => (
+                <div 
+                  key={challenge.id}
+                  className="animate-fadeInUp"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <span className="text-xl">✨</span>
-                  <span>Create Your First Challenge</span>
-                </button>
-              )}
+                  <ChallengeCard
+                    challenge={challenge}
+                    onEdit={() => handleEditChallenge(challenge)}
+                    onDelete={() => handleDeleteChallenge(challenge.id)}
+                  />
+                </div>
+              ))}
             </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fadeInUp">
-            {filteredChallenges.map((challenge, index) => (
-              <div 
-                key={challenge.id}
-                className="animate-fadeInUp"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <ChallengeCard
-                  challenge={challenge}
-                  onEdit={() => handleEditChallenge(challenge)}
-                  onDelete={() => handleDeleteChallenge(challenge.id)}
-                />
+          ) : challenges.length === 0 ? (
+            <div className="empty-state text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+              <div className="mx-auto w-32 h-32 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                <span className="text-6xl">⚡</span>
               </div>
-            ))}
-          </div>
-        )}
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">Ready to Challenge Yourself?</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto text-lg">
+                Create your first coding challenge to start building your skills and tracking your progress. 
+                Every expert was once a beginner! 🚀
+              </p>
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                ✨ Create Your First Challenge
+              </button>
+            </div>
+          ) : (
+            <div className="empty-state text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+              <div className="mx-auto w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700 rounded-full flex items-center justify-center mb-6">
+                <span className="text-6xl">🔍</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">No Challenges Match Your Filters</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto text-lg">
+                Try adjusting your filters to discover more challenges, or create a new one!
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => setFilters({ category: '', status: '', difficulty: '', goalId: '' })}
+                  className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105"
+                >
+                  🗑️ Clear Filters
+                </button>
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                >
+                  ✨ Create New Challenge
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

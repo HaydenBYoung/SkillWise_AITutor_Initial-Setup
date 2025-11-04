@@ -7,7 +7,7 @@ export const challengeService = {
   async getChallenges() {
     try {
       const response = await apiService.get(CHALLENGES_ENDPOINT);
-      return response.data;
+      return response.data; // This should be { success: true, data: [...], message: '...' }
     } catch (error) {
       console.error('Error fetching challenges:', error);
       throw error;
@@ -62,7 +62,7 @@ export const challengeService = {
   async deleteChallenge(challengeId) {
     try {
       await apiService.delete(`${CHALLENGES_ENDPOINT}/${challengeId}`);
-      return true;
+      return { success: true };
     } catch (error) {
       console.error(`Error deleting challenge ${challengeId}:`, error);
       throw error;
@@ -86,7 +86,7 @@ export const challengeService = {
       const queryParams = new URLSearchParams(filters).toString();
       const url = queryParams ? `${CHALLENGES_ENDPOINT}?${queryParams}` : CHALLENGES_ENDPOINT;
       const response = await apiService.get(url);
-      return response.data;
+      return response.data; // This should be { success: true, data: [...], message: '...' }
     } catch (error) {
       console.error('Error fetching filtered challenges:', error);
       throw error;
