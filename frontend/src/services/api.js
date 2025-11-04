@@ -247,6 +247,11 @@ export const apiService = {
   },
 };
 
+// Export specific API sections for backward compatibility
+export const goalsApi = apiService.goals;
+export const challengesApi = apiService.challenges;
+export const progressApi = apiService.progress;
+
 // Export utilities for external use
 export { getAccessToken, setAccessToken, clearTokens };
 

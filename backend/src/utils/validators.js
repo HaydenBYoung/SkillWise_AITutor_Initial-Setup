@@ -97,6 +97,96 @@ const validateFileUpload = (file, options = {}) => {
   };
 };
 
+// Goal validation
+const validateGoalData = (goalData, isPartial = false) => {
+  const errors = [];
+  const { title, description, category, difficulty_level, target_completion_date } = goalData;
+
+  // Title validation (required for new goals)
+  if (!isPartial && (!title || title.trim().length === 0)) {
+    errors.push('Title is required');
+  } else if (title && (title.length < 3 || title.length > 255)) {
+    errors.push('Title must be between 3 and 255 characters');
+  }
+
+  // Description validation (optional but has limits)
+  if (description && description.length > 2000) {
+    errors.push('Description cannot exceed 2000 characters');
+  }
+
+  // Category validation (optional but has limits)
+  if (category && category.length > 100) {
+    errors.push('Category cannot exceed 100 characters');
+  }
+
+  // Difficulty level validation
+  if (difficulty_level && !['easy', 'medium', 'hard', 'expert'].includes(difficulty_level)) {
+    errors.push('Difficulty level must be one of: easy, medium, hard, expert');
+  }
+
+  // Target completion date validation
+  if (target_completion_date) {
+    const targetDate = new Date(target_completion_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (isNaN(targetDate.getTime())) {
+      errors.push('Invalid target completion date');
+    } else if (targetDate < today) {
+      errors.push('Target completion date cannot be in the past');
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
+};
+
+// Challenge validation
+const validateChallengeData = (challengeData, isPartial = false) => {
+  const errors = [];
+  const { title, description, difficulty_level, estimated_time_minutes, category } = challengeData;
+
+  // Title validation (required for new challenges)
+  if (!isPartial && (!title || title.trim().length === 0)) {
+    errors.push('Title is required');
+  } else if (title && (title.length < 3 || title.length > 255)) {
+    errors.push('Title must be between 3 and 255 characters');
+  }
+
+  // Description validation (required for new challenges)
+  if (!isPartial && (!description || description.trim().length === 0)) {
+    errors.push('Description is required');
+  } else if (description && description.length > 2000) {
+    errors.push('Description cannot exceed 2000 characters');
+  }
+
+  // Category validation (required for new challenges)
+  if (!isPartial && (!category || category.trim().length === 0)) {
+    errors.push('Category is required');
+  } else if (category && category.length > 100) {
+    errors.push('Category cannot exceed 100 characters');
+  }
+
+  // Difficulty level validation
+  if (difficulty_level && !['easy', 'medium', 'hard', 'expert'].includes(difficulty_level)) {
+    errors.push('Difficulty level must be one of: easy, medium, hard, expert');
+  }
+
+  // Estimated time validation
+  if (estimated_time_minutes !== undefined) {
+    if (!Number.isInteger(estimated_time_minutes) || estimated_time_minutes < 1 || estimated_time_minutes > 1440) {
+      errors.push('Estimated time must be a whole number between 1 and 1440 minutes');
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
+};
+
 module.exports = {
   validateEmail,
   validatePassword,
@@ -105,6 +195,8 @@ module.exports = {
   validateUrl,
   validateDate,
   validateObjectId,
+  validateGoalData,
+  validateChallengeData,
   sanitizeString,
   validateFileUpload,
 };
