@@ -29,12 +29,12 @@ const DashboardLayout = ({ children }) => {
           <h2>SkillWise</h2>
           <p>Welcome, {user?.firstName || 'Student'}!</p>
         </div>
-        
+
         <nav className="sidebar-navigation">
           <ul>
             {navigationItems.map((item) => (
               <li key={item.path}>
-                <Link 
+                <Link
                   to={item.path}
                   className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
                 >
@@ -47,7 +47,7 @@ const DashboardLayout = ({ children }) => {
         </nav>
 
         <div className="sidebar-footer">
-          <button 
+          <button
             onClick={handleLogout}
             className="logout-button"
           >

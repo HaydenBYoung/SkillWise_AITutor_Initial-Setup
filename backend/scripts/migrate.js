@@ -6,15 +6,15 @@ const path = require('path');
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://skillwise_user:skillwise_pass@localhost:5433/skillwise_db'
+  connectionString: process.env.DATABASE_URL || 'postgresql://skillwise_user:skillwise_pass@localhost:5433/skillwise_db',
 });
 
 const migrationsDir = path.join(__dirname, '../database/migrations');
 
-async function runMigrations() {
+async function runMigrations () {
   try {
     console.log('Starting database migrations...');
-    
+
     // TODO: Create migrations table if not exists
     await pool.query(`
       CREATE TABLE IF NOT EXISTS migrations (
@@ -26,12 +26,12 @@ async function runMigrations() {
 
     // TODO: Read migration files and execute in order
     const files = fs.readdirSync(migrationsDir).sort();
-    
+
     for (const file of files) {
       if (file.endsWith('.sql')) {
         // TODO: Check if migration already executed
         const result = await pool.query('SELECT * FROM migrations WHERE filename = $1', [file]);
-        
+
         if (result.rows.length === 0) {
           console.log(`Executing migration: ${file}`);
           const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
@@ -43,7 +43,7 @@ async function runMigrations() {
         }
       }
     }
-    
+
     console.log('All migrations completed successfully!');
   } catch (error) {
     console.error('Migration failed:', error);

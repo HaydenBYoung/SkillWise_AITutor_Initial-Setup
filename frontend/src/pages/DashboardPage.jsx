@@ -10,7 +10,7 @@ const DashboardPage = () => {
         <h1>Dashboard</h1>
         <p>Track your learning progress and achievements</p>
       </div>
-      
+
       <DashboardOverview />
     </DashboardLayout>
   );

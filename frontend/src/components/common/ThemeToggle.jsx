@@ -5,7 +5,7 @@ const ThemeToggle = () => {
   const { isDark, toggleTheme } = useTheme();
 
   return (
-    <button 
+    <button
       onClick={toggleTheme}
       className="theme-toggle"
       aria-label="Toggle dark mode"
@@ -54,7 +54,7 @@ const ThemeToggle = () => {
           }
         }
       `}</style>
-      
+
       <span className="theme-icon">
         {isDark ? '☀️' : '🌙'}
       </span>

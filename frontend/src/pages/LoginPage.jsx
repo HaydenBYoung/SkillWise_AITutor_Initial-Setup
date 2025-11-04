@@ -21,12 +21,12 @@ const LoginPage = () => {
     try {
       setIsLoading(true);
       setError('');
-      
+
       const result = await login({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
       });
-      
+
       if (result.success) {
         setShowConfetti(true);
         // Navigate after a short delay to show the celebration
@@ -74,7 +74,7 @@ const LoginPage = () => {
                 Sign up here
               </Link>
             </p>
-            
+
             <p>
               <Link to="/forgot-password" className="auth-link">
                 Forgot your password?
@@ -92,7 +92,7 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
-      
+
       {showConfetti && (
         <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
       )}

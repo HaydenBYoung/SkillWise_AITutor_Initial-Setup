@@ -1,7 +1,7 @@
 const db = require('../database/connection');
 
 class Goal {
-  static async findByUserId(userId) {
+  static async findByUserId (userId) {
     try {
       const query = 'SELECT * FROM goals WHERE user_id = $1 ORDER BY created_at DESC';
       const result = await db.query(query, [userId]);
@@ -11,7 +11,7 @@ class Goal {
     }
   }
 
-  static async findById(goalId) {
+  static async findById (goalId) {
     try {
       const query = 'SELECT * FROM goals WHERE id = $1';
       const result = await db.query(query, [goalId]);
@@ -21,7 +21,7 @@ class Goal {
     }
   }
 
-  static async create(goalData) {
+  static async create (goalData) {
     try {
       const { title, description, user_id, target_date, type } = goalData;
       const query = `
@@ -36,7 +36,7 @@ class Goal {
     }
   }
 
-  static async update(goalId, updateData) {
+  static async update (goalId, updateData) {
     try {
       const { title, description, target_date, progress, status } = updateData;
       const query = `
@@ -57,7 +57,7 @@ class Goal {
     }
   }
 
-  static async delete(goalId) {
+  static async delete (goalId) {
     try {
       const query = 'DELETE FROM goals WHERE id = $1 RETURNING *';
       const result = await db.query(query, [goalId]);

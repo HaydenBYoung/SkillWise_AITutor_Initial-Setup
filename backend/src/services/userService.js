@@ -6,7 +6,7 @@ const userService = {
   getUserById: async (userId) => {
     const { rows } = await db.query(
       'SELECT id, first_name, last_name, email, created_at, updated_at FROM users WHERE id = $1',
-      [userId]
+      [userId],
     );
     return rows[0];
   },
@@ -38,7 +38,7 @@ const userService = {
       `UPDATE users SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP 
        WHERE id = $${paramCount} 
        RETURNING id, first_name, last_name, email, created_at, updated_at`,
-      values
+      values,
     );
 
     return rows[0];
@@ -50,14 +50,14 @@ const userService = {
     return await db.withTransaction(async (query) => {
       // Delete all refresh tokens first (to prevent logout issues)
       await query('DELETE FROM refresh_tokens WHERE user_id = $1', [userId]);
-      
+
       // Delete the user (start simple, add other tables as they're implemented)
       const result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [userId]);
-      
+
       if (result.rowCount === 0) {
         throw new Error('User not found');
       }
-      
+
       return { deleted: true, userId };
     });
   },
@@ -67,7 +67,7 @@ const userService = {
     // This would integrate with user_statistics table
     const { rows } = await db.query(
       'SELECT * FROM user_statistics WHERE user_id = $1',
-      [userId]
+      [userId],
     );
     return rows[0] || null;
   },

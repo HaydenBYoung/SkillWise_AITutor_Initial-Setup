@@ -37,7 +37,7 @@ const authService = {
 
     await db.query(
       'INSERT INTO refresh_tokens(token, user_id, expires_at, is_revoked) VALUES($1, $2, $3, false)',
-      [refreshToken, user.id, expiresAt]
+      [refreshToken, user.id, expiresAt],
     );
 
     return {
@@ -46,10 +46,10 @@ const authService = {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role
+        role: user.role,
       },
       accessToken,
-      refreshToken
+      refreshToken,
     };
   },
 
@@ -68,7 +68,7 @@ const authService = {
     const insert = await db.query(
       `INSERT INTO users (email, password_hash, first_name, last_name)
        VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name, role`,
-      [email, passwordHash, firstName, lastName]
+      [email, passwordHash, firstName, lastName],
     );
 
     const user = insert.rows[0];
@@ -87,10 +87,10 @@ const authService = {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role
+        role: user.role,
       },
       accessToken,
-      refreshToken
+      refreshToken,
     };
   },
 
@@ -140,7 +140,7 @@ const authService = {
   resetPassword: async (email) => {
     // Implementation would generate token and email user
     return true;
-  }
+  },
 };
 
 module.exports = authService;

@@ -11,7 +11,7 @@ jest.mock('bcryptjs');
 
 describe('Auth API', () => {
   const baseUrl = '/api/auth';
-  
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -22,7 +22,7 @@ describe('Auth API', () => {
       password: 'Password123!',
       confirmPassword: 'Password123!',
       firstName: 'Test',
-      lastName: 'User'
+      lastName: 'User',
     };
 
     beforeEach(() => {
@@ -87,7 +87,7 @@ describe('Auth API', () => {
   describe('POST /login', () => {
     const credentials = {
       email: 'test@example.com',
-      password: 'Password123!'
+      password: 'Password123!',
     };
 
     const mockUser = {
@@ -96,7 +96,7 @@ describe('Auth API', () => {
       password_hash: 'hashedPassword123',
       first_name: 'Test',
       last_name: 'User',
-      role: 'student'
+      role: 'student',
     };
 
     beforeEach(() => {
@@ -159,13 +159,13 @@ describe('Auth API', () => {
         token: mockRefreshToken,
         user_id: 1,
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        is_revoked: false
+        is_revoked: false,
       };
 
       // Mock token verification
       jwt.verifyRefreshToken.mockReturnValue({ id: 1, email: 'test@example.com', role: 'student' });
       jwt.generateToken.mockReturnValue('newAccessToken123');
-      
+
       // Mock DB response
       db.query.mockResolvedValueOnce({ rows: [mockTokenRecord] });
 
@@ -194,7 +194,7 @@ describe('Auth API', () => {
   describe('POST /logout', () => {
     it('should logout successfully', async () => {
       const mockRefreshToken = 'validRefreshToken123';
-      
+
       // Mock DB update
       db.query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
 

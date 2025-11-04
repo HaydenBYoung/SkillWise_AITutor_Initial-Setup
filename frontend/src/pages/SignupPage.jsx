@@ -30,10 +30,10 @@ const signupSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number'),
   confirmPassword: z
     .string()
-    .min(1, 'Please confirm your password')
+    .min(1, 'Please confirm your password'),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword']
+  message: 'Passwords don\'t match',
+  path: ['confirmPassword'],
 });
 
 const SignupPage = () => {
@@ -46,10 +46,10 @@ const SignupPage = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(signupSchema),
-    mode: 'onSubmit'
+    mode: 'onSubmit',
   });
 
   const onSubmit = async (formData) => {
@@ -58,19 +58,19 @@ const SignupPage = () => {
     try {
       setIsLoading(true);
       setError('');
-      
+
       const result = await registerUser({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        confirmPassword: formData.confirmPassword
+        confirmPassword: formData.confirmPassword,
       });
-      
+
       if (result.success) {
         // Show celebration!
         setShowConfetti(true);
-        
+
         // Wait a moment for confetti, then navigate
         setTimeout(() => {
           navigate('/dashboard');
@@ -175,8 +175,8 @@ const SignupPage = () => {
                 )}
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn-primary"
                 disabled={isSubmitting || isLoading}
               >
@@ -208,7 +208,7 @@ const SignupPage = () => {
           </div>
         </div>
       </div>
-      
+
       {showConfetti && (
         <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
       )}

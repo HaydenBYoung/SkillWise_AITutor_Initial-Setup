@@ -37,7 +37,7 @@ const ProfilePage = () => {
         { id: 2, name: 'Streak Master', icon: '🔥', description: 'Maintain a 7-day learning streak', earned: false },
         { id: 3, name: 'Goal Crusher', icon: '🎯', description: 'Complete 5 learning goals', earned: false },
         { id: 4, name: 'Code Reviewer', icon: '👥', description: 'Provide 10 peer reviews', earned: false },
-        { id: 5, name: 'Challenge Master', icon: '💪', description: 'Complete 50 challenges', earned: false }
+        { id: 5, name: 'Challenge Master', icon: '💪', description: 'Complete 50 challenges', earned: false },
       ],
       skills: [],
       recentActivity: [],
@@ -46,8 +46,8 @@ const ProfilePage = () => {
         pushNotifications: false,
         weeklyDigest: true,
         publicProfile: true,
-        showProgress: true
-      }
+        showProgress: true,
+      },
     };
 
     setTimeout(() => {
@@ -61,14 +61,14 @@ const ProfilePage = () => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     // TODO: Replace with actual API call
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -88,7 +88,7 @@ const ProfilePage = () => {
       challenge: '🏆',
       goal: '🎯',
       review: '👥',
-      streak: '🔥'
+      streak: '🔥',
     };
     return icons[type] || '📝';
   };
@@ -97,7 +97,7 @@ const ProfilePage = () => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -105,7 +105,7 @@ const ProfilePage = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     return `${Math.floor(diffInHours / 24)}d ago`;
@@ -114,7 +114,7 @@ const ProfilePage = () => {
   const handleDeleteAccount = async () => {
     try {
       setLoading(true);
-      
+
       // Use the API service instead of manual fetch
       await apiService.user.deleteAccount();
 
@@ -151,7 +151,7 @@ const ProfilePage = () => {
               <span className="avatar-icon">{profileData?.avatar}</span>
               <div className="level-badge">Level {profileData?.level}</div>
             </div>
-            
+
             <div className="profile-details">
               <h1>{profileData?.firstName} {profileData?.lastName}</h1>
               <p className="profile-bio">{profileData?.bio}</p>
@@ -181,7 +181,7 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            <button 
+            <button
               className="btn-primary"
               onClick={() => setIsEditing(!isEditing)}
             >
@@ -247,7 +247,7 @@ const ProfilePage = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="bio">Bio</label>
                 <textarea
@@ -259,7 +259,7 @@ const ProfilePage = () => {
                   placeholder="Share a bit about yourself and your learning journey..."
                 />
               </div>
-              
+
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="location">Location</label>
@@ -289,8 +289,8 @@ const ProfilePage = () => {
               <button type="submit" className="btn-primary" disabled={loading}>
                 {loading ? 'Saving...' : 'Save Changes'}
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="btn-secondary"
                 onClick={() => setIsEditing(false)}
               >
@@ -356,7 +356,7 @@ const ProfilePage = () => {
                   </div>
                   <div className="skill-progress">
                     <div className="progress-bar">
-                      <div 
+                      <div
                         className="progress-fill"
                         style={{ width: `${skill.level}%` }}
                       ></div>
@@ -403,7 +403,7 @@ const ProfilePage = () => {
                   />
                   <span>Email notifications</span>
                 </label>
-                
+
                 <label className="setting-item">
                   <input
                     type="checkbox"
@@ -413,7 +413,7 @@ const ProfilePage = () => {
                   />
                   <span>Push notifications</span>
                 </label>
-                
+
                 <label className="setting-item">
                   <input
                     type="checkbox"
@@ -438,7 +438,7 @@ const ProfilePage = () => {
                   />
                   <span>Public profile</span>
                 </label>
-                
+
                 <label className="setting-item">
                   <input
                     type="checkbox"
@@ -452,7 +452,7 @@ const ProfilePage = () => {
             </div>
 
             <div className="settings-actions">
-              <button 
+              <button
                 className="btn-primary"
                 onClick={handleSubmit}
                 disabled={loading}
@@ -464,7 +464,7 @@ const ProfilePage = () => {
             <div className="settings-section danger-zone">
               <h3>⚠️ Danger Zone</h3>
               <p>Once you delete your account, there is no going back. Please be certain.</p>
-              <button 
+              <button
                 className="btn-danger"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={loading}
@@ -483,16 +483,16 @@ const ProfilePage = () => {
             <h2>⚠️ Delete Account?</h2>
             <p>Are you absolutely sure you want to delete your account?</p>
             <p><strong>This action cannot be undone.</strong> All your data, progress, and achievements will be permanently deleted.</p>
-            
+
             <div className="modal-actions">
-              <button 
+              <button
                 className="btn-danger"
                 onClick={handleDeleteAccount}
                 disabled={loading}
               >
                 {loading ? 'Deleting...' : 'Yes, Delete My Account'}
               </button>
-              <button 
+              <button
                 className="btn-secondary"
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={loading}
