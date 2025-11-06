@@ -1,13 +1,18 @@
-// TODO: Implement goal card component
 import {} from 'react';
 
-const GoalCard = ({ goal }) => {
-  // TODO: Add progress bar, completion status, actions
+const GoalCard = ({ goal, onComplete }) => {
+  // Goal card displays title, description, progress bar and actions (edit/delete/complete)
   return (
     <div className="goal-card">
       <div className="goal-header">
         <h3>{goal?.title || 'Goal Title'}</h3>
         <span className="goal-category">{goal?.category || 'Category'}</span>
+      </div>
+
+      <div className="goal-actions">
+        {goal.status !== 'completed' && (
+          <button onClick={() => onComplete(goal.id)}>Mark Complete</button>
+        )}
       </div>
 
       <div className="goal-content">

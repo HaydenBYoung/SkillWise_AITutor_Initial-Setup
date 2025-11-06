@@ -1,7 +1,7 @@
-// TODO: Implement dashboard page with navigation
+// Dashboard page (overview component mounted below) — ensure DashboardOverview is completed with real data
 import {} from 'react';
-import {} from '../components/dashboard/DashboardOverview';
-import {} from '../components/common/DashboardLayout';
+import DashboardOverview from '../components/dashboard/DashboardOverview';
+import DashboardLayout from '../components/common/DashboardLayout';
 
 const DashboardPage = () => {
   return (

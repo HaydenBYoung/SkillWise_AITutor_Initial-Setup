@@ -1,8 +1,8 @@
-// TODO: Implement loading spinner component
+// Loading spinner component (simple placeholder). Consider adding variants and animations.
 import {} from 'react';
 
 const LoadingSpinner = ({ size = 'medium', message = 'Loading...' }) => {
-  // TODO: Add different spinner sizes and animations
+  // Simple spinner UI; can be enhanced with different sizes and animations
   return (
     <div className={`loading-spinner ${size}`}>
       <div className="spinner"></div>

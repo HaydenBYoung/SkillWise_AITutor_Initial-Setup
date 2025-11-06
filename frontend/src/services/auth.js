@@ -1,71 +1,62 @@
-// TODO: Implement authentication API service
-import api from './api';
+import { apiService } from './api';
+import { setAccessToken, getAccessToken, clearTokens } from './api';
 
+// Lightweight helper wrapper around apiService.auth to keep storage keys consistent
 export const authService = {
-  // TODO: Login user
   async login(email, password) {
-    try {
-      const response = await api.post('/auth/login', { email, password });
-      const { token, refreshToken, user } = response.data;
-      
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      return { token, refreshToken, user };
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Login failed');
+    const payload = await apiService.auth.login({ email, password });
+    // backend returns { user, accessToken } and sets httpOnly refresh cookie
+    const { user, accessToken } = payload || {};
+
+    if (accessToken) {
+      setAccessToken(accessToken);
     }
+
+    if (user) {
+      try {
+        localStorage.setItem('user', JSON.stringify(user));
+      } catch (e) {
+        console.warn('Failed to persist user in localStorage', e);
+      }
+    }
+
+    return payload;
   },
 
-  // TODO: Register new user
   async register(userData) {
-    try {
-      const response = await api.post('/auth/register', userData);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Registration failed');
-    }
+    const payload = await apiService.auth.register(userData);
+    const { user, accessToken } = payload || {};
+    if (accessToken) setAccessToken(accessToken);
+    if (user) localStorage.setItem('user', JSON.stringify(user));
+    return payload;
   },
 
-  // TODO: Logout user
   async logout() {
     try {
-      await api.post('/auth/logout');
-    } catch (error) {
-      // Continue with local cleanup even if API call fails
-      console.warn('Logout API call failed:', error);
+      await apiService.auth.logout();
+    } catch (err) {
+      console.warn('Logout API failed', err);
     } finally {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('refreshToken');
+      clearTokens();
       localStorage.removeItem('user');
     }
   },
 
-  // TODO: Refresh token
   async refreshToken() {
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      const response = await api.post('/auth/refresh', { refreshToken });
-      const { token } = response.data;
-      
-      localStorage.setItem('authToken', token);
-      return token;
-    } catch (error) {
-      throw new Error('Token refresh failed');
-    }
+    const data = await apiService.auth.refresh();
+    const { accessToken } = data || {};
+    if (accessToken) setAccessToken(accessToken);
+    return accessToken;
   },
 
-  // TODO: Get current user
   getCurrentUser() {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
   },
 
-  // TODO: Check if user is authenticated
   isAuthenticated() {
-    return !!localStorage.getItem('authToken');
-  }
+    return !!getAccessToken();
+  },
 };
 
 export default authService;

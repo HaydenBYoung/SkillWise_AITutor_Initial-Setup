@@ -1,10 +1,12 @@
-// TODO: Implement login page with form handling
+// Login page with form handling and post-login flow
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; //Link
+import { Link, useNavigate, useLocation } from 'react-router-dom'; //Link
+
 import { useAuth } from '../hooks/useAuth';
-import {} from '../components/auth/LoginForm';
-import {} from '../components/common/LoadingSpinner';
-import {} from '../components/common/ConfettiCelebration';
+
+import LoginForm from '../components/auth/LoginForm';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ConfettiCelebration from '../components/common/ConfettiCelebration';
 
 const LoginPage = () => {
   const [error, setError] = useState('');

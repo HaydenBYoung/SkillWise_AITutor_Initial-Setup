@@ -1,22 +1,22 @@
-// TODO: Implement goal routes
+// Goal routes (CRUD) — mounted under /api/goals
 const express = require('express');
 const router = express.Router();
 const goalController = require('../controllers/goalController');
 const auth = require('../middleware/auth');
 
-// TODO: Add GET / route for user goals
+// GET / - user goals
 router.get('/', auth, goalController.getGoals);
 
-// TODO: Add GET /:id route for single goal
+// GET /:id - single goal
 router.get('/:id', auth, goalController.getGoalById);
 
-// TODO: Add POST / route for creating goal
+// POST / - create goal
 router.post('/', auth, goalController.createGoal);
 
-// TODO: Add PUT /:id route for updating goal
+// PUT /:id - update goal
 router.put('/:id', auth, goalController.updateGoal);
 
-// TODO: Add DELETE /:id route for deleting goal
+// DELETE /:id - delete goal
 router.delete('/:id', auth, goalController.deleteGoal);
 
 module.exports = router;

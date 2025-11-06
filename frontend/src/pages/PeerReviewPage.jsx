@@ -1,7 +1,7 @@
-// TODO: Implement peer review and collaboration features
+// Peer review UI implemented using mock data; replace mocks with API calls and wire peer-review endpoints
 import { useState, useEffect } from 'react';
-import {} from '../components/common/LoadingSpinner';
-import {} from '../components/common/DashboardLayout';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import DashboardLayout from '../components/common/DashboardLayout';
 import { useAuth } from '../hooks/useAuth';
 
 const PeerReviewPage = () => {
@@ -12,7 +12,7 @@ const PeerReviewPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const { user } = useAuth();
 
-  // Mock data - TODO: Replace with API calls
+  // Currently uses mock data for development; replace with real API calls (peer review endpoints)
   useEffect(() => {
     const mockReviews = [
       {

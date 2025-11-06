@@ -1,8 +1,10 @@
-// TODO: Implement challenges browsing and participation page
+// Challenges browsing and participation page
 import { useState, useEffect } from 'react';
-import {} from '../components/challenges/ChallengeCard';
-import {} from '../components/common/LoadingSpinner';
-import {} from '../components/common/DashboardLayout';
+import ChallengeCard from '../components/challenges/ChallengeCard';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import DashboardLayout from '../components/common/DashboardLayout';
+import { apiService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const ChallengesPage = () => {
   const [challenges, setChallenges] = useState([]);
@@ -14,50 +16,35 @@ const ChallengesPage = () => {
     search: '',
   });
 
-  // Mock data - TODO: Replace with API call
-  useEffect(() => {
-    const mockChallenges = [
-      {
-        id: 1,
-        title: 'Build a React Component',
-        description:
-          'Create a reusable React component with props and state management.',
-        category: 'Programming',
-        difficulty: 'Medium',
-        points: 50,
-        estimatedTime: 45,
-        tags: ['React', 'JavaScript', 'Frontend'],
-      },
-      {
-        id: 2,
-        title: 'Design a Logo',
-        description:
-          'Design a professional logo using design principles and color theory.',
-        category: 'Design',
-        difficulty: 'Easy',
-        points: 30,
-        estimatedTime: 60,
-        tags: ['Design', 'Branding', 'Creative'],
-      },
-      {
-        id: 3,
-        title: 'Database Optimization',
-        description:
-          'Optimize a slow database query and improve performance metrics.',
-        category: 'Backend',
-        difficulty: 'Hard',
-        points: 100,
-        estimatedTime: 120,
-        tags: ['SQL', 'Database', 'Performance'],
-      },
-    ];
+  //If this doesn't work, call apiService.challenges.submit(...) after user action
+  const navigate = useNavigate();
+  const handleStartChallenge = (challengeId) => {
+    navigate(`/challenges/${challengeId}`);
+  };
 
-    setTimeout(() => {
-      setChallenges(mockChallenges);
-      setFilteredChallenges(mockChallenges);
-      setLoading(false);
-    }, 1000);
-  }, []);
+  // Challenges are fetched from backend via apiService.challenges.getAll
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      setLoading(true);
+      try {
+        // Send current filters as query parameters to API
+        const data = await apiService.challenges.getAll({
+          category: filters.category,
+          difficulty: filters.difficulty,
+          search: filters.search,
+        });
+        // API may return an envelope { success, data }
+        const list = data && data.data ? data.data : data || [];
+        setChallenges(list);
+        setFilteredChallenges(list);
+      } catch (error) {
+        console.error('Failed to fetch challenges:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchChallenges();
+  }, [filters]); //re-fetch when filters change
 
   // Filter challenges based on current filters
   useEffect(() => {
@@ -171,7 +158,11 @@ const ChallengesPage = () => {
           ) : filteredChallenges.length > 0 ? (
             <div className="challenges-grid">
               {filteredChallenges.map((challenge) => (
-                <ChallengeCard key={challenge.id} challenge={challenge} />
+                <ChallengeCard
+                  key={challenge.id}
+                  challenge={challenge}
+                  onStart={() => handleStartChallenge(challenge.id)}
+                />
               ))}
             </div>
           ) : (

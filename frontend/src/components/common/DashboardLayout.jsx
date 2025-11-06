@@ -1,5 +1,5 @@
 import {} from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'; //removed link as import
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 const DashboardLayout = ({ children }) => {

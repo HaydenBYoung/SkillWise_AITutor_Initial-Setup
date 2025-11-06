@@ -23,8 +23,8 @@ const ApiTestComponent = () => {
   const testTokenRefresh = async () => {
     try {
       // Simulate a 401 error by calling a protected endpoint without token
-      const response = await apiService.user.getProfile();
-      console.log('Profile fetch successful:', response.data);
+      const profile = await apiService.user.getProfile();
+      console.log('Profile fetch successful:', profile);
     } catch (error) {
       console.log(
         'Profile fetch failed (expected without token):',

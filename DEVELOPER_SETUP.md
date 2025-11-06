@@ -180,25 +180,27 @@ SkillWise_AITutor/
 #### Adding a New API Endpoint
 
 1. Create a route file in `backend/src/routes/`
+
    ```javascript
    const express = require('express');
    const router = express.Router();
    const auth = require('../middleware/auth');
    const yourController = require('../controllers/yourController');
-   
+
    router.use(auth); // Protect all routes
    router.get('/', yourController.getAll);
    router.post('/', yourController.create);
    // etc...
-   
+
    module.exports = router;
    ```
 
 2. Add controller in `backend/src/controllers/`
+
    ```javascript
    const yourService = require('../services/yourService');
    const { AppError } = require('../middleware/errorHandler');
-   
+
    const yourController = {
      getAll: async (req, res, next) => {
        try {
@@ -207,36 +209,39 @@ SkillWise_AITutor/
        } catch (error) {
          next(error);
        }
-     }
+     },
      // etc...
    };
    ```
 
 3. Create service in `backend/src/services/`
+
    ```javascript
    const db = require('../database/connection');
    const { AppError } = require('../middleware/errorHandler');
-   
+
    const yourService = {
      getAll: async () => {
        const { rows } = await db.query('SELECT * FROM your_table');
        return rows;
-     }
+     },
      // etc...
    };
    ```
 
 4. Update `routes/index.js` to mount your new route
+
    ```javascript
    const yourRoutes = require('./your');
    router.use('/your-endpoint', yourRoutes);
    ```
 
 5. Add integration tests in `tests/integration/`
+
    ```javascript
    const request = require('supertest');
    const app = require('../../src/app');
-   
+
    describe('Your API Integration', () => {
      it('should get all items when authenticated', async () => {
        const res = await request(app)
@@ -252,15 +257,16 @@ SkillWise_AITutor/
 #### Adding a New React Page
 
 1. Create component in `frontend/src/pages/`
+
    ```jsx
    import React, { useState, useEffect } from 'react';
    import { useAuth } from '../contexts/AuthContext';
    import api from '../services/api';
-   
+
    const YourPage = () => {
      const [data, setData] = useState([]);
      const { user } = useAuth();
-   
+
      useEffect(() => {
        const fetchData = async () => {
          const result = await api.get('/your-endpoint');
@@ -268,30 +274,31 @@ SkillWise_AITutor/
        };
        fetchData();
      }, []);
-   
-     return (
-       <div>
-         {/* Your JSX */}
-       </div>
-     );
+
+     return <div>{/* Your JSX */}</div>;
    };
-   
+
    export default YourPage;
    ```
 
 2. Add route in `frontend/src/App.jsx`
+
    ```jsx
    import YourPage from './pages/YourPage';
-   
+
    // In your Routes component:
-   <Route path="/your-route" element={
-     <PrivateRoute>
-       <YourPage />
-     </PrivateRoute>
-   } />
+   <Route
+     path="/your-route"
+     element={
+       <PrivateRoute>
+         <YourPage />
+       </PrivateRoute>
+     }
+   />;
    ```
 
 3. Add navigation in appropriate component (e.g., `Sidebar` or `Navigation`)
+
    ```jsx
    <Menu.Item key="/your-route">
      <Link to="/your-route">
@@ -305,12 +312,14 @@ SkillWise_AITutor/
 #### Database Changes
 
 1. Create a new migration file in `backend/database/migrations/`
+
    - Use sequential numbering: `012_description.sql`
    - Include both up and down migrations
    - Add indexes for performance
    - Use consistent naming conventions
-   
+
    Example:
+
    ```sql
    -- Up Migration
    CREATE TABLE IF NOT EXISTS your_table (
@@ -321,35 +330,37 @@ SkillWise_AITutor/
        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
    );
-   
+
    -- Add indexes
    CREATE INDEX idx_your_table_user_id ON your_table(user_id);
-   
+
    -- Create trigger for updated_at
    CREATE TRIGGER update_your_table_timestamp
        BEFORE UPDATE ON your_table
        FOR EACH ROW
        EXECUTE FUNCTION update_updated_at_column();
-   
+
    -- Down Migration (at bottom, commented out)
    -- DROP TRIGGER IF EXISTS update_your_table_timestamp ON your_table;
    -- DROP TABLE IF EXISTS your_table;
    ```
 
 2. Apply the migration:
+
    ```bash
    # Stop services
    npm run down
-   
+
    # Start fresh with new migration
    npm run dev:all
    ```
 
 3. Verify the migration:
+
    ```bash
    # Check table structure
    docker-compose exec database psql -U skillwise_user -d skillwise_db -c "\d your_table"
-   
+
    # Verify indexes
    docker-compose exec database psql -U skillwise_user -d skillwise_db -c "\di your_table*"
    ```
@@ -499,7 +510,6 @@ docker-compose ps
 
 # Test frontend
 curl http://localhost:3000
-
 # Test backend API
 curl http://localhost:3001/api
 

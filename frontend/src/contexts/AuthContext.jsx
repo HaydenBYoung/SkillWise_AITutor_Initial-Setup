@@ -90,10 +90,10 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           // Validate token by fetching user profile
-          const response = await apiService.user.getProfile();
+          const user = await apiService.user.getProfile();
           dispatch({
             type: AUTH_ACTIONS.LOGIN_SUCCESS,
-            payload: { user: response.data },
+            payload: { user },
           });
         } catch (error) {
           console.error('Token validation failed:', error);
@@ -129,11 +129,11 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-      const response = await apiService.auth.login(credentials);
-      const { user, accessToken } = response.data;
+      const payload = await apiService.auth.login(credentials);
+      const { user, accessToken } = payload || {};
 
       // Store access token
-      setAccessToken(accessToken);
+      if (accessToken) setAccessToken(accessToken);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -157,11 +157,11 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-      const response = await apiService.auth.register(userData);
-      const { user, accessToken } = response.data;
+      const payload = await apiService.auth.register(userData);
+      const { user, accessToken } = payload || {};
 
       // Store access token
-      setAccessToken(accessToken);
+      if (accessToken) setAccessToken(accessToken);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -203,8 +203,7 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-      const response = await apiService.user.updateProfile(profileData);
-      const updatedUser = response.data;
+      const updatedUser = await apiService.user.updateProfile(profileData);
 
       dispatch({
         type: AUTH_ACTIONS.UPDATE_USER,

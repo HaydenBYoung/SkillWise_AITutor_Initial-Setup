@@ -1,4 +1,4 @@
-// TODO: Implement leaderboard and rankings page
+// Leaderboard and rankings page UI (currently uses mock data; replace with leaderboard API calls)
 import { useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -16,7 +16,7 @@ const LeaderboardPage = () => {
   const [showTrophies, setShowTrophies] = useState(false);
   const { user: authUser } = useAuth();
 
-  // Mock data - TODO: Replace with API call
+  // Currently using mockLeaderboardData for development; replace with apiService.leaderboard.getGlobal/getUserRank
   useEffect(() => {
     const mockLeaderboardData = [
       {

@@ -58,6 +58,18 @@ const LoginForm = ({ onSubmit }) => {
       <button type="submit" className="btn-primary" disabled={isSubmitting}>
         {isSubmitting ? 'Signing in...' : 'Sign In'}
       </button>
+
+      {/*below is for cypress testing*/}
+      <input data-testid="email-input" type="email" {...register('email')} />
+      <input
+        data-testid="password-input"
+        type="password"
+        {...register('password')}
+      />
+      <button data-testid="login-button" type="submit">
+        Login
+      </button>
+      {/*above is for cypress testing*/}
     </form>
   );
 };

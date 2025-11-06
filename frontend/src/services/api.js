@@ -42,7 +42,7 @@ const processQueue = (error, token = null) => {
       resolve(token);
     }
   });
-  
+
   failedQueue = [];
 };
 
@@ -50,16 +50,18 @@ const processQueue = (error, token = null) => {
 api.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Log request in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+      console.log(
+        `🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`
+      );
     }
-    
+
     return config;
   },
   (error) => {
@@ -73,31 +75,41 @@ api.interceptors.response.use(
   (response) => {
     // Log successful response in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+      console.log(
+        `✅ API Response: ${response.config.method?.toUpperCase()} ${
+          response.config.url
+        } - ${response.status}`
+      );
     }
-    
+
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
     // Log error in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`❌ API Error: ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - ${error.response?.status}`);
+      console.log(
+        `❌ API Error: ${originalRequest?.method?.toUpperCase()} ${
+          originalRequest?.url
+        } - ${error.response?.status}`
+      );
     }
-    
+
     // Handle 401 Unauthorized errors
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         // If already refreshing, queue this request
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
       originalRequest._retry = true;
@@ -106,7 +118,9 @@ api.interceptors.response.use(
       try {
         // Attempt to refresh the token using httpOnly refresh cookie
         const refreshResponse = await axios.post(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/auth/refresh`,
+          `${
+            process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
+          }/auth/refresh`,
           {},
           {
             withCredentials: true, // Send httpOnly refresh cookie
@@ -115,135 +129,169 @@ api.interceptors.response.use(
         );
 
         const { accessToken } = refreshResponse.data;
-        
+
         if (accessToken) {
           // Update stored access token
           setAccessToken(accessToken);
-          
+
           // Update default authorization header
           api.defaults.headers.Authorization = `Bearer ${accessToken}`;
-          
+
           // Process queued requests with new token
           processQueue(null, accessToken);
-          
+
           // Retry original request with new token
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          
+
           console.log('✅ Token refreshed successfully');
           return api(originalRequest);
         } else {
           throw new Error('No access token received from refresh');
         }
-        
       } catch (refreshError) {
         console.error('❌ Token refresh failed:', refreshError);
-        
+
         // Clear tokens and redirect to login
         clearTokens();
         processQueue(refreshError, null);
-        
+
         // Dispatch logout event for AuthContext to handle
-        window.dispatchEvent(new CustomEvent('auth:logout', { 
-          detail: { reason: 'token_refresh_failed' } 
-        }));
-        
+        window.dispatchEvent(
+          new CustomEvent('auth:logout', {
+            detail: { reason: 'token_refresh_failed' },
+          })
+        );
+
         // Redirect to login page
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
-        
+
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
-    
+
     // Handle other error cases
     if (error.response?.status >= 500) {
       console.error('🚨 Server Error:', error.response.data);
       // Could dispatch global error event here
-      window.dispatchEvent(new CustomEvent('api:server-error', { 
-        detail: { error: error.response.data } 
-      }));
+      window.dispatchEvent(
+        new CustomEvent('api:server-error', {
+          detail: { error: error.response.data },
+        })
+      );
     }
-    
+
     // Network errors
     if (error.code === 'ECONNABORTED') {
       console.error('⏰ Request timeout');
-      error.message = 'Request timeout. Please check your connection and try again.';
+      error.message =
+        'Request timeout. Please check your connection and try again.';
     } else if (!error.response) {
       console.error('🔌 Network Error:', error.message);
-      error.message = 'Network error. Please check your connection and try again.';
+      error.message =
+        'Network error. Please check your connection and try again.';
     }
-    
+
     return Promise.reject(error);
   }
 );
 
 // API service methods
+// NOTE: All methods return the response.data payload (not the full axios response)
 export const apiService = {
   // Authentication methods
   auth: {
-    login: (credentials) => api.post('/auth/login', credentials),
-    register: (userData) => api.post('/auth/register', userData),
-    logout: () => api.post('/auth/logout'),
-    refresh: () => api.post('/auth/refresh'),
-    forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-    resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
+    login: async (credentials) =>
+      (await api.post('/auth/login', credentials)).data,
+    register: async (userData) =>
+      (await api.post('/auth/register', userData)).data,
+    logout: async () => (await api.post('/auth/logout')).data,
+    refresh: async () => (await api.post('/auth/refresh')).data,
+    forgotPassword: async (email) =>
+      (await api.post('/auth/forgot-password', { email })).data,
+    resetPassword: async (token, password) =>
+      (await api.post('/auth/reset-password', { token, password })).data,
   },
 
   // User methods
   user: {
-    getProfile: () => api.get('/users/profile'),
-    updateProfile: (data) => api.put('/users/profile', data),
-    deleteAccount: () => api.delete('/users/account'),
-    changePassword: (data) => api.put('/users/change-password', data),
+    getProfile: async () => (await api.get('/users/profile')).data,
+    updateProfile: async (data) => (await api.put('/users/profile', data)).data,
+    deleteAccount: async () => (await api.delete('/users/account')).data,
+    changePassword: async (data) =>
+      (await api.put('/users/change-password', data)).data,
   },
 
   // Goals methods
   goals: {
-    getAll: () => api.get('/goals'),
-    create: (goal) => api.post('/goals', goal),
-    update: (id, goal) => api.put(`/goals/${id}`, goal),
-    delete: (id) => api.delete(`/goals/${id}`),
-    getById: (id) => api.get(`/goals/${id}`),
+    getAll: async (params) => (await api.get('/goals', { params })).data,
+    create: async (goal) => (await api.post('/goals', goal)).data,
+    update: async (id, goal) => (await api.put(`/goals/${id}`, goal)).data,
+    delete: async (id) => (await api.delete(`/goals/${id}`)).data,
+    getById: async (id) => (await api.get(`/goals/${id}`)).data,
   },
 
   // Challenges methods
   challenges: {
-    getAll: (params) => api.get('/challenges', { params }),
-    getById: (id) => api.get(`/challenges/${id}`),
-    submit: (id, submission) => api.post(`/challenges/${id}/submit`, submission),
-    getSubmissions: (id) => api.get(`/challenges/${id}/submissions`),
+    getAll: async (params) => (await api.get('/challenges', { params })).data,
+    getById: async (id) => (await api.get(`/challenges/${id}`)).data,
+    submit: async (id, submission) =>
+      (await api.post(`/challenges/${id}/submit`, submission)).data,
+    getSubmissions: async (id) =>
+      (await api.get(`/challenges/${id}/submissions`)).data,
   },
 
   // Progress methods
   progress: {
-    getOverview: () => api.get('/progress/overview'),
-    getSkills: () => api.get('/progress/skills'),
-    getActivity: (params) => api.get('/progress/activity', { params }),
-    getStats: () => api.get('/progress/stats'),
+    // Try to support an optional timeframe query (week/month/year)
+    getOverview: async (timeframe) =>
+      (await api.get('/progress', { params: timeframe ? { timeframe } : {} }))
+        .data,
+    // Post a progress event (e.g. challenge completed)
+    update: async (eventData) =>
+      (await api.post('/progress/event', eventData)).data,
+    // Convenience: refresh overview
+    updateOverview: async (timeframe) =>
+      (await api.get('/progress', { params: timeframe ? { timeframe } : {} }))
+        .data,
+    getSkills: async () => (await api.get('/progress/skills')).data,
+    getActivity: async (params) =>
+      (await api.get('/progress/activity', { params })).data,
+    getStats: async () => (await api.get('/progress/stats')).data,
   },
 
   // Leaderboard methods
   leaderboard: {
-    getGlobal: (params) => api.get('/leaderboard/global', { params }),
-    getUserRank: () => api.get('/leaderboard/user-rank'),
+    getGlobal: async (params) =>
+      (await api.get('/leaderboard/global', { params })).data,
+    getUserRank: async () => (await api.get('/leaderboard/user-rank')).data,
   },
 
   // Peer Review methods
   peerReview: {
-    getReviewQueue: (params) => api.get('/peer-review/queue', { params }),
-    getMySubmissions: () => api.get('/peer-review/my-submissions'),
-    submitReview: (submissionId, review) => api.post(`/peer-review/submissions/${submissionId}/review`, review),
-    getReviewDetails: (submissionId) => api.get(`/peer-review/submissions/${submissionId}`),
+    getReviewQueue: async (params) =>
+      (await api.get('/peer-review/queue', { params })).data,
+    getMySubmissions: async () =>
+      (await api.get('/peer-review/my-submissions')).data,
+    submitReview: async (submissionId, review) =>
+      (
+        await api.post(
+          `/peer-review/submissions/${submissionId}/review`,
+          review
+        )
+      ).data,
+    getReviewDetails: async (submissionId) =>
+      (await api.get(`/peer-review/submissions/${submissionId}`)).data,
   },
 
   // Notifications methods
   notifications: {
-    getAll: () => api.get('/notifications'),
-    markAsRead: (id) => api.put(`/notifications/${id}/read`),
-    markAllAsRead: () => api.put('/notifications/read-all'),
+    getAll: async () => (await api.get('/notifications')).data,
+    markAsRead: async (id) => (await api.put(`/notifications/${id}/read`)).data,
+    markAllAsRead: async () => (await api.put('/notifications/read-all')).data,
   },
 };
 
