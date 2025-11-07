@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "title": "Build a Todo App",
+    "description": "Create a functional todo application with CRUD operations",
+    "difficulty": "medium",
+    "category": "Frontend",
+    "estimated_time": 120,
+    "points_reward": 150,
+    "tags": ["react", "javascript", "crud"],
+    "status": "available",
+    "created_at": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "title": "Implement User Authentication",
+    "description": "Add JWT-based authentication to your application",
+    "difficulty": "hard",
+    "category": "Backend",
+    "estimated_time": 180,
+    "points_reward": 200,
+    "tags": ["jwt", "auth", "security"],
+    "status": "available",
+    "created_at": "2024-01-02T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "title": "Create Responsive Design",
+    "description": "Make your application mobile-friendly using CSS Grid and Flexbox",
+    "difficulty": "easy",
+    "category": "Frontend",
+    "estimated_time": 60,
+    "points_reward": 100,
+    "tags": ["css", "responsive", "mobile"],
+    "status": "completed",
+    "created_at": "2024-01-03T00:00:00.000Z"
+  }
+]

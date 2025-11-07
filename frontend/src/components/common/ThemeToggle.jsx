@@ -5,13 +5,13 @@ const ThemeToggle = () => {
   const { isDark, toggleTheme } = useTheme();
 
   return (
-    <button 
+    <button
       onClick={toggleTheme}
       className="theme-toggle"
       aria-label="Toggle dark mode"
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      <style jsx>{`
+      <style>{`
         .theme-toggle {
           position: fixed;
           bottom: 2rem;
@@ -54,10 +54,8 @@ const ThemeToggle = () => {
           }
         }
       `}</style>
-      
-      <span className="theme-icon">
-        {isDark ? '☀️' : '🌙'}
-      </span>
+
+      <span className="theme-icon">{isDark ? '☀️' : '🌙'}</span>
     </button>
   );
 };

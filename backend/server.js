@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // TODO: Server entry point with graceful shutdown and error handling
 
+require('dotenv').config();
 const app = require('./src/app');
 const logger = app.get('logger');
 
@@ -17,18 +18,18 @@ const server = app.listen(PORT, () => {
 // Graceful shutdown handling
 const gracefulShutdown = (signal) => {
   logger.info(`📴 Received ${signal}. Starting graceful shutdown...`);
-  
+
   server.close((err) => {
     if (err) {
       logger.error('❌ Error during server shutdown:', err);
       process.exit(1);
     }
-    
+
     logger.info('✅ Server closed successfully');
-    
+
     // Close database connections, cleanup resources, etc.
     // TODO: Add database connection cleanup
-    
+
     process.exit(0);
   });
 

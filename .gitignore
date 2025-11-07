@@ -198,3 +198,7 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+
+# Ignore Cypress output
+cypress/screenshots/
+cypress/videos/

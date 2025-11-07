@@ -7,6 +7,9 @@ const auth = require('../middleware/auth');
 // TODO: Add GET / route for user progress
 router.get('/', auth, progressController.getProgress);
 
+// Simple test endpoint to check database connection
+router.get('/test-db', progressController.testDatabase);
+
 // TODO: Add POST /event route for tracking progress events
 router.post('/event', auth, progressController.updateProgress);
 

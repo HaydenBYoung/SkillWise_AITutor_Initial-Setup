@@ -12,17 +12,17 @@ const loginSchema = z.object({
   password: z
     .string()
     .min(1, 'Password is required')
-    .min(8, 'Password must be at least 8 characters')
+    .min(8, 'Password must be at least 8 characters'),
 });
 
 const LoginForm = ({ onSubmit }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
-    mode: 'onBlur' // Validate on blur for better UX
+    mode: 'onBlur', // Validate on blur for better UX
   });
 
   return (
@@ -55,11 +55,7 @@ const LoginForm = ({ onSubmit }) => {
         )}
       </div>
 
-      <button 
-        type="submit" 
-        className="btn-primary"
-        disabled={isSubmitting}
-      >
+      <button type="submit" className="btn-primary" disabled={isSubmitting}>
         {isSubmitting ? 'Signing in...' : 'Sign In'}
       </button>
     </form>

@@ -235,7 +235,7 @@ SkillWise_AITutor/
 
 ## 🧪 Testing
 
-### Run Tests
+### Run Tests Locally
 
 ```bash
 # Backend tests
@@ -254,7 +254,90 @@ docker-compose exec frontend npm run test:coverage
 ```bash
 # Open Cypress (requires frontend to be running)
 cd frontend && npx cypress open
+
+# Run Cypress headless
+cd frontend && npx cypress run
 ```
+
+### Test Structure
+
+- **Unit Tests**: `backend/tests/unit/` and `frontend/src/**/*.test.js`
+- **Integration Tests**: `backend/tests/integration/`
+- **E2E Tests**: `frontend/cypress/e2e/`
+- **Test Coverage**: Generated in `coverage/` directories
+
+## 🔄 CI/CD Pipeline
+
+This project uses GitHub Actions for continuous integration and deployment.
+
+### Automated Testing
+
+Every pull request and push to main triggers:
+
+1. **Code Quality Checks**
+   - ESLint for both frontend and backend
+   - Prettier code formatting validation
+2. **Unit Testing**
+
+   - Jest tests for backend services and controllers
+   - React Testing Library tests for frontend components
+   - Test coverage reports uploaded to Codecov
+
+3. **Integration Testing**
+
+   - Database integration tests
+   - API endpoint tests
+
+4. **End-to-End Testing**
+   - Cypress smoke tests
+   - Full user workflow testing
+   - Cross-browser compatibility
+
+### Pipeline Stages
+
+```yaml
+┌─────────────────┐    ┌─────────────────┐
+│   Lint & Test   │    │   Lint & Test   │
+│    Backend      │    │    Frontend     │
+└─────────┬───────┘    └─────────┬───────┘
+│                      │
+└──────┬─────────────┬─┘
+│             │
+┌────────▼─────────────▼────┐
+│     E2E Testing          │
+│   (Cypress Smoke Test)   │
+└────────┬─────────────────┘
+│
+┌────────▼─────────────────┐
+│   Build & Deploy Check   │
+│  (Docker Images & Assets)│
+└──────────────────────────┘
+```
+
+### CI Environment
+
+The CI pipeline uses:
+
+- **Node.js 18**
+- **PostgreSQL 15** (test database)
+- **Redis 7** (test cache)
+- **Ubuntu Latest** runners
+
+### Test Commands
+
+```bash
+# Run the same tests that CI runs
+npm run test:ci          # All tests
+npm run lint:all         # Lint checks
+npm run test:coverage    # Coverage reports
+npm run cypress:run      # E2E tests
+```
+
+### Coverage Reports
+
+- Coverage reports are automatically generated and uploaded
+- View coverage at: https://codecov.io/gh/[your-repo]
+- Minimum coverage thresholds enforced
 
 ## 📝 API Documentation
 

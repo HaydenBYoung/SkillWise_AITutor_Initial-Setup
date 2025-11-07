@@ -29,14 +29,16 @@ const DashboardLayout = ({ children }) => {
           <h2>SkillWise</h2>
           <p>Welcome, {user?.firstName || 'Student'}!</p>
         </div>
-        
+
         <nav className="sidebar-navigation">
           <ul>
             {navigationItems.map((item) => (
               <li key={item.path}>
-                <Link 
+                <Link
                   to={item.path}
-                  className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+                  className={`nav-link ${
+                    location.pathname === item.path ? 'active' : ''
+                  }`}
                 >
                   <span className="nav-icon">{item.icon}</span>
                   <span className="nav-label">{item.label}</span>
@@ -47,19 +49,14 @@ const DashboardLayout = ({ children }) => {
         </nav>
 
         <div className="sidebar-footer">
-          <button 
-            onClick={handleLogout}
-            className="logout-button"
-          >
+          <button onClick={handleLogout} className="logout-button">
             <span className="nav-icon">🚪</span>
             <span className="nav-label">Logout</span>
           </button>
         </div>
       </aside>
 
-      <main className="dashboard-main">
-        {children}
-      </main>
+      <main className="dashboard-main">{children}</main>
     </div>
   );
 };
