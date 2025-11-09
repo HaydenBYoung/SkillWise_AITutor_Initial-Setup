@@ -1,26 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import GoalCard from '../components/goals/GoalCard';
-import GoalForm from '../components/goals/GoalForm';
 import DashboardLayout from '../components/common/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import ConfettiCelebration from '../components/common/ConfettiCelebration';
-import { useAuth } from '../hooks/useAuth';
-import { goalsApi } from '../services/api';
+import { useForm } from 'react-hook-form';
+import { goalService } from '../services/goalService';
 
 const GoalsPage = () => {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editingGoal, setEditingGoal] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [filters, setFilters] = useState({
-    category: '',
-    status: '',
-    difficulty: '',
-  });
-  const { user } = useAuth();
+  const [sortBy, setSortBy] = useState('newest');
+  const [filterCategory, setFilterCategory] = useState('');
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
 
   // Fetch goals on component mount
   useEffect(() => {
@@ -30,112 +28,115 @@ const GoalsPage = () => {
   const fetchGoals = async () => {
     try {
       setLoading(true);
-      const response = await goalsApi.getGoals();
+      const response = await goalService.getGoals();
+      console.log('Goals response:', response);
+      
       if (response.success) {
-        setGoals(response.data);
+        setGoals(response.data.goals || response.data || []);
+      } else {
+        setGoals([]);
       }
     } catch (error) {
       console.error('Error fetching goals:', error);
       toast.error('Failed to load goals');
+      setGoals([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateGoal = async (goalData) => {
+  const handleCreateGoal = async (formData) => {
     try {
       setSubmitting(true);
-      const response = await goalsApi.createGoal(goalData);
+      console.log('Submitting goal:', formData);
+      
+      const response = await goalService.createGoal(formData);
+      console.log('Create goal response:', response);
+      
       if (response.success) {
+        toast.success('🎯 Goal created successfully!');
         setGoals(prev => [response.data, ...prev]);
         setShowForm(false);
-        
-        // 🎉 CELEBRATION PRESERVED! 🎉
-        setShowCelebration(true);
-        toast.success('🎯 Amazing! Your new goal is ready to conquer!', {
-          duration: 4000,
-          icon: '🚀',
-        });
+        reset();
       }
     } catch (error) {
       console.error('Error creating goal:', error);
-      toast.error(error.response?.data?.message || 'Failed to create goal');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleUpdateGoal = async (goalData) => {
-    try {
-      setSubmitting(true);
-      const response = await goalsApi.updateGoal(editingGoal.id, goalData);
-      if (response.success) {
-        setGoals(prev => prev.map(goal => 
-          goal.id === editingGoal.id ? response.data : goal
-        ));
-        setEditingGoal(null);
-        
-        // Check if goal was completed and trigger celebration 🏆
-        if (response.data.is_completed && !editingGoal.is_completed) {
-          setShowCelebration(true);
-          toast.success('🏆 GOAL COMPLETED! You\'re unstoppable!', {
-            duration: 5000,
-            icon: '🎊',
-          });
-        } else {
-          toast.success('✨ Goal updated successfully!');
-        }
-      }
-    } catch (error) {
-      console.error('Error updating goal:', error);
-      toast.error(error.response?.data?.message || 'Failed to update goal');
+      toast.error(error.response?.data?.error || 'Failed to create goal');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteGoal = async (goalId) => {
-    if (!confirm('Are you sure you want to delete this goal? This action cannot be undone.')) {
+    if (!window.confirm('Are you sure you want to delete this goal?')) {
       return;
     }
 
     try {
-      const response = await goalsApi.deleteGoal(goalId);
-      if (response.success) {
-        setGoals(prev => prev.filter(goal => goal.id !== goalId));
-        toast.success('Goal deleted successfully');
-      }
+      await goalService.deleteGoal(goalId);
+      
+      // Update state immediately to remove goal from UI
+      setGoals(prev => prev.filter(goal => goal.id !== goalId));
+      toast.success('Goal deleted successfully');
     } catch (error) {
       console.error('Error deleting goal:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete goal');
+      toast.error('Failed to delete goal. Please try again.');
     }
   };
 
-  const handleEditGoal = (goal) => {
-    setEditingGoal(goal);
-    setShowForm(true);
-  };
-
-  const handleCancelForm = () => {
-    setShowForm(false);
-    setEditingGoal(null);
-  };
-
-  const filteredGoals = goals.filter(goal => {
-    if (filters.category && goal.category !== filters.category) return false;
-    if (filters.difficulty && goal.difficulty_level !== filters.difficulty) return false;
-    if (filters.status) {
-      if (filters.status === 'completed' && !goal.is_completed) return false;
-      if (filters.status === 'active' && goal.is_completed) return false;
+  const handleToggleCompletion = async (goalId, currentStatus) => {
+    try {
+      await goalService.toggleGoalCompletion(goalId, !currentStatus);
+      setGoals(prev => prev.map(goal => 
+        goal.id === goalId 
+          ? { ...goal, is_completed: !currentStatus }
+          : goal
+      ));
+      toast.success(currentStatus ? 'Goal marked as incomplete' : 'Goal completed! 🎉');
+    } catch (error) {
+      console.error('Error toggling goal completion:', error);
+      toast.error('Failed to update goal status');
     }
-    return true;
-  });
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'No deadline';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case 'easy': return 'bg-green-100 text-green-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'hard': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const sortedAndFilteredGoals = goals
+    .filter(goal => !filterCategory || goal.category === filterCategory)
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.created_at) - new Date(a.created_at);
+        case 'oldest':
+          return new Date(a.created_at) - new Date(b.created_at);
+        case 'difficulty-easy':
+          const difficultyOrder = { easy: 1, medium: 2, hard: 3 };
+          return difficultyOrder[a.difficulty_level] - difficultyOrder[b.difficulty_level];
+        case 'difficulty-hard':
+          const difficultyOrderDesc = { hard: 1, medium: 2, easy: 3 };
+          return difficultyOrderDesc[a.difficulty_level] - difficultyOrderDesc[b.difficulty_level];
+        default:
+          return 0;
+      }
+    });
 
   const categories = [...new Set(goals.map(goal => goal.category).filter(Boolean))];
-  const completedGoals = goals.filter(goal => goal.is_completed).length;
-  const averageProgress = goals.length > 0 
-    ? Math.round(goals.reduce((sum, goal) => sum + (goal.progress_percentage || 0), 0) / goals.length)
-    : 0;
 
   if (loading) {
     return (
@@ -149,196 +150,293 @@ const GoalsPage = () => {
 
   return (
     <DashboardLayout>
-      {/* 🎉 CELEBRATION PRESERVED! 🎉 */}
-      {showCelebration && (
-        <ConfettiCelebration onComplete={() => setShowCelebration(false)} />
-      )}
-      
-      <div className="goals-page relative">
-        {/* Enhanced Page Header with Gradient Background */}
-        <div className="page-header mb-8 p-8 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-600 dark:via-purple-600 dark:to-pink-600 text-white shadow-xl">
-          <div className="flex justify-between items-center">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold text-white mb-2">
-                🎯 My Learning Goals
-              </h1>
-              <div className="flex items-center space-x-6 text-white/90 dark:text-white/95">
-                <div className="flex items-center space-x-2">
-                  <span className="text-2xl">📊</span>
-                  <span className="font-medium">{goals.length} goals</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-2xl">🏆</span>
-                  <span className="font-medium">{completedGoals} completed</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-2xl">📈</span>
-                  <span className="font-medium">{averageProgress}% average progress</span>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-white dark:bg-gray-100 text-indigo-600 dark:text-indigo-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-200 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
-              disabled={showForm}
-            >
-              <span className="text-xl">✨</span>
-              <span>Create New Goal</span>
-            </button>
-          </div>
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            🎯 My Learning Goals
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Track your learning journey and measure your progress
+          </p>
         </div>
 
-        {/* Enhanced Goal Form Modal */}
+        {/* Create Goal Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            {showForm ? '✕ Cancel' : '➕ Create New Goal'}
+          </button>
+        </div>
+
+        {/* Goal Creation Form */}
         {showForm && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-screen overflow-y-auto shadow-2xl animate-slideUp">
-              <div className="p-8">
-                <div className="flex items-center space-x-3 mb-6">
-                  <span className="text-3xl">{editingGoal ? '✏️' : '🎯'}</span>
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-                    {editingGoal ? 'Edit Goal' : 'Create New Goal'}
-                  </h2>
-                </div>
-                <GoalForm
-                  goal={editingGoal}
-                  onSubmit={editingGoal ? handleUpdateGoal : handleCreateGoal}
-                  onCancel={handleCancelForm}
-                  isLoading={submitting}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Create New Goal</h2>
+            
+            <form onSubmit={handleSubmit(handleCreateGoal)} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Goal Title *
+                </label>
+                <input
+                  type="text"
+                  {...register('title', { 
+                    required: 'Title is required',
+                    minLength: { value: 3, message: 'Title must be at least 3 characters' }
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  placeholder="e.g., Learn Python Fundamentals"
                 />
+                {errors.title && (
+                  <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Description
+                </label>
+                <textarea
+                  {...register('description')}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  placeholder="Describe what you want to achieve..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Category *
+                  </label>
+                  <select
+                    {...register('category', { required: 'Category is required' })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">Select Category</option>
+                    <option value="programming">Programming</option>
+                    <option value="web development">Web Development</option>
+                    <option value="data science">Data Science</option>
+                    <option value="databases">Databases</option>
+                    <option value="design">Design</option>
+                    <option value="business">Business</option>
+                  </select>
+                  {errors.category && (
+                    <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Difficulty
+                  </label>
+                  <select
+                    {...register('difficulty_level')}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Target Date
+                  </label>
+                  <input
+                    type="date"
+                    {...register('target_completion_date')}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                >
+                  {submitting ? 'Creating...' : '✓ Create Goal'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Filters */}
+        {goals.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex flex-wrap gap-4 items-center">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Sort by
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="difficulty-easy">Difficulty: Easy to Hard</option>
+                  <option value="difficulty-hard">Difficulty: Hard to Easy</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Filter by Category
+                </label>
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map(category => (
+                    <option key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
         )}
 
-        {/* Enhanced Filters with Glass Effect */}
-        <div className="goals-filters bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-xl shadow-lg mb-8 border border-white/20 dark:border-gray-600/20">
-          <div className="flex items-center space-x-3 mb-4">
-            <span className="text-2xl">🔍</span>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Filter Goals</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                📁 Category
-              </label>
-              <select
-                value={filters.category}
-                onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-                className="form-select w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-indigo-500 dark:focus:border-indigo-400 transition-colors"
+        {/* Goals List */}
+        {sortedAndFilteredGoals.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedAndFilteredGoals.map((goal) => (
+              <div
+                key={goal.id}
+                className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-2 transition-all hover:shadow-xl ${
+                  goal.is_completed 
+                    ? 'border-green-300 bg-green-50 dark:bg-green-900/20' 
+                    : 'border-gray-200 dark:border-gray-700'
+                }`}
               >
-                <option value="">All Categories</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                📊 Status
-              </label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="form-select w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-indigo-500 dark:focus:border-indigo-400 transition-colors"
-              >
-                <option value="">All Statuses</option>
-                <option value="active">🔥 Active</option>
-                <option value="completed">✅ Completed</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ⚡ Difficulty
-              </label>
-              <select
-                value={filters.difficulty}
-                onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value }))}
-                className="form-select w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-indigo-500 dark:focus:border-indigo-400 transition-colors"
-              >
-                <option value="">All Difficulties</option>
-                <option value="easy">🟢 Easy</option>
-                <option value="medium">🟡 Medium</option>
-                <option value="hard">🟠 Hard</option>
-                <option value="expert">🔴 Expert</option>
-              </select>
-            </div>
-
-            <div className="flex items-end">
-              <button
-                onClick={() => setFilters({ category: '', status: '', difficulty: '' })}
-                className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105"
-              >
-                🗑️ Clear Filters
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Goals Grid */}
-        <div className="goals-grid">
-          {filteredGoals.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredGoals.map((goal, index) => (
-                <div 
-                  key={goal.id}
-                  className="animate-fadeInUp"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <GoalCard
-                    goal={goal}
-                    onEdit={() => handleEditGoal(goal)}
-                    onDelete={() => handleDeleteGoal(goal.id)}
-                  />
+                {/* Goal Header */}
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getDifficultyColor(goal.difficulty_level)}`}>
+                        {goal.difficulty_level?.charAt(0).toUpperCase() + goal.difficulty_level?.slice(1)}
+                      </span>
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                        {goal.category?.charAt(0).toUpperCase() + goal.category?.slice(1)}
+                      </span>
+                      {goal.is_completed && (
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                          ✓ Completed
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      {goal.title}
+                    </h3>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleToggleCompletion(goal.id, goal.is_completed)}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1 ${
+                        goal.is_completed 
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
+                      }`}
+                      title={goal.is_completed ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      {goal.is_completed ? 'Completed' : 'Complete'}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteGoal(goal.id)}
+                      className="px-3 py-1 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 border border-red-300 transition-all duration-200 flex items-center gap-1"
+                      title="Delete goal"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
-          ) : goals.length === 0 ? (
-            <div className="empty-state text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-              <div className="mx-auto w-32 h-32 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                <span className="text-6xl">🎯</span>
+
+                {/* Description */}
+                {goal.description && (
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                    {goal.description}
+                  </p>
+                )}
+
+                {/* Progress Bar */}
+                <div className="mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progress</span>
+                    <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                      {goal.progress || 0}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                    <div
+                      className="h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-500 ease-out"
+                      style={{ width: `${goal.progress || 0}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between items-center mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    <span>
+                      📚 {goal.completedChallenges || 0} / {goal.totalChallenges || 0} challenges
+                    </span>
+                    <span className="text-blue-600 dark:text-blue-400 font-medium">
+                      {goal.progress >= 100 ? '🎉 Complete!' : '⚡ In Progress'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                  <div>Created: {formatDate(goal.created_at)}</div>
+                  <div>Target: {formatDate(goal.target_completion_date)}</div>
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">Ready to Start Your Journey?</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto text-lg">
-                Create your first learning goal to start tracking your progress and organizing your challenges. 
-                Every expert was once a beginner! 🚀
-              </p>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                ✨ Create Your First Goal
-              </button>
-            </div>
-          ) : (
-            <div className="empty-state text-center py-16 bg-white rounded-2xl shadow-lg">
-              <div className="mx-auto w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-6">
-                <span className="text-6xl">🔍</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">No Goals Match Your Filters</h3>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
-                Try adjusting your filters to discover more goals, or create a new one!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={() => setFilters({ category: '', status: '', difficulty: '' })}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105"
-                >
-                  🗑️ Clear Filters
-                </button>
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-indigo-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
-                >
-                  ✨ Create New Goal
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : goals.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🎯</div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              No goals added yet
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Start your learning journey by creating your first goal!
+            </p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              ➕ Create Your First Goal
+            </button>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              No goals match your filters
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Try adjusting your filters or create a new goal.
+            </p>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

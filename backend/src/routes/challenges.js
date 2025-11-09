@@ -19,9 +19,12 @@ router.put('/:id', auth, challengeController.updateChallenge);
 router.delete('/:id', auth, challengeController.deleteChallenge);
 
 // Add challenge to goal
-router.post('/:challengeId/goals/:goalId', auth, challengeController.addToGoal);
+router.post('/:challengeId/add-to-goal', auth, challengeController.addToGoal);
+
+// Get challenges for a specific goal
+router.get('/goals/:goalId', auth, challengeController.getGoalChallenges);
 
 // Update challenge status in goal
-router.put('/:challengeId/goals/:goalId/status', auth, challengeController.updateChallengeStatus);
+router.put('/goals/:goalId/:challengeId/status', auth, challengeController.updateChallengeStatus);
 
 module.exports = router;

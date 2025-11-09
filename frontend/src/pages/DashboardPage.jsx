@@ -1,4 +1,3 @@
-// TODO: Implement dashboard page with navigation
 import React from 'react';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import DashboardLayout from '../components/common/DashboardLayout';
@@ -6,12 +5,9 @@ import DashboardLayout from '../components/common/DashboardLayout';
 const DashboardPage = () => {
   return (
     <DashboardLayout>
-      <div className="dashboard-header">
-        <h1>Dashboard</h1>
-        <p>Track your learning progress and achievements</p>
+      <div className="max-w-7xl mx-auto p-6">
+        <DashboardOverview />
       </div>
-
-      <DashboardOverview />
     </DashboardLayout>
   );
 };

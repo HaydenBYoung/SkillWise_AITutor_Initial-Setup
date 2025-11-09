@@ -1,147 +1,156 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { challengeService } from '../services/challengeService';
-import ChallengeCard from '../components/challenges/ChallengeCard';
-import ChallengeForm from '../components/challenges/ChallengeForm';
 import DashboardLayout from '../components/common/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import ConfettiCelebration from '../components/common/ConfettiCelebration';
-import { useAuth } from '../hooks/useAuth';
+import { goalService } from '../services/goalService';
 
 const ChallengesPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [challenges, setChallenges] = useState([]);
+  const [goals, setGoals] = useState([]);
+  const [challengeModules, setChallengeModules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingChallenge, setEditingChallenge] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const { user } = useAuth();
+  const [selectedGoal, setSelectedGoal] = useState('');
 
-  // Filters
-  const [filters, setFilters] = useState({
-    difficulty: searchParams.get('difficulty') || '',
-    category: searchParams.get('category') || '',
-    status: searchParams.get('status') || '',
-    goalId: searchParams.get('goalId') || '',
-  });
+  // Mock challenge modules based on goals
+  const generateChallengeModules = (goals) => {
+    const modules = [];
+    
+    goals.forEach(goal => {
+      if (goal.category === 'programming') {
+        modules.push({
+          id: `${goal.id}-python-basics`,
+          goalId: goal.id,
+          goalTitle: goal.title,
+          title: 'Introduction to Python',
+          logo: '🐍',
+          totalChallenges: 10,
+          completedChallenges: Math.floor(Math.random() * 11),
+          category: 'Programming',
+          description: 'Learn Python fundamentals including variables, data types, and basic operations.',
+        });
+        modules.push({
+          id: `${goal.id}-control-flow`,
+          goalId: goal.id,
+          goalTitle: goal.title,
+          title: 'Control Flow & Logic',
+          logo: '🔄',
+          totalChallenges: 8,
+          completedChallenges: Math.floor(Math.random() * 9),
+          category: 'Programming',
+          description: 'Master if statements, loops, and conditional logic in Python.',
+        });
+      } else if (goal.category === 'web development') {
+        modules.push({
+          id: `${goal.id}-html-basics`,
+          goalId: goal.id,
+          goalTitle: goal.title,
+          title: 'HTML Fundamentals',
+          logo: '🌐',
+          totalChallenges: 12,
+          completedChallenges: Math.floor(Math.random() * 13),
+          category: 'Web Development',
+          description: 'Learn HTML structure, elements, and semantic markup.',
+        });
+        modules.push({
+          id: `${goal.id}-css-styling`,
+          goalId: goal.id,
+          goalTitle: goal.title,
+          title: 'CSS Styling & Layout',
+          logo: '🎨',
+          totalChallenges: 15,
+          completedChallenges: Math.floor(Math.random() * 16),
+          category: 'Web Development',
+          description: 'Master CSS selectors, styling, and modern layout techniques.',
+        });
+      } else if (goal.category === 'data science') {
+        modules.push({
+          id: `${goal.id}-pandas-basics`,
+          goalId: goal.id,
+          goalTitle: goal.title,
+          title: 'Pandas Data Analysis',
+          logo: '📊',
+          totalChallenges: 14,
+          completedChallenges: Math.floor(Math.random() * 15),
+          category: 'Data Science',
+          description: 'Learn data manipulation and analysis with Pandas library.',
+        });
+      } else if (goal.category === 'databases') {
+        modules.push({
+          id: `${goal.id}-sql-basics`,
+          goalId: goal.id,
+          goalTitle: goal.title,
+          title: 'SQL Fundamentals',
+          logo: '🗄️',
+          totalChallenges: 16,
+          completedChallenges: Math.floor(Math.random() * 17),
+          category: 'Databases',
+          description: 'Master SQL queries, joins, and database operations.',
+        });
+      } else {
+        // Generic modules for other categories
+        modules.push({
+          id: `${goal.id}-fundamentals`,
+          goalId: goal.id,
+          goalTitle: goal.title,
+          title: `${goal.title} - Fundamentals`,
+          logo: '📚',
+          totalChallenges: 10,
+          completedChallenges: Math.floor(Math.random() * 11),
+          category: goal.category?.charAt(0).toUpperCase() + goal.category?.slice(1),
+          description: `Learn the fundamentals of ${goal.title}.`,
+        });
+      }
+    });
+    
+    return modules;
+  };
 
-  // Load challenges on component mount
+  // Fetch goals and generate challenge modules
   useEffect(() => {
-    fetchChallenges();
+    fetchGoalsAndChallenges();
   }, []);
 
-  const fetchChallenges = async () => {
+  const fetchGoalsAndChallenges = async () => {
     try {
       setLoading(true);
-      const response = await challengeService.getChallenges();
+      const response = await goalService.getGoals();
+      
       if (response.success) {
-        setChallenges(response.data);
+        const goalsData = response.data.goals || response.data || [];
+        setGoals(goalsData);
+        
+        // Generate challenge modules based on goals
+        const modules = generateChallengeModules(goalsData);
+        setChallengeModules(modules);
       }
     } catch (error) {
-      console.error('Error fetching challenges:', error);
+      console.error('Error fetching goals:', error);
       toast.error('Failed to load challenges');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateChallenge = async (challengeData) => {
-    try {
-      setSubmitting(true);
-      const response = await challengeService.createChallenge(challengeData);
-      if (response.success) {
-        setChallenges(prev => [response.data, ...prev]);
-        setShowForm(false);
-        
-        // 🎉 CELEBRATION PRESERVED! 🎉
-        setShowCelebration(true);
-        toast.success('⚡ Amazing! Your new challenge is ready to conquer!', {
-          duration: 4000,
-          icon: '🚀',
-        });
-      }
-    } catch (error) {
-      console.error('Error creating challenge:', error);
-      toast.error(error.response?.data?.message || 'Failed to create challenge');
-    } finally {
-      setSubmitting(false);
-    }
+  const handleModuleClick = (moduleId) => {
+    toast('🚧 Challenge module coming in Sprint 3 with AI integration!', {
+      icon: '🚧',
+      duration: 4000,
+    });
   };
 
-  const handleUpdateChallenge = async (challengeData) => {
-    try {
-      setSubmitting(true);
-      const response = await challengeService.updateChallenge(editingChallenge.id, challengeData);
-      if (response.success) {
-        setChallenges(prev => prev.map(challenge => 
-          challenge.id === editingChallenge.id ? response.data : challenge
-        ));
-        setEditingChallenge(null);
-        
-        // Check if challenge was completed and trigger celebration 🏆
-        if (response.data.status === 'completed' && editingChallenge.status !== 'completed') {
-          setShowCelebration(true);
-          toast.success('🏆 CHALLENGE COMPLETED! You are unstoppable!', {
-            duration: 5000,
-            icon: '🎊',
-          });
-        } else {
-          toast.success('✨ Challenge updated successfully!');
-        }
-      }
-    } catch (error) {
-      console.error('Error updating challenge:', error);
-      toast.error(error.response?.data?.message || 'Failed to update challenge');
-    } finally {
-      setSubmitting(false);
-    }
+  const getProgressPercentage = (completed, total) => {
+    return total > 0 ? Math.round((completed / total) * 100) : 0;
   };
 
-  const handleDeleteChallenge = async (challengeId) => {
-    if (!confirm('Are you sure you want to delete this challenge? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const response = await challengeService.deleteChallenge(challengeId);
-      if (response.success) {
-        setChallenges(prev => prev.filter(challenge => challenge.id !== challengeId));
-        toast.success('Challenge deleted successfully');
-      }
-    } catch (error) {
-      console.error('Error deleting challenge:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete challenge');
-    }
+  const getProgressColor = (percentage) => {
+    if (percentage >= 80) return 'bg-green-500';
+    if (percentage >= 50) return 'bg-yellow-500';
+    if (percentage >= 25) return 'bg-orange-500';
+    return 'bg-red-500';
   };
 
-  const handleEditChallenge = (challenge) => {
-    setEditingChallenge(challenge);
-    setShowForm(true);
-  };
-
-  const handleCancelForm = () => {
-    setShowForm(false);
-    setEditingChallenge(null);
-  };
-
-  const filteredChallenges = challenges.filter(challenge => {
-    if (filters.category && challenge.category !== filters.category) return false;
-    if (filters.difficulty && challenge.difficulty_level !== filters.difficulty) return false;
-    if (filters.status && challenge.status !== filters.status) return false;
-    return true;
-  });
-
-  const categories = [...new Set(challenges.map(challenge => challenge.category).filter(Boolean))];
-  const completedChallenges = challenges.filter(challenge => challenge.status === 'completed').length;
-  const averageProgress = challenges.length > 0 
-    ? Math.round(challenges.reduce((sum, challenge) => {
-        const progress = challenge.status === 'completed' ? 100 : 
-                        challenge.status === 'in_progress' ? 50 : 0;
-        return sum + progress;
-      }, 0) / challenges.length)
-    : 0;
+  const filteredModules = selectedGoal 
+    ? challengeModules.filter(module => module.goalId.toString() === selectedGoal)
+    : challengeModules;
 
   if (loading) {
     return (
@@ -155,196 +164,205 @@ const ChallengesPage = () => {
 
   return (
     <DashboardLayout>
-      {/* 🎉 CELEBRATION PRESERVED! 🎉 */}
-      {showCelebration && (
-        <ConfettiCelebration onComplete={() => setShowCelebration(false)} />
-      )}
-      
-      <div className="challenges-page relative">
-        {/* Enhanced Page Header with Gradient Background */}
-        <div className="page-header mb-8 p-8 rounded-2xl bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-500 dark:from-purple-600 dark:via-indigo-600 dark:to-blue-600 text-white shadow-xl">
-          <div className="flex justify-between items-center">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold text-white mb-2">
-                ⚡ My Challenges
-              </h1>
-              <div className="flex items-center space-x-6 text-white/90 dark:text-white/95">
-                <div className="flex items-center space-x-2">
-                  <span className="text-2xl">📊</span>
-                  <span className="font-medium">{challenges.length} challenges</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-2xl">🏆</span>
-                  <span className="font-medium">{completedChallenges} completed</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-2xl">📈</span>
-                  <span className="font-medium">{averageProgress}% average progress</span>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-white dark:bg-gray-100 text-purple-600 dark:text-purple-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-200 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
-              disabled={showForm}
-            >
-              <span className="text-xl">✨</span>
-              <span>Create New Challenge</span>
-            </button>
-          </div>
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            ⚡ Challenge Modules
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Complete challenges to make progress on your learning goals
+          </p>
         </div>
 
-        {/* Enhanced Challenge Form Modal */}
-        {showForm && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-screen overflow-y-auto shadow-2xl animate-slideUp">
-              <div className="p-8">
-                <div className="flex items-center space-x-3 mb-6">
-                  <span className="text-3xl">{editingChallenge ? '✏️' : '⚡'}</span>
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-                    {editingChallenge ? 'Edit Challenge' : 'Create New Challenge'}
-                  </h2>
-                </div>
-                <ChallengeForm
-                  challenge={editingChallenge}
-                  onSubmit={editingChallenge ? handleUpdateChallenge : handleCreateChallenge}
-                  onCancel={handleCancelForm}
-                  isLoading={submitting}
-                />
-              </div>
-            </div>
+        {/* Goal Filter */}
+        {goals.length > 0 && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Filter by Goal
+            </label>
+            <select
+              value={selectedGoal}
+              onChange={(e) => setSelectedGoal(e.target.value)}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white min-w-64"
+            >
+              <option value="">All Goals</option>
+              {goals.map(goal => (
+                <option key={goal.id} value={goal.id}>
+                  {goal.title}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
-        {/* Enhanced Filters with Glass Effect */}
-        <div className="challenges-filters bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-xl shadow-lg mb-8 border border-white/20 dark:border-gray-600/20">
-          <div className="flex items-center space-x-3 mb-4">
-            <span className="text-2xl">🔍</span>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Filter Challenges</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                📁 Category
-              </label>
-              <select
-                value={filters.category}
-                onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-                className="form-select w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-purple-500 dark:focus:border-purple-400 transition-colors"
-              >
-                <option value="">All Categories</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ⚡ Difficulty
-              </label>
-              <select
-                value={filters.difficulty}
-                onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value }))}
-                className="form-select w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-purple-500 dark:focus:border-purple-400 transition-colors"
-              >
-                <option value="">All Difficulties</option>
-                <option value="easy">🟢 Easy</option>
-                <option value="medium">🟡 Medium</option>
-                <option value="hard">🟠 Hard</option>
-                <option value="expert">🔴 Expert</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                📊 Status
-              </label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="form-select w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-purple-500 dark:focus:border-purple-400 transition-colors"
-              >
-                <option value="">All Statuses</option>
-                <option value="not_started">🆕 Not Started</option>
-                <option value="in_progress">⏳ In Progress</option>
-                <option value="completed">✅ Completed</option>
-              </select>
-            </div>
-
-            <div className="flex items-end">
-              <button
-                onClick={() => setFilters({ category: '', status: '', difficulty: '', goalId: '' })}
-                className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105"
-              >
-                🗑️ Clear Filters
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Challenges Grid */}
-        <div className="challenges-grid">
-          {filteredChallenges.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredChallenges.map((challenge, index) => (
-                <div 
-                  key={challenge.id}
-                  className="animate-fadeInUp"
-                  style={{ animationDelay: `${index * 100}ms` }}
+        {/* Challenge Modules Grid */}
+        {filteredModules.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredModules.map((module) => {
+              const progressPercentage = getProgressPercentage(module.completedChallenges, module.totalChallenges);
+              
+              // Dynamic background colors based on category
+              const getBackgroundColor = (category) => {
+                switch (category.toLowerCase()) {
+                  case 'programming':
+                    return 'bg-gradient-to-br from-purple-500 to-indigo-600';
+                  case 'web development':
+                    return 'bg-gradient-to-br from-blue-500 to-cyan-600';
+                  case 'data science':
+                    return 'bg-gradient-to-br from-green-500 to-emerald-600';
+                  case 'databases':
+                    return 'bg-gradient-to-br from-orange-500 to-red-600';
+                  default:
+                    return 'bg-gradient-to-br from-gray-500 to-slate-600';
+                }
+              };
+              
+              return (
+                <div
+                  key={module.id}
+                  onClick={() => handleModuleClick(module.id)}
+                  className="group cursor-pointer transform hover:scale-105 transition-all duration-300"
                 >
-                  <ChallengeCard
-                    challenge={challenge}
-                    onEdit={() => handleEditChallenge(challenge)}
-                    onDelete={() => handleDeleteChallenge(challenge.id)}
-                  />
+                  {/* Course Card */}
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                    {/* Colorful Header */}
+                    <div className={`${getBackgroundColor(module.category)} p-6 text-white relative overflow-hidden`}>
+                      <div className="absolute top-4 right-4">
+                        <button className="text-white/80 hover:text-white transition-colors">
+                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="text-4xl">{module.logo}</div>
+                        <div>
+                          <h3 className="text-xl font-bold text-white mb-1">
+                            {module.title}
+                          </h3>
+                          <div className="flex items-center space-x-2">
+                            <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium">
+                              {module.category}
+                            </span>
+                            <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium">
+                              Build
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Content */}
+                    <div className="p-6">
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
+                        {module.description}
+                      </p>
+
+                      {/* Progress Section */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
+                            Progress
+                          </span>
+                          <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                            {progressPercentage}%
+                          </span>
+                        </div>
+                        
+                        {/* Progress Bar */}
+                        <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all duration-500 ease-out ${
+                              progressPercentage >= 80 ? 'bg-green-500' :
+                              progressPercentage >= 50 ? 'bg-yellow-500' :
+                              progressPercentage >= 25 ? 'bg-orange-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${progressPercentage}%` }}
+                          />
+                        </div>
+                        
+                        {/* Challenge Count */}
+                        <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+                          <span>
+                            {module.completedChallenges} / {module.totalChallenges} challenges
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            🎯 {module.goalTitle}
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                              </svg>
+                            </button>
+                            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          ) : challenges.length === 0 ? (
-            <div className="empty-state text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-              <div className="mx-auto w-32 h-32 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                <span className="text-6xl">⚡</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">Ready to Challenge Yourself?</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto text-lg">
-                Create your first coding challenge to start building your skills and tracking your progress. 
-                Every expert was once a beginner! 🚀
+              );
+            })}
+          </div>
+        ) : goals.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🎯</div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              No goals created yet
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Create learning goals first to unlock challenge modules!
+            </p>
+            <a
+              href="/goals"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-block"
+            >
+              ➕ Create Your First Goal
+            </a>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              No challenge modules for this goal
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Try selecting a different goal or create a new one.
+            </p>
+          </div>
+        )}
+
+        {/* AI Integration Notice */}
+        <div className="mt-12 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+          <div className="flex items-center space-x-3">
+            <div className="text-2xl">🤖</div>
+            <div>
+              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                AI-Powered Challenges Coming Soon!
+              </h3>
+              <p className="text-blue-700 dark:text-blue-300 mt-1">
+                In Sprint 3, we'll integrate AI to generate personalized challenges based on your goals. 
+                For now, explore the mock challenge modules above to see the structure!
               </p>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                ✨ Create Your First Challenge
-              </button>
             </div>
-          ) : (
-            <div className="empty-state text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-              <div className="mx-auto w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700 rounded-full flex items-center justify-center mb-6">
-                <span className="text-6xl">🔍</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">No Challenges Match Your Filters</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto text-lg">
-                Try adjusting your filters to discover more challenges, or create a new one!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={() => setFilters({ category: '', status: '', difficulty: '', goalId: '' })}
-                  className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105"
-                >
-                  🗑️ Clear Filters
-                </button>
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
-                >
-                  ✨ Create New Challenge
-                </button>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </DashboardLayout>
