@@ -223,6 +223,8 @@ export const apiService = {
     getSkills: () => api.get('/progress/skills'),
     getActivity: (params) => api.get('/progress/activity', { params }),
     getStats: () => api.get('/progress/stats'),
+    // Track an event such as marking a challenge complete. Body: { eventType, eventData }
+    trackEvent: (payload) => api.post('/progress/event', payload),
   },
 
   // Leaderboard methods

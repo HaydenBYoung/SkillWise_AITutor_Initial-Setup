@@ -1,8 +1,9 @@
 // TODO: Implement challenges browsing and participation page
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ChallengeCard from '../components/challenges/ChallengeCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DashboardLayout from '../components/common/DashboardLayout';
+import { apiService } from '../services/api';
 
 const ChallengesPage = () => {
   const [challenges, setChallenges] = useState([]);
@@ -13,6 +14,8 @@ const ChallengesPage = () => {
     difficulty: '',
     search: '',
   });
+  // Track pending persistence timers so we can support Undo before server call
+  const pendingTimersRef = useRef({});
 
   // Mock data - TODO: Replace with API call
   useEffect(() => {
@@ -82,6 +85,49 @@ const ChallengesPage = () => {
 
     setFilteredChallenges(filtered);
   }, [challenges, filters]);
+
+  const handleToggleComplete = async (id, updated) => {
+    // Optimistic update immediately
+    setChallenges(prev => prev.map(c => (c.id === id ? { ...c, ...updated } : c)));
+    setFilteredChallenges(prev => prev.map(c => (c.id === id ? { ...c, ...updated } : c)));
+
+    // If there is an existing pending timer, clear it
+    if (pendingTimersRef.current[id]) {
+      clearTimeout(pendingTimersRef.current[id].timer);
+      delete pendingTimersRef.current[id];
+    }
+
+    // Start a delayed persistence (gives user a small Undo window)
+    const timer = setTimeout(async () => {
+      try {
+        await apiService.progress.trackEvent({ eventType: 'toggle_complete', eventData: { challengeId: id, completed: true } });
+        // dispatch global event so other components can react
+        window.dispatchEvent(new CustomEvent('challenge:persisted', { detail: { id, completed: true } }));
+      } catch (err) {
+        // If persistence failed, revert optimistic update and notify user
+        setChallenges(prev => prev.map(c => (c.id === id ? { ...c, completed: false, progress: 0 } : c)));
+        setFilteredChallenges(prev => prev.map(c => (c.id === id ? { ...c, completed: false, progress: 0 } : c)));
+        // eslint-disable-next-line no-console
+        console.error('Failed to persist challenge completion', err);
+      } finally {
+        delete pendingTimersRef.current[id];
+      }
+    }, 5000); // 5s undo window
+
+    pendingTimersRef.current[id] = { timer };
+  };
+
+  const handleUndo = (id) => {
+    // Cancel pending persistence and revert optimistic UI
+    if (pendingTimersRef.current[id]) {
+      clearTimeout(pendingTimersRef.current[id].timer);
+      delete pendingTimersRef.current[id];
+    }
+    setChallenges(prev => prev.map(c => (c.id === id ? { ...c, completed: false, progress: 0 } : c)));
+    setFilteredChallenges(prev => prev.map(c => (c.id === id ? { ...c, completed: false, progress: 0 } : c)));
+    // Optionally notify other parts of the app
+    window.dispatchEvent(new CustomEvent('challenge:undo', { detail: { id } }));
+  };
 
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
@@ -153,7 +199,13 @@ const ChallengesPage = () => {
           ) : filteredChallenges.length > 0 ? (
             <div className="challenges-grid">
               {filteredChallenges.map(challenge => (
-                <ChallengeCard key={challenge.id} challenge={challenge} />
+                <ChallengeCard
+                  key={challenge.id}
+                  challenge={challenge}
+                  onToggleComplete={handleToggleComplete}
+                  pending={Boolean(pendingTimersRef.current[challenge.id])}
+                  onUndo={handleUndo}
+                />
               ))}
             </div>
           ) : (
