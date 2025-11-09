@@ -8,7 +8,9 @@ const DashboardOverview = () => {
   useEffect(() => {
     const handler = (e) => {
       const goal = e.detail?.goal;
-      setNotification({ message: `New goal created: ${goal?.title || 'Untitled'}` });
+      setNotification({
+        message: `New goal created: ${goal?.title || 'Untitled'}`,
+      });
 
       // Hide after 4 seconds
       setTimeout(() => setNotification(null), 4000);
@@ -26,15 +28,26 @@ const DashboardOverview = () => {
         </div>
       )}
 
-      {/* Statistics Grid */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Statistics Grid (three columns horizontally) */}
+      <div className="grid grid-cols-3 gap-5 items-stretch">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="bg-indigo-500 rounded-md p-3">
-                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div className="bg-indigo-500 rounded-md p-1">
+                  <svg
+                    className="text-white"
+                    style={{ width: '32px', height: '32px' }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
               </div>
@@ -43,15 +56,16 @@ const DashboardOverview = () => {
                   Goals Completed
                 </dt>
                 <dd className="flex items-baseline">
-                  <div className="text-2xl font-semibold text-gray-900">
-                    0
-                  </div>
+                  <div className="text-2xl font-semibold text-gray-900">0</div>
                 </dd>
               </div>
             </div>
           </div>
           <div className="bg-gray-50 px-5 py-3">
-            <Link to="/goals" className="text-sm font-medium text-indigo-600 hover:text-indigo-900 truncate">
+            <Link
+              to="/goals"
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-900 truncate"
+            >
               View all goals
             </Link>
           </div>
@@ -61,9 +75,20 @@ const DashboardOverview = () => {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="bg-green-500 rounded-md p-3">
-                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <div className="bg-green-500 rounded-md p-1">
+                  <svg
+                    className="text-white"
+                    style={{ width: '32px', height: '32px' }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
                   </svg>
                 </div>
               </div>
@@ -72,15 +97,16 @@ const DashboardOverview = () => {
                   Challenges Completed
                 </dt>
                 <dd className="flex items-baseline">
-                  <div className="text-2xl font-semibold text-gray-900">
-                    0
-                  </div>
+                  <div className="text-2xl font-semibold text-gray-900">0</div>
                 </dd>
               </div>
             </div>
           </div>
           <div className="bg-gray-50 px-5 py-3">
-            <Link to="/challenges" className="text-sm font-medium text-indigo-600 hover:text-indigo-900 truncate">
+            <Link
+              to="/challenges"
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-900 truncate"
+            >
               View challenges
             </Link>
           </div>
@@ -90,9 +116,20 @@ const DashboardOverview = () => {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="bg-yellow-500 rounded-md p-3">
-                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div className="bg-yellow-500 rounded-md p-1">
+                  <svg
+                    className="text-white"
+                    style={{ width: '32px', height: '32px' }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
               </div>
@@ -109,7 +146,10 @@ const DashboardOverview = () => {
             </div>
           </div>
           <div className="bg-gray-50 px-5 py-3">
-            <Link to="/progress" className="text-sm font-medium text-indigo-600 hover:text-indigo-900 truncate">
+            <Link
+              to="/progress"
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-900 truncate"
+            >
               View progress
             </Link>
           </div>
