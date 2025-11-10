@@ -12,7 +12,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const { user, updateProfile, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   // Mock data - TODO: Replace with API call
   useEffect(() => {
@@ -33,11 +33,41 @@ const ProfilePage = () => {
       currentStreak: 0,
       longestStreak: 0,
       badges: [
-        { id: 1, name: 'First Steps', icon: '🚀', description: 'Complete your first challenge', earned: false },
-        { id: 2, name: 'Streak Master', icon: '🔥', description: 'Maintain a 7-day learning streak', earned: false },
-        { id: 3, name: 'Goal Crusher', icon: '🎯', description: 'Complete 5 learning goals', earned: false },
-        { id: 4, name: 'Code Reviewer', icon: '👥', description: 'Provide 10 peer reviews', earned: false },
-        { id: 5, name: 'Challenge Master', icon: '💪', description: 'Complete 50 challenges', earned: false },
+        {
+          id: 1,
+          name: 'First Steps',
+          icon: '🚀',
+          description: 'Complete your first challenge',
+          earned: false,
+        },
+        {
+          id: 2,
+          name: 'Streak Master',
+          icon: '🔥',
+          description: 'Maintain a 7-day learning streak',
+          earned: false,
+        },
+        {
+          id: 3,
+          name: 'Goal Crusher',
+          icon: '🎯',
+          description: 'Complete 5 learning goals',
+          earned: false,
+        },
+        {
+          id: 4,
+          name: 'Code Reviewer',
+          icon: '👥',
+          description: 'Provide 10 peer reviews',
+          earned: false,
+        },
+        {
+          id: 5,
+          name: 'Challenge Master',
+          icon: '💪',
+          description: 'Complete 50 challenges',
+          earned: false,
+        },
       ],
       skills: [],
       recentActivity: [],
@@ -59,7 +89,7 @@ const ProfilePage = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
@@ -71,7 +101,7 @@ const ProfilePage = () => {
 
     // TODO: Replace with actual API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setProfileData(formData);
       setIsEditing(false);
       // Call auth context update if needed
@@ -153,15 +183,24 @@ const ProfilePage = () => {
             </div>
 
             <div className="profile-details">
-              <h1>{profileData?.firstName} {profileData?.lastName}</h1>
+              <h1>
+                {profileData?.firstName} {profileData?.lastName}
+              </h1>
               <p className="profile-bio">{profileData?.bio}</p>
               <div className="profile-meta">
                 <span>📍 {profileData?.location}</span>
                 <span>📅 Joined {formatDate(profileData?.joinedDate)}</span>
                 {profileData?.website && (
-                  <span>🌐 <a href={profileData.website} target="_blank" rel="noopener noreferrer">
-                    {profileData.website}
-                  </a></span>
+                  <span>
+                    🌐{' '}
+                    <a
+                      href={profileData.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {profileData.website}
+                    </a>
+                  </span>
                 )}
               </div>
             </div>
@@ -315,7 +354,9 @@ const ProfilePage = () => {
                         <h4>{activity.title}</h4>
                         <div className="activity-meta">
                           <span>{formatTimeAgo(activity.date)}</span>
-                          <span className="points">+{activity.points} points</span>
+                          <span className="points">
+                            +{activity.points} points
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -335,7 +376,9 @@ const ProfilePage = () => {
                     <span>Longest Streak</span>
                   </div>
                   <div className="achievement-stat">
-                    <strong>{profileData?.badges.filter(b => b.earned).length}</strong>
+                    <strong>
+                      {profileData?.badges.filter((b) => b.earned).length}
+                    </strong>
                     <span>Badges Earned</span>
                   </div>
                 </div>
@@ -374,7 +417,10 @@ const ProfilePage = () => {
             <h3>Badge Collection</h3>
             <div className="badges-grid">
               {profileData?.badges.map((badge) => (
-                <div key={badge.id} className={`badge-item ${badge.earned ? 'earned' : 'locked'}`}>
+                <div
+                  key={badge.id}
+                  className={`badge-item ${badge.earned ? 'earned' : 'locked'}`}
+                >
                   <div className="badge-icon">{badge.icon}</div>
                   <h4>{badge.name}</h4>
                   <p>{badge.description}</p>
@@ -463,7 +509,10 @@ const ProfilePage = () => {
 
             <div className="settings-section danger-zone">
               <h3>⚠️ Danger Zone</h3>
-              <p>Once you delete your account, there is no going back. Please be certain.</p>
+              <p>
+                Once you delete your account, there is no going back. Please be
+                certain.
+              </p>
               <button
                 className="btn-danger"
                 onClick={() => setShowDeleteConfirm(true)}
@@ -478,11 +527,17 @@ const ProfilePage = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowDeleteConfirm(false)}
+        >
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>⚠️ Delete Account?</h2>
             <p>Are you absolutely sure you want to delete your account?</p>
-            <p><strong>This action cannot be undone.</strong> All your data, progress, and achievements will be permanently deleted.</p>
+            <p>
+              <strong>This action cannot be undone.</strong> All your data,
+              progress, and achievements will be permanently deleted.
+            </p>
 
             <div className="modal-actions">
               <button
