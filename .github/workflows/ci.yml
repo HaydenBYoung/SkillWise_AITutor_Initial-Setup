@@ -20,7 +20,8 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        # use npm install instead of npm ci to satisfy environments where package-lock.json may be absent
+        run: npm install
 
       - name: Run unit tests (Jest)
         working-directory: ./frontend
