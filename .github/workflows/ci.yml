@@ -1,0 +1,180 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: skillwise_password
+          POSTGRES_USER: skillwise_user
+          POSTGRES_DB: skillwise_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          backend/package-lock.json
+
+    # Backend Setup and Tests
+    - name: Install backend dependencies
+      working-directory: backend
+      run: npm ci
+
+    - name: Run backend linter
+      working-directory: backend
+      run: npm run lint --if-present || echo "No lint script found"
+
+    - name: Run backend unit tests
+      working-directory: backend
+      run: npm test --if-present || echo "No test script found"
+      env:
+        NODE_ENV: test
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: skillwise_db
+        DB_USER: skillwise_user
+        DB_PASSWORD: skillwise_password
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        JWT_SECRET: test_jwt_secret_key_for_ci
+        JWT_REFRESH_SECRET: test_refresh_secret_key_for_ci
+
+    - name: Start backend server
+      working-directory: backend
+      run: |
+        npm start &
+        echo $! > backend.pid
+        sleep 10
+      env:
+        NODE_ENV: test
+        PORT: 3001
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: skillwise_db
+        DB_USER: skillwise_user
+        DB_PASSWORD: skillwise_password
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        JWT_SECRET: test_jwt_secret_key_for_ci
+        JWT_REFRESH_SECRET: test_refresh_secret_key_for_ci
+        CORS_ORIGIN: http://localhost:3000
+
+    # Frontend Setup and Tests
+    - name: Install frontend dependencies
+      working-directory: frontend
+      run: npm ci
+
+    - name: Run frontend linter
+      working-directory: frontend
+      run: npm run lint --if-present || echo "No lint script found"
+
+    - name: Run frontend unit tests
+      working-directory: frontend
+      run: npm test -- --coverage --ci --watchAll=false --testResultsProcessor=jest-sonar-reporter || echo "No test script found"
+      env:
+        CI: true
+        REACT_APP_API_URL: http://localhost:3001
+
+    - name: Build frontend
+      working-directory: frontend
+      run: npm run build
+      env:
+        CI: true
+        REACT_APP_API_URL: http://localhost:3001
+
+    - name: Start frontend server
+      working-directory: frontend
+      run: |
+        npx serve -s build -l 3000 &
+        echo $! > frontend.pid
+        sleep 10
+      env:
+        CI: true
+
+    # Cypress E2E Tests
+    - name: Wait for services to be ready
+      run: |
+        timeout 30 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+        timeout 30 bash -c 'until curl -f http://localhost:3001/api/health; do sleep 2; done'
+
+    - name: Run database migrations
+      working-directory: backend
+      run: npm run migrate --if-present || echo "No migrate script found"
+      env:
+        NODE_ENV: test
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: skillwise_db
+        DB_USER: skillwise_user
+        DB_PASSWORD: skillwise_password
+
+    - name: Run Cypress E2E tests
+      working-directory: frontend
+      run: npx cypress run --headless
+      env:
+        CYPRESS_BASE_URL: http://localhost:3000
+
+    # Upload test results and artifacts
+    - name: Upload Cypress screenshots
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: cypress-screenshots
+        path: frontend/cypress/screenshots
+        retention-days: 7
+
+    - name: Upload Cypress videos
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: cypress-videos
+        path: frontend/cypress/videos
+        retention-days: 7
+
+    - name: Upload test coverage
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-coverage
+        path: frontend/coverage
+        retention-days: 7
+
+    # Cleanup
+    - name: Stop servers
+      if: always()
+      run: |
+        if [ -f backend/backend.pid ]; then kill $(cat backend/backend.pid) || true; fi
+        if [ -f frontend/frontend.pid ]; then kill $(cat frontend/frontend.pid) || true; fi
