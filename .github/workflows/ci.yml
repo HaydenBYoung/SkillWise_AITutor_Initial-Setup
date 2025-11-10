@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, '**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  frontend-tests:
+    name: Frontend tests (Jest + Cypress)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run unit tests (Jest)
+        working-directory: ./frontend
+        env:
+          CI: true
+        run: npm test -- --watchAll=false --silent
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Start static server for Cypress
+        working-directory: ./frontend
+        # use http-server via npx so no global install required
+        run: npx http-server ./build -p 3000 &
+
+      - name: Wait for server
+        run: |
+          for i in {1..10}; do
+            if curl -sSf http://localhost:3000 >/dev/null; then
+              echo "server ready"; break
+            fi
+            sleep 1
+          done
+
+      - name: Run Cypress tests
+        working-directory: ./frontend
+        run: npx cypress run --config baseUrl=http://localhost:3000
