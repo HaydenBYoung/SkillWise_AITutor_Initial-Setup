@@ -32,6 +32,7 @@ const LoginForm = ({ onSubmit }) => {
         <input
           type="email"
           id="email"
+          data-cy="email-input"
           {...register('email')}
           className={errors.email ? 'input-error' : ''}
           placeholder="you@example.com"
@@ -46,6 +47,7 @@ const LoginForm = ({ onSubmit }) => {
         <input
           type="password"
           id="password"
+          data-cy="password-input"
           {...register('password')}
           className={errors.password ? 'input-error' : ''}
           placeholder="Enter your password"
@@ -58,6 +60,7 @@ const LoginForm = ({ onSubmit }) => {
       <button
         type="submit"
         className="btn-primary"
+        data-cy="login-button"
         disabled={isSubmitting}
       >
         {isSubmitting ? 'Signing in...' : 'Sign In'}

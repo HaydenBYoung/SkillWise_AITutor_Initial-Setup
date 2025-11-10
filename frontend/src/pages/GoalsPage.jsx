@@ -229,6 +229,7 @@ const GoalsPage = () => {
           <button
             onClick={() => setShowForm(!showForm)}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            data-cy="create-goal-button"
           >
             {showForm ? '✕ Cancel' : '✨ Create New Goal'}
           </button>
@@ -249,6 +250,7 @@ const GoalsPage = () => {
                 </label>
                 <input
                   type="text"
+                  data-cy="goal-title-input"
                   {...register('title', { 
                     required: 'Title is required',
                     minLength: { value: 3, message: 'Title must be at least 3 characters' }
@@ -266,6 +268,7 @@ const GoalsPage = () => {
                   Description
                 </label>
                 <textarea
+                  data-cy="goal-description-input"
                   {...register('description')}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -279,6 +282,7 @@ const GoalsPage = () => {
                     Category *
                   </label>
                   <select
+                    data-cy="goal-category-select"
                     {...register('category', { required: 'Category is required' })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   >
@@ -300,6 +304,7 @@ const GoalsPage = () => {
                     Difficulty
                   </label>
                   <select
+                    data-cy="goal-difficulty-select"
                     {...register('difficulty_level')}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   >
@@ -315,6 +320,7 @@ const GoalsPage = () => {
                   </label>
                   <input
                     type="date"
+                    data-cy="goal-date-input"
                     {...register('target_completion_date')}
                     min={new Date().toISOString().split('T')[0]}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -325,6 +331,7 @@ const GoalsPage = () => {
               <div className="flex justify-end">
                 <button
                   type="submit"
+                  data-cy="create-goal-submit"
                   disabled={submitting}
                   className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-6 py-2 rounded-md font-medium transition-colors"
                 >
@@ -418,6 +425,7 @@ const GoalsPage = () => {
                           : 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300'
                       }`}
                       title={goal.is_completed ? 'Reopen goal to continue challenges' : 'Complete goal and save progress'}
+                      data-cy="complete-goal-button"
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

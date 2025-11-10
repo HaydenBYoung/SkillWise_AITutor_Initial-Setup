@@ -113,6 +113,7 @@ const SignupPage = () => {
                   <input
                     type="text"
                     id="firstName"
+                    data-cy="first-name-input"
                     {...register('firstName')}
                     className={errors.firstName ? 'input-error' : ''}
                   />
@@ -126,6 +127,7 @@ const SignupPage = () => {
                   <input
                     type="text"
                     id="lastName"
+                    data-cy="last-name-input"
                     {...register('lastName')}
                     className={errors.lastName ? 'input-error' : ''}
                   />
@@ -140,6 +142,7 @@ const SignupPage = () => {
                 <input
                   type="email"
                   id="email"
+                  data-cy="email-input"
                   {...register('email')}
                   className={errors.email ? 'input-error' : ''}
                 />
@@ -153,6 +156,7 @@ const SignupPage = () => {
                 <input
                   type="password"
                   id="password"
+                  data-cy="password-input"
                   {...register('password')}
                   className={errors.password ? 'input-error' : ''}
                 />
@@ -169,6 +173,7 @@ const SignupPage = () => {
                   id="confirmPassword"
                   {...register('confirmPassword')}
                   className={errors.confirmPassword ? 'input-error' : ''}
+                  data-cy="confirm-password-input"
                 />
                 {errors.confirmPassword && (
                   <span className="error-text">{errors.confirmPassword.message}</span>
@@ -178,6 +183,7 @@ const SignupPage = () => {
               <button
                 type="submit"
                 className="btn-primary"
+                data-cy="register-button"
                 disabled={isSubmitting || isLoading}
               >
                 {isSubmitting || isLoading ? 'Creating Account...' : 'Create Account'}

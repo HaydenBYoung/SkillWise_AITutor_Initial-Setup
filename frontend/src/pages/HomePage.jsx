@@ -9,10 +9,10 @@ const HomePage = () => {
           <h1>Welcome to SkillWise 🎓</h1>
           <p>Your AI-powered learning companion for skill development</p>
           <div className="hero-actions">
-            <Link to="/signup" className="btn btn-primary">
+            <Link to="/signup" className="btn btn-primary" data-cy="get-started-button">
               Get Started Free
             </Link>
-            <Link to="/login" className="btn btn-secondary">
+            <Link to="/login" className="btn btn-secondary" data-cy="sign-in-button">
               Sign In
             </Link>
           </div>

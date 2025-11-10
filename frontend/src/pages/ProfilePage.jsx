@@ -467,6 +467,7 @@ const ProfilePage = () => {
                 className="btn-danger"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={loading}
+                data-cy="delete-account-button"
               >
                 Delete Account
               </button>
@@ -488,6 +489,7 @@ const ProfilePage = () => {
                 className="btn-danger"
                 onClick={handleDeleteAccount}
                 disabled={loading}
+                data-cy="confirm-delete-button"
               >
                 {loading ? 'Deleting...' : 'Yes, Delete My Account'}
               </button>
@@ -495,6 +497,7 @@ const ProfilePage = () => {
                 className="btn-secondary"
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={loading}
+                data-cy="cancel-delete-button"
               >
                 Cancel
               </button>

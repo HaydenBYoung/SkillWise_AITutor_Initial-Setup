@@ -174,6 +174,7 @@ const ChallengesPage = () => {
                   <div
                     onClick={() => handleModuleClick(module.id)}
                     className="cursor-pointer hover:shadow-lg transition-shadow duration-200 p-4"
+                    data-cy="challenge-card"
                   >
                     {/* Canvas-style Card with Rounded Rectangle Border */}
                     <div className="bg-gray-50 dark:bg-gray-750 rounded-xl border-2 border-gray-600 dark:border-gray-400 hover:border-blue-500 dark:hover:border-blue-400 overflow-hidden transition-all duration-200 shadow-md hover:shadow-lg" style={{
@@ -281,6 +282,7 @@ const ChallengesPage = () => {
                                   handleChallengeSubmit(module, challenge);
                                 }}
                                 className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors"
+                                data-cy="start-challenge-button"
                               >
                                 Complete Challenge (+{challenge.points_reward} pts)
                               </button>

@@ -70,7 +70,7 @@ const LoginPage = () => {
           <div className="auth-footer">
             <p>
               Don't have an account?{' '}
-              <Link to="/signup" className="auth-link">
+              <Link to="/signup" className="auth-link" data-cy="register-link">
                 Sign up here
               </Link>
             </p>

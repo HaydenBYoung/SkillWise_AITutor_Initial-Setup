@@ -28,6 +28,9 @@ const DashboardLayout = ({ children }) => {
         <div className="sidebar-header">
           <h2>SkillWise</h2>
           <p>Welcome, {user?.firstName || 'Student'}!</p>
+          <div className="user-menu" data-cy="user-menu">
+            <span>{user?.firstName || 'User'}</span>
+          </div>
         </div>
 
         <nav className="sidebar-navigation">
@@ -37,6 +40,7 @@ const DashboardLayout = ({ children }) => {
                 <Link
                   to={item.path}
                   className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+                  data-cy={`${item.label.toLowerCase()}-nav`}
                 >
                   <span className="nav-icon">{item.icon}</span>
                   <span className="nav-label">{item.label}</span>
@@ -50,6 +54,7 @@ const DashboardLayout = ({ children }) => {
           <button
             onClick={handleLogout}
             className="logout-button"
+            data-cy="logout-button"
           >
             <span className="nav-icon">🚪</span>
             <span className="nav-label">Logout</span>
