@@ -16,8 +16,11 @@ try {
 
 // Test database configuration
 const testDbConfig = {
+  // Prefer an explicit TEST_DATABASE_URL for CI/testing, but fall back to
+  // DATABASE_URL (used by CI workflow) and finally the local default.
   connectionString:
     process.env.TEST_DATABASE_URL ||
+    process.env.DATABASE_URL ||
     'postgresql://skillwise_user:skillwise_pass@localhost:5433/skillwise_db',
   // Reduce connections for test environment
   max: 5,
