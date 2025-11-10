@@ -7,9 +7,7 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const pool = new Pool({
-  connectionString:
-    process.env.DATABASE_URL ||
-    'postgresql://postgres:Se%40fox03@localhost:5432/skillwise',
+  connectionString: process.env.DATABASE_URL,
 });
 
 const migrationsDir = path.join(__dirname, '../database/migrations');

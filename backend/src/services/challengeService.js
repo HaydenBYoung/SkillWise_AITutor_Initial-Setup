@@ -41,7 +41,7 @@ const challengeService = {
       params.push(filters.created_by);
     }
 
-    query += ` ORDER BY created_at DESC`;
+    query += ' ORDER BY created_at DESC';
 
     if (filters.limit) {
       paramCount++;

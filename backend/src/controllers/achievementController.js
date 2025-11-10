@@ -26,12 +26,16 @@ const achievementController = {
 
   async getUserAchievements(req, res, next) {
     try {
-      const achievements = await achievementService.getUserAchievements(req.user.id);
+      const achievements = await achievementService.getUserAchievements(
+        req.user.id
+      );
       res.json({ achievements });
     } catch (err) {
-      next(new AppError('Failed to fetch user achievements', 500, 'FETCH_ERROR'));
+      next(
+        new AppError('Failed to fetch user achievements', 500, 'FETCH_ERROR')
+      );
     }
-  }
+  },
 };
 
 module.exports = achievementController;

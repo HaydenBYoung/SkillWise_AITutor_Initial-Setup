@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // TODO: Implement database backup script
 
+require('dotenv').config();
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -10,19 +11,19 @@ async function backupDatabase() {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupDir = path.join(__dirname, '../backups');
     const backupFile = path.join(backupDir, `backup-${timestamp}.sql`);
-    
+
     // TODO: Ensure backup directory exists
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir, { recursive: true });
     }
-    
+
     console.log('Starting database backup...');
     console.log(`Backup file: ${backupFile}`);
-    
+
     // TODO: Create database dump
     const command = `pg_dump ${process.env.DATABASE_URL} > ${backupFile}`;
     await runCommand(command);
-    
+
     console.log('Database backup completed successfully!');
     console.log(`Backup saved to: ${backupFile}`);
   } catch (error) {
