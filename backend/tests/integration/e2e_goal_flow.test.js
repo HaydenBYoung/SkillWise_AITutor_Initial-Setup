@@ -1,6 +1,9 @@
 // End-to-end server-side flow test: login -> create goal -> add challenge -> mark complete
 // This test runs against the test database configured by tests/setup.js
+// Prefer an existing DATABASE_URL (CI), then TEST_DATABASE_URL, then a local default.
+// Do NOT overwrite an existing DATABASE_URL set by CI.
 process.env.DATABASE_URL =
+  process.env.DATABASE_URL ||
   process.env.TEST_DATABASE_URL ||
   'postgresql://skillwise_user:skillwise_pass@localhost:5433/skillwise_db';
 

@@ -13,6 +13,8 @@ jobs:
       JWT_SECRET: test-jwt-secret
       JWT_REFRESH_SECRET: test-refresh-secret
       NODE_ENV: test
+      TEST_DATABASE_URL: postgresql://skillwise_user:skillwise_pass@127.0.0.1:5432/skillwise_db
+      DATABASE_URL: postgresql://skillwise_user:skillwise_pass@127.0.0.1:5432/skillwise_db
     services:
       postgres:
         image: postgres:14
@@ -44,19 +46,19 @@ jobs:
       - name: Wait for Postgres
         run: |
           for i in {1..15}; do
-            pg_isready -h localhost -p 5432 -U skillwise_user && break || sleep 2;
+            pg_isready -h 127.0.0.1 -p 5432 -U skillwise_user && break || sleep 2;
           done
 
       - name: Run backend migrations
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://skillwise_user:skillwise_pass@localhost:5432/skillwise_db
+          DATABASE_URL: postgresql://skillwise_user:skillwise_pass@127.0.0.1:5432/skillwise_db
         run: npm run migrate
 
       - name: Seed Cypress test user
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://skillwise_user:skillwise_pass@localhost:5432/skillwise_db
+          DATABASE_URL: postgresql://skillwise_user:skillwise_pass@127.0.0.1:5432/skillwise_db
           CYPRESS_TEST_USER_EMAIL: ${{ secrets.CYPRESS_TEST_USER_EMAIL }}
           CYPRESS_TEST_USER_PASSWORD: ${{ secrets.CYPRESS_TEST_USER_PASSWORD }}
           CYPRESS_TEST_USER_FIRSTNAME: ${{ secrets.CYPRESS_TEST_USER_FIRSTNAME }}
@@ -66,7 +68,7 @@ jobs:
       - name: Run backend tests (Jest)
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://skillwise_user:skillwise_pass@localhost:5432/skillwise_db
+          DATABASE_URL: postgresql://skillwise_user:skillwise_pass@127.0.0.1:5432/skillwise_db
         run: npm test -- --runInBand --detectOpenHandles
 
       - name: Install frontend deps
@@ -89,7 +91,7 @@ jobs:
           CYPRESS_TEST_USER_EMAIL: ${{ secrets.CYPRESS_TEST_USER_EMAIL }}
           CYPRESS_TEST_USER_PASSWORD: ${{ secrets.CYPRESS_TEST_USER_PASSWORD }}
           REACT_APP_API_URL: http://localhost:3001/api
-          DATABASE_URL: postgresql://skillwise_user:skillwise_pass@localhost:5432/skillwise_db
+          DATABASE_URL: postgresql://skillwise_user:skillwise_pass@127.0.0.1:5432/skillwise_db
 
       - name: Upload Cypress artifacts on failure
         if: failure()

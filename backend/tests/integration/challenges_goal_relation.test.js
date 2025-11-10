@@ -1,5 +1,8 @@
 // Integration test: create a goal then create a challenge linked to that goal
+// Prefer an existing DATABASE_URL (CI), then TEST_DATABASE_URL, then a local default.
+// Do NOT overwrite an existing DATABASE_URL set by CI.
 process.env.DATABASE_URL =
+  process.env.DATABASE_URL ||
   process.env.TEST_DATABASE_URL ||
   'postgresql://skillwise_user:skillwise_pass@localhost:5433/skillwise_db';
 

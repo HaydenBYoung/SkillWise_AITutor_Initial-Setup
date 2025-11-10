@@ -25,17 +25,6 @@ const auth = async (req, res, next) => {
     // Verify token
     const decoded = await verifyToken(token);
 
-    // TODO: Check if user still exists (optional - requires database query)
-    // const currentUser = await User.findById(decoded.id);
-    // if (!currentUser) {
-    //   return next(new AppError('The user belonging to this token does no longer exist.', 401));
-    // }
-
-    // TODO: Check if user changed password after token was issued (optional)
-    // if (currentUser.changedPasswordAfter(decoded.iat)) {
-    //   return next(new AppError('User recently changed password! Please log in again.', 401));
-    // }
-
     // Grant access to protected route
     // Ensure the decoded token has the required user fields
     if (!decoded || !decoded.id) {
