@@ -50,6 +50,7 @@ const authController = {
       } catch (e) {
         console.log('[auth] Login attempt (unable to log details)');
       }
+
       const result = await authService.login(email, password);
 
       // set refresh cookie
@@ -82,6 +83,12 @@ const authController = {
         .status(201)
         .json({ user: result.user, accessToken: result.accessToken });
     } catch (err) {
+      // Log for diagnostics in CI and local runs
+      try {
+        console.error('[auth] Registration error:', err && err.message);
+      } catch (logErr) {
+        // ignore logging failures
+      }
       if (err.code === 'EMAIL_EXISTS') {
         err.status = 400;
         err.message = 'Email already registered';

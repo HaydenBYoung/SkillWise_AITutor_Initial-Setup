@@ -88,24 +88,50 @@ const authService = {
 
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-    const insert = await db.query(
-      `INSERT INTO users (email, password_hash, first_name, last_name)
-       VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name, role`,
-      [email, passwordHash, firstName, lastName]
-    );
-
-    const user = insert.rows[0];
+    // Insert user and log for diagnostics
+    let user;
+    try {
+      console.log('[register] Creating user for email:', email);
+      const insert = await db.query(
+        `INSERT INTO users (email, password_hash, first_name, last_name)
+         VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name, role`,
+        [email, passwordHash, firstName, lastName]
+      );
+      user = insert.rows[0];
+      console.log('[register] Created user id:', user && user.id);
+    } catch (err) {
+      console.error('[register] DB insert error:', err && err.message);
+      throw new AppError('Registration failed', 500, 'REGISTRATION_FAILED');
+    }
 
     const payload = { id: user.id, email: user.email, role: user.role };
     const accessToken = jwt.generateToken(payload);
     const refreshToken = jwt.generateRefreshToken(payload);
+    console.log(
+      '[register] Tokens generated (access/refresh lengths):',
+      accessToken.length,
+      refreshToken.length
+    );
 
     // Store refresh token
     let expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await db.query(
-      'INSERT INTO refresh_tokens(token, user_id, expires_at, is_revoked) VALUES($1,$2,$3,false)',
-      [refreshToken, user.id, expiresAt]
-    );
+    try {
+      await db.query(
+        'INSERT INTO refresh_tokens(token, user_id, expires_at, is_revoked) VALUES($1,$2,$3,false)',
+        [refreshToken, user.id, expiresAt]
+      );
+    } catch (err) {
+      console.error(
+        '[register] Failed storing refresh token:',
+        err && err.message
+      );
+      // attempt to rollback created user could be added here
+      throw new AppError(
+        'Registration failed (token storage)',
+        500,
+        'REGISTRATION_FAILED'
+      );
+    }
 
     return {
       user: {
@@ -173,7 +199,7 @@ const authService = {
   },
 
   // Password reset placeholder
-  resetPassword: async (email) => {
+  resetPassword: async () => {
     // Implementation would generate token and email user
     return true;
   },
