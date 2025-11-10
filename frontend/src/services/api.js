@@ -217,12 +217,24 @@ export const apiService = {
     getSubmissions: (id) => api.get(`/challenges/${id}/submissions`),
   },
 
+  // Challenge Modules methods
+  challengeModules: {
+    getAll: () => api.get('/challenge-modules'),
+    complete: (goalId, challengeId, answer) => api.post(`/challenge-modules/${goalId}/challenges/${challengeId}/complete`, { answer }),
+  },
+
   // Progress methods
   progress: {
-    getOverview: () => api.get('/progress/overview'),
-    getSkills: () => api.get('/progress/skills'),
+    getAll: () => api.get('/progress'),
     getActivity: (params) => api.get('/progress/activity', { params }),
-    getStats: () => api.get('/progress/stats'),
+    getCategories: () => api.get('/progress/categories'),
+    getAchievements: () => api.get('/progress/achievements'),
+    getTimeline: (params) => api.get('/progress/timeline', { params }),
+    trackEvent: (data) => api.post('/progress/event', data),
+    // Legacy methods
+    getOverview: () => api.get('/progress'),
+    getSkills: () => api.get('/progress/categories'),
+    getStats: () => api.get('/progress'),
   },
 
   // Leaderboard methods

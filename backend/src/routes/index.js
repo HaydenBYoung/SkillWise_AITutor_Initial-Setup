@@ -22,6 +22,7 @@ const authRoutes = require('./auth');
 const userRoutes = require('./users');
 const goalRoutes = require('./goals');
 const challengeRoutes = require('./challenges');
+const challengeModuleRoutes = require('./challengeModules');
 const progressRoutes = require('./progress');
 const submissionRoutes = require('./submissions');
 const aiRoutes = require('./ai');
@@ -40,6 +41,7 @@ router.get('/', (req, res) => {
       users: '/api/users - User management',
       goals: '/api/goals - Learning goals',
       challenges: '/api/challenges - Learning challenges',
+      challengeModules: '/api/challenge-modules - Challenge modules with expandable challenges',
       progress: '/api/progress - Progress tracking',
       submissions: '/api/submissions - Work submissions',
       ai: '/api/ai - AI-powered features',
@@ -57,6 +59,7 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/goals', goalRoutes);
 router.use('/challenges', challengeRoutes);
+router.use('/challenge-modules', challengeModuleRoutes);
 router.use('/progress', progressRoutes);
 router.use('/submissions', submissionRoutes);
 router.use('/ai', aiRoutes);
@@ -76,7 +79,7 @@ router.get('/health', (req, res) => {
     routes: {
       total: router.stack.length,
       mounted: [
-        'auth', 'users', 'goals', 'challenges',
+        'auth', 'users', 'goals', 'challenges', 'challenge-modules',
         'progress', 'submissions', 'ai', 'reviews', 'leaderboard',
       ],
     },

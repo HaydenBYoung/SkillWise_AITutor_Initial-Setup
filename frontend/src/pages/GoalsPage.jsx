@@ -25,14 +25,40 @@ const GoalsPage = () => {
     fetchGoals();
   }, []);
 
+  // Add visibility change listener to refresh data when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Tab is now visible, refresh the goals data
+        fetchGoals();
+      }
+    };
+
+    const handleFocus = () => {
+      // Window gained focus, refresh the goals data
+      fetchGoals();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   const fetchGoals = async () => {
     try {
       setLoading(true);
       const response = await goalService.getGoals();
       console.log('Goals response:', response);
+      console.log('Goals data:', response.data);
       
       if (response.success) {
-        setGoals(response.data.goals || response.data || []);
+        const goalsData = response.data.goals || response.data || [];
+        console.log('Processed goals data:', goalsData);
+        setGoals(goalsData);
       } else {
         setGoals([]);
       }
@@ -55,7 +81,8 @@ const GoalsPage = () => {
       
       if (response.success) {
         toast.success('🎯 Goal created successfully!');
-        setGoals(prev => [response.data, ...prev]);
+        // Refetch all goals to ensure consistency
+        await fetchGoals();
         setShowForm(false);
         reset();
       }
@@ -110,11 +137,27 @@ const GoalsPage = () => {
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'hard': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'easy': return 'bg-green-500/80 text-white shadow-lg';
+      case 'medium': return 'bg-yellow-500/80 text-white shadow-lg';
+      case 'hard': return 'bg-red-500/80 text-white shadow-lg';
+      default: return 'bg-gray-500/80 text-white shadow-lg';
     }
+  };
+
+  const getCategoryIcon = (category) => {
+    const icons = {
+      'programming': '💻',
+      'design': '🎨',
+      'business': '💼',
+      'language': '🗣️',
+      'science': '🔬',
+      'math': '📊',
+      'music': '🎵',
+      'fitness': '💪',
+      'cooking': '👨‍🍳',
+      'other': '📚'
+    };
+    return icons[category?.toLowerCase()] || '📚';
   };
 
   const sortedAndFilteredGoals = goals
@@ -152,29 +195,32 @@ const GoalsPage = () => {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
             🎯 My Learning Goals
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Track your learning journey and measure your progress
+          <p className="text-gray-600 dark:text-gray-300 text-lg">
+            Set ambitious goals, track your progress, and achieve greatness through consistent learning
           </p>
         </div>
 
         {/* Create Goal Button */}
-        <div className="mb-6">
+        <div className="mb-8 text-center">
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
-            {showForm ? '✕ Cancel' : '➕ Create New Goal'}
+            {showForm ? '✕ Cancel' : '✨ Create New Goal'}
           </button>
         </div>
 
         {/* Goal Creation Form */}
         {showForm && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Create New Goal</h2>
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-2xl p-8 mb-8 border border-white/20 dark:border-gray-700/50 transform transition-all duration-500">
+            <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white flex items-center gap-3">
+              <span className="bg-gradient-to-r from-blue-500 to-purple-500 w-10 h-10 rounded-full flex items-center justify-center text-white">✨</span>
+              Create Your Goal
+            </h2>
             
             <form onSubmit={handleSubmit(handleCreateGoal)} className="space-y-4">
               <div>
@@ -378,26 +424,46 @@ const GoalsPage = () => {
                   </p>
                 )}
 
-                {/* Progress Bar */}
+                {/* Cute Progress Section */}
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progress</span>
-                    <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                      {goal.progress || 0}%
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                        {goal.calculated_progress_percentage || goal.progress_percentage || goal.progress || 0}%
+                      </span>
+                      <span>
+                        {(goal.calculated_progress_percentage || goal.progress_percentage || goal.progress || 0) >= 100 ? '🎉' : 
+                         (goal.calculated_progress_percentage || goal.progress_percentage || goal.progress || 0) >= 75 ? '🔥' :
+                         (goal.calculated_progress_percentage || goal.progress_percentage || goal.progress || 0) >= 50 ? '⚡' :
+                         (goal.calculated_progress_percentage || goal.progress_percentage || goal.progress || 0) >= 25 ? '🌱' : '🌟'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                  
+                  {/* Simple Cute Progress Bar */}
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 shadow-inner">
                     <div
-                      className="h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-500 ease-out"
-                      style={{ width: `${goal.progress || 0}%` }}
-                    />
+                      className="h-3 rounded-full bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 transition-all duration-700 ease-out relative overflow-hidden"
+                      style={{ width: `${goal.calculated_progress_percentage || goal.progress_percentage || goal.progress || 0}%` }}
+                    >
+                      {/* Simple shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    <span>
-                      📚 {goal.completedChallenges || 0} / {goal.totalChallenges || 0} challenges
+                  
+                  {/* Points and Status */}
+                  <div className="flex justify-between items-center mt-2 text-xs">
+                    <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                      <span>🎯</span>
+                      <span>{goal.earned_points || 0} / {goal.target_points || 0} points</span>
                     </span>
-                    <span className="text-blue-600 dark:text-blue-400 font-medium">
-                      {goal.progress >= 100 ? '🎉 Complete!' : '⚡ In Progress'}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      (goal.calculated_progress_percentage || goal.progress_percentage || goal.progress || 0) >= 100 
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    }`}>
+                      {(goal.calculated_progress_percentage || goal.progress_percentage || goal.progress || 0) >= 100 ? '🎉 Complete!' : '⚡ In Progress'}
                     </span>
                   </div>
                 </div>

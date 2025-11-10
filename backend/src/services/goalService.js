@@ -3,7 +3,7 @@ const db = require('../database/connection');
 const { validateGoalData } = require('../utils/validators');
 
 const goalService = {
-  // Get user goals with progress and challenge counts
+  // Get user goals with progress and points
   getUserGoals: async (userId) => {
     try {
       const query = `
@@ -11,9 +11,26 @@ const goalService = {
           g.*,
           COUNT(gc.id) as total_challenges,
           COUNT(gc.id) FILTER (WHERE gc.status = 'completed') as completed_challenges,
-          COALESCE(g.progress_percentage, 0) as progress_percentage
+          CASE 
+            WHEN g.difficulty_level = 'easy' THEN 20
+            WHEN g.difficulty_level = 'medium' THEN 35
+            WHEN g.difficulty_level = 'hard' THEN 50
+            ELSE 35
+          END as target_points,
+          COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0)::INTEGER as earned_points,
+          CASE 
+            WHEN g.difficulty_level = 'easy' THEN 
+              LEAST(100, ROUND((COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) * 100.0) / 20))
+            WHEN g.difficulty_level = 'medium' THEN 
+              LEAST(100, ROUND((COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) * 100.0) / 35))
+            WHEN g.difficulty_level = 'hard' THEN 
+              LEAST(100, ROUND((COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) * 100.0) / 50))
+            ELSE 
+              LEAST(100, ROUND((COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) * 100.0) / 35))
+          END as calculated_progress_percentage
         FROM goals g
         LEFT JOIN goal_challenges gc ON g.id = gc.goal_id
+        LEFT JOIN challenges c ON gc.challenge_id = c.id
         WHERE g.user_id = $1
         GROUP BY g.id
         ORDER BY g.created_at DESC

@@ -50,11 +50,10 @@ const ProfilePage = () => {
       },
     };
 
-    setTimeout(() => {
-      setProfileData(mockProfileData);
-      setFormData(mockProfileData);
-      setLoading(false);
-    }, 1000);
+    // Set profile data immediately instead of artificial delay
+    setProfileData(mockProfileData);
+    setFormData(mockProfileData);
+    setLoading(false);
   }, [user]);
 
   const handleInputChange = (e) => {
@@ -71,7 +70,7 @@ const ProfilePage = () => {
 
     // TODO: Replace with actual API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Remove artificial delay for better UX
       setProfileData(formData);
       setIsEditing(false);
       // Call auth context update if needed

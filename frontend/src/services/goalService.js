@@ -17,50 +17,18 @@ export const goalService = {
         goals = response.data;
       }
       
-      // Add progress calculation for each goal based on mock challenge completion
+      // Use real backend data instead of mock progress calculations
       const goalsWithProgress = goals.map(goal => {
-        // Mock progress calculation based on goal category
-        let progress = 0;
-        let totalChallenges = 10; // default
-        
-        if (goal.category === 'programming') {
-          // Simulate 2 modules with random completion
-          const module1Progress = Math.floor(Math.random() * 11); // 0-10 challenges
-          const module2Progress = Math.floor(Math.random() * 9); // 0-8 challenges
-          const totalCompleted = module1Progress + module2Progress;
-          totalChallenges = 18; // 10 + 8
-          progress = Math.round((totalCompleted / totalChallenges) * 100);
-        } else if (goal.category === 'web development') {
-          // Simulate 2 modules with random completion
-          const module1Progress = Math.floor(Math.random() * 13); // 0-12 challenges
-          const module2Progress = Math.floor(Math.random() * 16); // 0-15 challenges
-          const totalCompleted = module1Progress + module2Progress;
-          totalChallenges = 27; // 12 + 15
-          progress = Math.round((totalCompleted / totalChallenges) * 100);
-        } else if (goal.category === 'data science') {
-          // Simulate 1 module with random completion
-          const moduleProgress = Math.floor(Math.random() * 15); // 0-14 challenges
-          totalChallenges = 14;
-          progress = Math.round((moduleProgress / totalChallenges) * 100);
-        } else if (goal.category === 'databases') {
-          // Simulate 1 module with random completion
-          const moduleProgress = Math.floor(Math.random() * 17); // 0-16 challenges
-          totalChallenges = 16;
-          progress = Math.round((moduleProgress / totalChallenges) * 100);
-        } else {
-          // Generic progress for other categories
-          const moduleProgress = Math.floor(Math.random() * 11); // 0-10 challenges
-          totalChallenges = 10;
-          progress = Math.round((moduleProgress / totalChallenges) * 100);
-        }
-        
-        const completedChallenges = Math.floor((progress / 100) * totalChallenges);
-        
         return {
           ...goal,
-          progress: Math.min(progress, 100), // Cap at 100%
-          totalChallenges,
-          completedChallenges
+          // Use backend-calculated progress if available, otherwise use stored progress
+          progress: goal.calculated_progress_percentage || goal.progress_percentage || goal.progress || 0,
+          // Keep the real earned and target points from backend
+          earned_points: goal.earned_points || 0,
+          target_points: goal.target_points || 0,
+          // Use real challenge counts from backend
+          totalChallenges: goal.total_challenges || 0,
+          completedChallenges: goal.completed_challenges || 0
         };
       });
       
@@ -95,15 +63,14 @@ export const goalService = {
       const response = await apiService.goals.create(goalData);
       console.log('Create goal response:', response); // Debug logging
       
-      // Add initial progress data to new goal
+      // Use real backend data for new goals
       const goalWithProgress = {
         ...response.data,
-        progress: 0,
-        totalChallenges: goalData.category === 'programming' ? 18 : 
-                        goalData.category === 'web development' ? 27 :
-                        goalData.category === 'data science' ? 14 :
-                        goalData.category === 'databases' ? 16 : 10,
-        completedChallenges: 0
+        progress: response.data.calculated_progress_percentage || response.data.progress_percentage || 0,
+        earned_points: response.data.earned_points || 0,
+        target_points: response.data.target_points || 0,
+        totalChallenges: response.data.total_challenges || 0,
+        completedChallenges: response.data.completed_challenges || 0
       };
       
       return {

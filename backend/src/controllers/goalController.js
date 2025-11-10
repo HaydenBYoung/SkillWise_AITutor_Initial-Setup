@@ -1,6 +1,7 @@
 const { query, withTransaction } = require('../database/connection');
 const { z } = require('zod');
 const pino = require('pino');
+const goalService = require('../services/goalService');
 
 const logger = pino({ name: 'goalController' });
 
@@ -21,62 +22,22 @@ const goalController = {
   async getGoals(req, res) {
     try {
       const userId = req.user.id;
-      const { page = 1, limit = 10, category, is_completed, sort = 'created_at', order = 'DESC' } = req.query;
+      logger.info(`Fetching goals for user ${userId}`);
       
-      const offset = (page - 1) * limit;
+      // Use goalService to get goals with points and progress calculations
+      const goals = await goalService.getUserGoals(userId);
       
-      // Build WHERE clause
-      let whereClause = 'WHERE user_id = $1';
-      const params = [userId];
-      let paramIndex = 2;
-      
-      if (category) {
-        whereClause += ` AND category = $${paramIndex}`;
-        params.push(category);
-        paramIndex++;
-      }
-      
-      if (is_completed !== undefined) {
-        whereClause += ` AND is_completed = $${paramIndex}`;
-        params.push(is_completed === 'true');
-        paramIndex++;
-      }
-      
-      // Validate sort and order parameters
-      const validSortFields = ['created_at', 'updated_at', 'title', 'progress_percentage', 'target_completion_date'];
-      const validOrders = ['ASC', 'DESC'];
-      
-      const sortField = validSortFields.includes(sort) ? sort : 'created_at';
-      const sortOrder = validOrders.includes(order.toUpperCase()) ? order.toUpperCase() : 'DESC';
-      
-      const countResult = await query(
-        `SELECT COUNT(*) FROM goals ${whereClause}`,
-        params
-      );
-      const totalCount = parseInt(countResult.rows[0].count);
-      
-      const result = await query(
-        `SELECT 
-          id, title, description, category, difficulty_level,
-          target_completion_date, is_completed, completion_date,
-          progress_percentage, points_reward, is_public,
-          created_at, updated_at
-        FROM goals 
-        ${whereClause}
-        ORDER BY ${sortField} ${sortOrder}
-        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-        [...params, limit, offset]
-      );
+      logger.info(`Found ${goals.length} goals for user ${userId}`);
       
       res.status(200).json({
         success: true,
         data: {
-          goals: result.rows,
+          goals: goals,
           pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total: totalCount,
-            totalPages: Math.ceil(totalCount / limit),
+            page: 1,
+            limit: goals.length,
+            total: goals.length,
+            totalPages: 1,
           },
         },
       });
