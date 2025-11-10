@@ -1,9 +1,23 @@
 // TODO: Test environment setup and configuration
 const { Pool } = require('pg');
 
+// Increase default Jest timeout for potentially slow DB operations in CI/dev
+try {
+  if (
+    typeof jest !== 'undefined' &&
+    jest &&
+    typeof jest.setTimeout === 'function'
+  ) {
+    jest.setTimeout(20000);
+  }
+} catch (e) {
+  // ignore if not available
+}
+
 // Test database configuration
 const testDbConfig = {
-  connectionString: process.env.TEST_DATABASE_URL || 
+  connectionString:
+    process.env.TEST_DATABASE_URL ||
     'postgresql://skillwise_user:skillwise_pass@localhost:5433/skillwise_db',
   // Reduce connections for test environment
   max: 5,
@@ -19,7 +33,7 @@ beforeAll(async () => {
   process.env.NODE_ENV = 'test';
   process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
   process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-key-for-testing-only';
-  
+
   // Test database connection
   try {
     await testPool.query('SELECT 1');
@@ -35,7 +49,7 @@ afterAll(async () => {
   try {
     // Clean up test data if needed
     // await testPool.query('TRUNCATE TABLE users CASCADE');
-    
+
     // Close database connections
     await testPool.end();
     console.log('✅ Test database cleanup completed');
@@ -48,7 +62,7 @@ afterAll(async () => {
 const clearTestData = async () => {
   const tables = [
     'user_achievements',
-    'achievements', 
+    'achievements',
     'leaderboard',
     'progress_events',
     'peer_reviews',
@@ -57,7 +71,7 @@ const clearTestData = async () => {
     'challenges',
     'goals',
     'refresh_tokens',
-    'users'
+    'users',
   ];
 
   for (const table of tables) {
@@ -73,5 +87,5 @@ const clearTestData = async () => {
 // Export test utilities
 module.exports = {
   testPool,
-  clearTestData
+  clearTestData,
 };

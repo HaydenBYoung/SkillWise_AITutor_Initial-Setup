@@ -34,6 +34,7 @@ const ProgressPage = () => {
   */
 
   const fetchProgress = useCallback(async () => {
+    //change back to data?
     try {
       setLoading(true);
       const response = await apiService.progress.getOverview(timeframe);

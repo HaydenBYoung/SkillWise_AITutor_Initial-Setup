@@ -1,19 +1,24 @@
 # SkillWise API Documentation
 
 ## Overview
+
 This document outlines the RESTful API endpoints for the SkillWise application. The API follows REST conventions and returns JSON responses.
 
 ## Base URL
+
 - **Development**: `http://localhost:3000/api`
 - **Production**: `https://api.skillwise.com/api`
 
 ## Authentication
+
 - **Type**: JWT (JSON Web Tokens)
 - **Headers**: `Authorization: Bearer <token>`
 - **Cookies**: `refreshToken` (httpOnly, secure)
 
 ## Response Format
+
 All API responses follow this structure:
+
 ```json
 {
   "success": true,
@@ -24,6 +29,7 @@ All API responses follow this structure:
 ```
 
 Error responses:
+
 ```json
 {
   "success": false,
@@ -37,6 +43,7 @@ Error responses:
 ```
 
 ## Status Codes
+
 - `200` - Success
 - `201` - Created
 - `400` - Bad Request
@@ -52,9 +59,11 @@ Error responses:
 ## Authentication Endpoints
 
 ### POST /auth/register
+
 Register a new user account.
 
 **Request Body:**
+
 ```json
 {
   "fullName": "John Smith",
@@ -64,6 +73,7 @@ Register a new user account.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -81,9 +91,11 @@ Register a new user account.
 ```
 
 ### POST /auth/login
+
 Authenticate user and receive access token.
 
 **Request Body:**
+
 ```json
 {
   "email": "john@example.com",
@@ -92,6 +104,7 @@ Authenticate user and receive access token.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -108,28 +121,32 @@ Authenticate user and receive access token.
 ```
 
 ### POST /auth/logout
+
 Logout user and invalidate refresh token.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
-  "success": true,
+  "targetCompletionDate": "2024-05-01T00:00:00Z",
   "message": "Logged out successfully"
 }
 ```
 
 ### POST /auth/refresh
+
 Refresh access token using refresh token.
 
 **Response:**
+
 ```json
 {
   "success": true,
   "data": {
     "accessToken": "eyJhbGciOiJIUzI1NiIs..."
-  },
+        "progressPercentage": 0,
   "message": "Token refreshed"
 }
 ```
@@ -139,11 +156,13 @@ Refresh access token using refresh token.
 ## User Endpoints
 
 ### GET /users/profile
+
 Get current user profile.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -152,9 +171,9 @@ Get current user profile.
     "fullName": "John Smith",
     "email": "john@example.com",
     "bio": "Learning JavaScript and loving it!",
-    "avatar": "https://example.com/avatar.jpg",
+        "targetCompletionDate": "2024-04-15T00:00:00Z",
     "createdAt": "2024-03-15T10:30:00Z",
-    "stats": {
+        "progressPercentage": 65,
       "totalPoints": 2450,
       "challengesCompleted": 47,
       "currentStreak": 12,
@@ -165,11 +184,13 @@ Get current user profile.
 ```
 
 ### PUT /users/profile
+
 Update user profile information.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "fullName": "John Smith Jr.",
@@ -180,20 +201,25 @@ Update user profile information.
 
 ---
 
+    "targetCompletionDate": "2024-04-20T00:00:00Z",
+
 ## Goals Endpoints
 
 ### GET /goals
+
 Get all goals for the authenticated user.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Query Parameters:**
+
 - `status` - Filter by status (active, completed, paused)
 - `category` - Filter by category
 - `limit` - Number of results (default: 20)
 - `offset` - Pagination offset
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -224,11 +250,13 @@ Get all goals for the authenticated user.
 ```
 
 ### POST /goals
+
 Create a new learning goal.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "title": "Learn React Hooks",
@@ -241,6 +269,7 @@ Create a new learning goal.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -258,11 +287,13 @@ Create a new learning goal.
 ```
 
 ### GET /goals/:id
+
 Get specific goal details.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -291,11 +322,13 @@ Get specific goal details.
 ```
 
 ### PUT /goals/:id
+
 Update an existing goal.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "title": "Master JavaScript Fundamentals",
@@ -306,6 +339,7 @@ Update an existing goal.
 ```
 
 ### DELETE /goals/:id
+
 Delete a goal and all associated challenges.
 
 **Headers:** `Authorization: Bearer <token>`
@@ -315,11 +349,13 @@ Delete a goal and all associated challenges.
 ## Challenges Endpoints
 
 ### GET /challenges
+
 Get challenges for a specific goal or user.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Query Parameters:**
+
 - `goalId` - Filter by goal ID
 - `status` - Filter by status (todo, in_progress, completed)
 - `difficulty` - Filter by difficulty
@@ -327,6 +363,7 @@ Get challenges for a specific goal or user.
 - `offset` - Pagination offset
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -360,11 +397,13 @@ Get challenges for a specific goal or user.
 ```
 
 ### POST /challenges
+
 Create a new challenge.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "goalId": "goal_123",
@@ -383,11 +422,13 @@ Create a new challenge.
 ```
 
 ### GET /challenges/:id
+
 Get specific challenge details.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -427,11 +468,13 @@ Get specific challenge details.
 ## Submissions Endpoints
 
 ### POST /submissions
+
 Submit work for a challenge.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "challengeId": "challenge_789",
@@ -442,6 +485,7 @@ Submit work for a challenge.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -461,11 +505,13 @@ Submit work for a challenge.
 ```
 
 ### GET /submissions/:id
+
 Get specific submission details.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -501,11 +547,13 @@ Get specific submission details.
 ## AI Endpoints
 
 ### POST /ai/generate-challenges
+
 Generate AI challenges for a goal.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "goalId": "goal_123",
@@ -516,6 +564,7 @@ Generate AI challenges for a goal.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -537,11 +586,13 @@ Generate AI challenges for a goal.
 ```
 
 ### POST /ai/feedback
+
 Get AI feedback on a submission.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "submissionId": "submission_456"
@@ -549,6 +600,7 @@ Get AI feedback on a submission.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -575,11 +627,13 @@ Get AI feedback on a submission.
 ```
 
 ### POST /ai/explain
+
 Get AI explanation for a concept.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "concept": "JavaScript closures",
@@ -593,11 +647,13 @@ Get AI explanation for a concept.
 ## Progress Endpoints
 
 ### GET /progress/dashboard
+
 Get dashboard data for the user.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -635,11 +691,13 @@ Get dashboard data for the user.
 ```
 
 ### GET /progress/goals/:goalId
+
 Get detailed progress for a specific goal.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -674,17 +732,20 @@ Get detailed progress for a specific goal.
 ## Leaderboard Endpoints
 
 ### GET /leaderboard
+
 Get leaderboard data.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Query Parameters:**
+
 - `scope` - global, friends, category
 - `timeframe` - all_time, this_week, this_month
 - `category` - programming, design, etc.
 - `limit` - Number of results (default: 50)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -714,16 +775,19 @@ Get leaderboard data.
 ## Peer Review Endpoints
 
 ### GET /reviews
+
 Get peer reviews for the user.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Query Parameters:**
+
 - `type` - to_review, given, received
 - `status` - pending, completed
 - `limit` - Number of results
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -744,11 +808,13 @@ Get peer reviews for the user.
 ```
 
 ### POST /reviews
+
 Submit a peer review.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "submissionId": "submission_789",
@@ -770,11 +836,13 @@ Submit a peer review.
 ## Rate Limiting
 
 All endpoints are rate limited:
+
 - **Authentication**: 5 requests per minute
 - **General API**: 100 requests per minute
 - **AI endpoints**: 10 requests per minute
 
 Rate limit headers are included in responses:
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
@@ -784,18 +852,21 @@ X-RateLimit-Reset: 1615802400
 ## Error Codes
 
 ### Authentication Errors
+
 - `AUTH_INVALID_CREDENTIALS` - Invalid email/password
 - `AUTH_TOKEN_EXPIRED` - Access token expired
 - `AUTH_TOKEN_INVALID` - Invalid or malformed token
 - `AUTH_USER_NOT_FOUND` - User account not found
 
 ### Validation Errors
+
 - `VALIDATION_REQUIRED_FIELD` - Required field missing
 - `VALIDATION_INVALID_FORMAT` - Invalid field format
 - `VALIDATION_MIN_LENGTH` - Field too short
 - `VALIDATION_MAX_LENGTH` - Field too long
 
 ### Business Logic Errors
+
 - `GOAL_NOT_FOUND` - Goal not found
 - `CHALLENGE_NOT_FOUND` - Challenge not found
 - `CHALLENGE_ALREADY_COMPLETED` - Challenge already completed
@@ -803,6 +874,7 @@ X-RateLimit-Reset: 1615802400
 - `DUPLICATE_SUBMISSION` - Submission already exists
 
 ### AI Service Errors
+
 - `AI_SERVICE_UNAVAILABLE` - AI service temporarily unavailable
 - `AI_QUOTA_EXCEEDED` - AI usage quota exceeded
 - `AI_INVALID_PROMPT` - Invalid prompt format

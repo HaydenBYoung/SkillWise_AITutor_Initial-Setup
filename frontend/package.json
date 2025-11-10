@@ -56,5 +56,6 @@
     "tutor"
   ],
   "author": "SkillWise Team",
-  "license": "MIT"
+  "license": "MIT",
+  "proxy": "http://localhost:3001"
 }

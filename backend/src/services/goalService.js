@@ -34,7 +34,10 @@ const goalService = {
 
   // Update goal progress (stores progress percentage)
   updateProgress: async (goalId, progress) => {
-    const updated = await Goal.update(goalId, { progress });
+    // Write to canonical DB column `progress_percentage` while accepting numeric input
+    const updated = await Goal.update(goalId, {
+      progress_percentage: progress,
+    });
     return updated;
   },
 
@@ -61,10 +64,16 @@ const goalService = {
   // Note: calculateCompletion currently uses a simple heuristic. Consider deriving completion from related challenges for more accuracy.
   calculateCompletion: (goal) => {
     if (!goal) return 0;
-    // If explicit progress field exists, use it
-    if (typeof goal.progress === 'number')
-      return Math.min(100, Math.max(0, goal.progress));
-    // Otherwise naive calculation: completed flag
+    // Prefer canonical `progress_percentage`, fall back to legacy `progress`.
+    const pct =
+      typeof goal.progress_percentage === 'number'
+        ? goal.progress_percentage
+        : goal.progress;
+    if (typeof pct === 'number') return Math.min(100, Math.max(0, pct));
+    // If explicit completion flag exists
+    if (typeof goal.is_completed === 'boolean')
+      return goal.is_completed ? 100 : 0;
+    // Legacy status support
     if (goal.status === 'completed' || goal.status === 'done') return 100;
     return 0;
   },

@@ -8,26 +8,37 @@ class Progress {
         'SELECT * FROM progress_events WHERE user_id = $1 ORDER BY timestamp_occurred DESC';
       const result = await db.query(query, [userId]);
       // map to legacy shape expected by services
-      return result.rows.map((r) => ({
-        id: r.id,
-        user_id: r.user_id,
-        challenge_id: r.related_challenge_id,
-        score:
-          r.event_data && r.event_data.score
-            ? Number(r.event_data.score)
-            : null,
-        completed:
-          r.event_type === 'challenge_completed' ||
-          (r.event_data && r.event_data.completed === true),
-        points_earned:
-          r.points_earned || (r.event_data && r.event_data.points_earned) || 0,
-        time_spent:
-          r.event_data && r.event_data.time_spent
-            ? Number(r.event_data.time_spent)
-            : null,
-        created_at: r.timestamp_occurred || r.created_at,
-        raw: r,
-      }));
+      return result.rows.map((r) => {
+        const createdAt = r.timestamp_occurred || r.created_at;
+        const createdAtStr = createdAt
+          ? createdAt.toISOString
+            ? createdAt.toISOString()
+            : String(createdAt)
+          : null;
+
+        return {
+          id: r.id,
+          user_id: r.user_id,
+          challenge_id: r.related_challenge_id,
+          score:
+            r.event_data && r.event_data.score
+              ? Number(r.event_data.score)
+              : null,
+          completed:
+            r.event_type === 'challenge_completed' ||
+            (r.event_data && r.event_data.completed === true),
+          points_earned:
+            r.points_earned ||
+            (r.event_data && r.event_data.points_earned) ||
+            0,
+          time_spent:
+            r.event_data && r.event_data.time_spent
+              ? Number(r.event_data.time_spent)
+              : null,
+          created_at: createdAtStr,
+          raw: r,
+        };
+      });
     } catch (error) {
       throw new Error(`Error finding progress for user: ${error.message}`);
     }
@@ -40,6 +51,12 @@ class Progress {
       const result = await db.query(query, [userId, challengeId]);
       const r = result.rows[0];
       if (!r) return null;
+      const createdAt = r.timestamp_occurred || r.created_at;
+      const createdAtStr = createdAt
+        ? createdAt.toISOString
+          ? createdAt.toISOString()
+          : String(createdAt)
+        : null;
       return {
         id: r.id,
         user_id: r.user_id,
@@ -57,7 +74,7 @@ class Progress {
           r.event_data && r.event_data.time_spent
             ? Number(r.event_data.time_spent)
             : null,
-        created_at: r.timestamp_occurred || r.created_at,
+        created_at: createdAtStr,
         raw: r,
       };
     } catch (error) {

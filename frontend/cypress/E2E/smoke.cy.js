@@ -1,10 +1,11 @@
-//First attempt at smoke test below
+/* global Cypress */
+// First attempt at smoke test below
 import {} from 'react';
 import { cy, it, describe } from 'cypress';
 
 describe('Smoke Test: Login → Create Goal → Add Challenge → Complete', () => {
-  const email = 'testuser@example.com';
-  const password = 'Password123!';
+  const email = Cypress.env('TEST_USER_EMAIL') || 'testuser@example.com';
+  const password = Cypress.env('TEST_USER_PASSWORD') || 'Password123!';
   const goalTitle = 'Learn React';
   const challengeTitle = 'Complete first component';
 

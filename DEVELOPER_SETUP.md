@@ -614,3 +614,54 @@ After getting everything running:
    - Contributing guidelines
 
 Happy coding! 🚀
+
+## Cypress CI: making the smoke test reliable
+
+Follow these steps to run the smoke Cypress test in CI or locally with a seeded test user.
+
+1. Ensure your backend database is reachable and migrations are applied. By default the project uses the DB at:
+
+   - `postgresql://skillwise_user:skillwise_pass@localhost:5433/skillwise_db`
+
+2. Seed a known Cypress test user in the database (the script creates or updates the user):
+
+   - From the `backend` folder run:
+
+     ```powershell
+     npm run seed:cypress
+     ```
+
+   - The script reads these optional env vars if you want different credentials:
+     - `CYPRESS_TEST_USER_EMAIL` (default: `testuser@example.com`)
+     - `CYPRESS_TEST_USER_PASSWORD` (default: `Password123!`)
+
+3. Start backend and frontend (or your CI job must start them). Example (local dev):
+
+   ```powershell
+   # start backend (port 3001)
+   cd backend; npm run dev
+
+   # start frontend (port 3000)
+   cd ../frontend; npm start
+   ```
+
+4. Run Cypress headless in the CI job (pass env vars as needed):
+
+   ```powershell
+   # from project root
+   # optional: set env vars for CI user
+   $env:CYPRESS_TEST_USER_EMAIL = 'testuser@example.com'; $env:CYPRESS_TEST_USER_PASSWORD = 'Password123!';
+   cd frontend; npm run cypress:run
+   ```
+
+5. If you prefer to run a single smoke spec directly:
+
+   ```powershell
+   npx cypress run --spec "cypress/E2E/smoke.cy.js"
+   ```
+
+Notes:
+
+- The smoke test uses the login credentials from `Cypress.env('TEST_USER_EMAIL')` and `Cypress.env('TEST_USER_PASSWORD')` if provided; otherwise it falls back to the seeded defaults.
+- For CI (GitHub Actions / GitLab CI), add the `npm run seed:cypress` step after the database starts and before `cypress run`.
+- If your CI runs the backend in a container, ensure `DATABASE_URL` or `TEST_DATABASE_URL` is set such that `backend/src/database/connection.js` connects to the same DB the seed script targets.
