@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DashboardLayout from '../components/common/DashboardLayout';
-import { useAuth } from '../hooks/useAuth';
 
 const PeerReviewPage = () => {
   const [reviews, setReviews] = useState([]);
