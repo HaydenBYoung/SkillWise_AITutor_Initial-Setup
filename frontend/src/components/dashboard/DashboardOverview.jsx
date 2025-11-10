@@ -1,6 +1,6 @@
 // TODO: Implement dashboard overview component
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+// Use plain anchors here so component renders in tests without requiring a Router context
 
 const DashboardOverview = () => {
   const [notification, setNotification] = useState(null);
@@ -62,12 +62,12 @@ const DashboardOverview = () => {
             </div>
           </div>
           <div className="bg-gray-50 px-5 py-3">
-            <Link
-              to="/goals"
+            <a
+              href="/goals"
               className="text-sm font-medium text-indigo-600 hover:text-indigo-900 truncate"
             >
               View all goals
-            </Link>
+            </a>
           </div>
         </div>
 
@@ -103,12 +103,12 @@ const DashboardOverview = () => {
             </div>
           </div>
           <div className="bg-gray-50 px-5 py-3">
-            <Link
-              to="/challenges"
+            <a
+              href="/challenges"
               className="text-sm font-medium text-indigo-600 hover:text-indigo-900 truncate"
             >
               View challenges
-            </Link>
+            </a>
           </div>
         </div>
 
@@ -146,12 +146,12 @@ const DashboardOverview = () => {
             </div>
           </div>
           <div className="bg-gray-50 px-5 py-3">
-            <Link
-              to="/progress"
+            <a
+              href="/progress"
               className="text-sm font-medium text-indigo-600 hover:text-indigo-900 truncate"
             >
               View progress
-            </Link>
+            </a>
           </div>
         </div>
       </div>
@@ -177,18 +177,18 @@ const DashboardOverview = () => {
             Quick Actions
           </h2>
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Link
-              to="/goals/new"
+            <a
+              href="/goals/new"
               className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
             >
               Create New Goal
-            </Link>
-            <Link
-              to="/challenges"
+            </a>
+            <a
+              href="/challenges"
               className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
             >
               Start a Challenge
-            </Link>
+            </a>
           </div>
         </div>
       </div>
