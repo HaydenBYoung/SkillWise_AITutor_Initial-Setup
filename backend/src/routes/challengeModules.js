@@ -7,7 +7,7 @@ const auth = require('../middleware/auth');
 router.get('/', auth, async (req, res) => {
   try {
     const modules = await challengeModuleService.getChallengeModulesForUser(req.user.id);
-    res.json(modules);
+    res.json(modules); // Return modules directly, not wrapped
   } catch (error) {
     console.error('Error fetching challenge modules:', error);
     res.status(500).json({ error: 'Failed to fetch challenge modules' });
@@ -17,25 +17,33 @@ router.get('/', auth, async (req, res) => {
 // Complete a challenge
 router.post('/:goalId/challenges/:challengeId/complete', auth, async (req, res) => {
   try {
-    const { goalId, challengeId } = req.params;
-    const { answer } = req.body;
-    
+    console.log('🎯 Challenge completion request:', {
+      goalId: req.params.goalId,
+      challengeId: req.params.challengeId,
+      userId: req.user.id
+    });
+
     const result = await challengeModuleService.completeChallenge(
-      req.user.id, 
-      parseInt(goalId), 
-      parseInt(challengeId), 
-      answer
+      req.user.id,
+      req.params.goalId,
+      req.params.challengeId,
+      req.body.answer
     );
-    
-    if (result.success) {
-      res.json(result);
-    } else {
-      res.status(400).json(result);
-    }
+
+    console.log('✅ Challenge completion result:', result);
+    res.json(result);
   } catch (error) {
-    console.error('Error completing challenge:', error);
-    res.status(500).json({ error: 'Failed to complete challenge' });
+    console.error('❌ Error completing challenge:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to complete challenge' 
+    });
   }
+});
+
+// Add a simple test route
+router.post('/test', auth, async (req, res) => {
+  res.json({ success: true, message: "Test route works!" });
 });
 
 module.exports = router;

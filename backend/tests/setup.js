@@ -33,10 +33,7 @@ beforeAll(async () => {
 // Global test cleanup
 afterAll(async () => {
   try {
-    // Clean up test data if needed
-    // await testPool.query('TRUNCATE TABLE users CASCADE');
-
-    // Close database connections
+    // ONLY close database connections - NO DATA DELETION EVER!
     await testPool.end();
     console.log('✅ Test database cleanup completed');
   } catch (err) {
@@ -44,34 +41,8 @@ afterAll(async () => {
   }
 });
 
-// Helper function to clear test data between tests
-const clearTestData = async () => {
-  const tables = [
-    'user_achievements',
-    'achievements',
-    'leaderboard',
-    'progress_events',
-    'peer_reviews',
-    'ai_feedback',
-    'submissions',
-    'challenges',
-    'goals',
-    'refresh_tokens',
-    'users',
-  ];
-
-  for (const table of tables) {
-    try {
-      await testPool.query(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
-    } catch (err) {
-      // Table might not exist, continue
-      console.warn(`Warning: Could not truncate table ${table}:`, err.message);
-    }
-  }
-};
-
-// Export test utilities
+// Export test utilities - NO DATABASE CLEARING FUNCTIONS
 module.exports = {
   testPool,
-  clearTestData,
+  // NO DATABASE CLEARING FUNCTIONS - Use the delete account API if tests need cleanup
 };

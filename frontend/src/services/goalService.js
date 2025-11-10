@@ -108,7 +108,9 @@ export const goalService = {
   // Toggle goal completion
   async toggleGoalCompletion(goalId, isCompleted) {
     try {
-      const response = await apiService.goals.update(goalId, { is_completed: isCompleted });
+      const response = await apiService.patch(`/goals/${goalId}/toggle-completion`, { 
+        is_completed: isCompleted 
+      });
       return response.data;
     } catch (error) {
       console.error(`Error toggling goal completion ${goalId}:`, error);

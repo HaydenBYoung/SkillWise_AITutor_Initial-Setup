@@ -39,12 +39,19 @@ const GoalsPage = () => {
       fetchGoals();
     };
 
+    const handleGoalProgressUpdated = () => {
+      // Challenge was completed, refresh goals
+      fetchGoals();
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('goalProgressUpdated', handleGoalProgressUpdated);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('goalProgressUpdated', handleGoalProgressUpdated);
     };
   }, []);
 
@@ -113,13 +120,21 @@ const GoalsPage = () => {
 
   const handleToggleCompletion = async (goalId, currentStatus) => {
     try {
-      await goalService.toggleGoalCompletion(goalId, !currentStatus);
+      // Call the proper completion endpoint
+      const response = await goalService.toggleGoalCompletion(goalId, !currentStatus);
+      
+      // Update state immediately to move goal to appropriate position
       setGoals(prev => prev.map(goal => 
         goal.id === goalId 
-          ? { ...goal, is_completed: !currentStatus }
+          ? { ...goal, is_completed: !currentStatus, completion_date: !currentStatus ? new Date().toISOString() : null }
           : goal
       ));
-      toast.success(currentStatus ? 'Goal marked as incomplete' : 'Goal completed! 🎉');
+      
+      const message = !currentStatus 
+        ? '🎉 Goal completed! Your points have been saved.' 
+        : 'Goal reopened. You can continue working on challenges.';
+      
+      toast.success(message);
     } catch (error) {
       console.error('Error toggling goal completion:', error);
       toast.error('Failed to update goal status');
@@ -163,6 +178,11 @@ const GoalsPage = () => {
   const sortedAndFilteredGoals = goals
     .filter(goal => !filterCategory || goal.category === filterCategory)
     .sort((a, b) => {
+      // Always put completed goals at the bottom
+      if (a.is_completed && !b.is_completed) return 1;
+      if (!a.is_completed && b.is_completed) return -1;
+      
+      // Within same completion status, apply other sorting
       switch (sortBy) {
         case 'newest':
           return new Date(b.created_at) - new Date(a.created_at);
@@ -380,7 +400,7 @@ const GoalsPage = () => {
                       </span>
                       {goal.is_completed && (
                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                          ✓ Completed
+                          ✓ Completed {goal.completion_date ? formatDate(goal.completion_date) : ''}
                         </span>
                       )}
                     </div>
@@ -394,15 +414,15 @@ const GoalsPage = () => {
                       onClick={() => handleToggleCompletion(goal.id, goal.is_completed)}
                       className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1 ${
                         goal.is_completed 
-                          ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300' 
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
+                          ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300' 
+                          : 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300'
                       }`}
-                      title={goal.is_completed ? 'Mark as incomplete' : 'Mark as complete'}
+                      title={goal.is_completed ? 'Reopen goal to continue challenges' : 'Complete goal and save progress'}
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      {goal.is_completed ? 'Completed' : 'Complete'}
+                      {goal.is_completed ? 'Reopen' : 'Complete'}
                     </button>
                     <button
                       onClick={() => handleDeleteGoal(goal.id)}

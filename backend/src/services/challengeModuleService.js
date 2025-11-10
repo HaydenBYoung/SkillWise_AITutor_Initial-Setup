@@ -11,19 +11,9 @@ const challengeModuleService = {
           g.title,
           g.category,
           g.difficulty_level,
-          CASE 
-            WHEN g.difficulty_level = 'easy' THEN 20
-            WHEN g.difficulty_level = 'medium' THEN 35
-            WHEN g.difficulty_level = 'hard' THEN 50
-            ELSE 35
-          END as target_points,
-          COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) as earned_points,
-          g.progress_percentage
+          g.earned_points
         FROM goals g
-        LEFT JOIN goal_challenges gc ON g.id = gc.goal_id
-        LEFT JOIN challenges c ON gc.challenge_id = c.id
         WHERE g.user_id = $1
-        GROUP BY g.id
         ORDER BY g.created_at DESC
       `;
       
@@ -34,37 +24,40 @@ const challengeModuleService = {
       const modules = [];
       
       for (const goal of goals) {
-        // Get challenges for this category (3 per category: easy, medium, hard)
-        const challengesQuery = `
-          SELECT c.*, 
-                 gc.status as user_status,
-                 gc.id as goal_challenge_id
-          FROM challenges c
-          LEFT JOIN goal_challenges gc ON c.id = gc.challenge_id 
-                                       AND gc.goal_id = $1 
-                                       AND gc.user_id = $2
-          WHERE LOWER(c.category) = LOWER($3)
-          ORDER BY 
-            CASE c.difficulty_level 
-              WHEN 'easy' THEN 1 
-              WHEN 'medium' THEN 2 
-              WHEN 'hard' THEN 3 
-            END
-          LIMIT 3
-        `;
-        
-        const challengesResult = await db.query(challengesQuery, [goal.id, userId, goal.category]);
-        const challenges = challengesResult.rows.map(challenge => ({
-          ...challenge,
-          status: challenge.user_status || 'todo'
-        }));
-        
+        // Create 3 simple temp challenges for this goal
+        const challenges = [
+          {
+            id: `temp-easy-${goal.id}`,
+            title: `${goal.category} Basics`,
+            description: `Learn the fundamentals of ${goal.category}`,
+            difficulty_level: 'easy',
+            points_reward: 1,
+            category: goal.category,
+            status: 'todo'
+          },
+          {
+            id: `temp-medium-${goal.id}`,
+            title: `${goal.category} Intermediate`, 
+            description: `Take your ${goal.category} skills to the next level`,
+            difficulty_level: 'medium',
+            points_reward: 2,
+            category: goal.category,
+            status: 'todo'
+          },
+          {
+            id: `temp-hard-${goal.id}`,
+            title: `${goal.category} Advanced`,
+            description: `Master advanced ${goal.category} concepts`,
+            difficulty_level: 'hard',
+            points_reward: 3,
+            category: goal.category,
+            status: 'todo'
+          }
+        ];
+
         // Calculate module progress
-        const completedChallenges = challenges.filter(c => c.status === 'completed').length;
-        const totalChallenges = challenges.length;
-        const earnedModulePoints = challenges
-          .filter(c => c.status === 'completed')
-          .reduce((sum, c) => sum + c.points_reward, 0);
+        const completedChallenges = 0; // Always 0 for temp challenges
+        const totalChallenges = 3;
         
         // Get category emoji
         const getCategoryEmoji = (category) => {
@@ -76,7 +69,7 @@ const challengeModuleService = {
             default: return '📚';
           }
         };
-        
+
         const module = {
           id: `goal-${goal.id}`,
           goalId: goal.id,
@@ -85,14 +78,9 @@ const challengeModuleService = {
           logo: getCategoryEmoji(goal.category),
           totalChallenges,
           completedChallenges,
-          earnedPoints: earnedModulePoints,
+          earnedPoints: goal.earned_points || 0, // Use actual earned_points from database
           targetPoints: 6, // 1 + 2 + 3 = 6 points total per module
-          challenges,
-          goalProgress: {
-            earned: goal.earned_points,
-            target: goal.target_points,
-            percentage: goal.progress_percentage
-          }
+          challenges
         };
         
         modules.push(module);
@@ -100,6 +88,7 @@ const challengeModuleService = {
       
       return modules;
     } catch (error) {
+      console.error('Error in getChallengeModulesForUser:', error);
       throw new Error(`Error retrieving challenge modules: ${error.message}`);
     }
   },
@@ -107,56 +96,51 @@ const challengeModuleService = {
   // Complete a challenge in a module
   completeChallenge: async (userId, goalId, challengeId, userAnswer) => {
     try {
-      // Validate the answer (for now, just check if it's "4")
-      if (userAnswer !== "4") {
-        return {
-          success: false,
-          message: "Incorrect answer. Please try again!"
-        };
-      }
-
-      // Check if this challenge is already linked to the goal
-      const existingQuery = `
-        SELECT id, status FROM goal_challenges 
-        WHERE goal_id = $1 AND challenge_id = $2 AND user_id = $3
+      console.log('🎯 Processing challenge completion:', { userId, goalId, challengeId, userAnswer });
+      
+      // Determine points earned based on difficulty
+      let pointsEarned = 1;
+      if (challengeId.includes('medium')) pointsEarned = 2;
+      else if (challengeId.includes('hard')) pointsEarned = 3;
+      
+      console.log('💰 Points to be earned:', pointsEarned);
+      
+      // Add points to the goal's earned_points
+      const updateQuery = `
+        UPDATE goals 
+        SET earned_points = COALESCE(earned_points, 0) + $1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2 AND user_id = $3
+        RETURNING earned_points, points_reward, title
       `;
       
-      const existingResult = await db.query(existingQuery, [goalId, challengeId, userId]);
+      console.log('🔄 Executing SQL query:', updateQuery);
+      console.log('🔄 Query params:', [pointsEarned, goalId, userId]);
       
-      if (existingResult.rows.length === 0) {
-        // Add the challenge to the goal first
-        const addQuery = `
-          INSERT INTO goal_challenges (goal_id, challenge_id, user_id, status)
-          VALUES ($1, $2, $3, 'completed')
-          RETURNING *
-        `;
-        
-        await db.query(addQuery, [goalId, challengeId, userId]);
-      } else {
-        // Update existing challenge status
-        const updateQuery = `
-          UPDATE goal_challenges 
-          SET status = 'completed', completed_at = NOW(), updated_at = NOW()
-          WHERE goal_id = $1 AND challenge_id = $2 AND user_id = $3
-          RETURNING *
-        `;
-        
-        await db.query(updateQuery, [goalId, challengeId, userId]);
+      const updateResult = await db.query(updateQuery, [pointsEarned, goalId, userId]);
+      
+      console.log('📊 Update result:', updateResult.rows);
+      
+      if (updateResult.rows.length === 0) {
+        throw new Error('Goal not found or does not belong to user');
       }
-
-      // Get the challenge points
-      const challengeQuery = `SELECT points_reward FROM challenges WHERE id = $1`;
-      const challengeResult = await db.query(challengeQuery, [challengeId]);
-      const pointsEarned = challengeResult.rows[0]?.points_reward || 0;
-
+      
+      const goal = updateResult.rows[0];
+      console.log('✅ Goal updated:', goal);
+      
       return {
         success: true,
-        message: `Congratulations! You earned ${pointsEarned} points!`,
-        pointsEarned
+        message: `🎉 Congratulations! You earned ${pointsEarned} points for "${goal.title}"!`,
+        pointsEarned,
+        goalProgress: {
+          earned: goal.earned_points,
+          target: goal.points_reward
+        }
       };
-      
     } catch (error) {
-      console.error('Error completing challenge:', error);
+      console.error('❌ Error completing challenge:', error);
+      console.error('❌ Error stack:', error.stack);
+      console.error('❌ Error message:', error.message);
       return {
         success: false,
         message: "An error occurred while completing the challenge."

@@ -9,30 +9,27 @@ const goalService = {
       const query = `
         SELECT 
           g.*,
-          COUNT(gc.id) as total_challenges,
-          COUNT(gc.id) FILTER (WHERE gc.status = 'completed') as completed_challenges,
+          0 as total_challenges,
+          0 as completed_challenges,
           CASE 
             WHEN g.difficulty_level = 'easy' THEN 20
             WHEN g.difficulty_level = 'medium' THEN 35
             WHEN g.difficulty_level = 'hard' THEN 50
             ELSE 35
           END as target_points,
-          COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0)::INTEGER as earned_points,
+          COALESCE(g.earned_points, 0)::INTEGER as earned_points,
           CASE 
             WHEN g.difficulty_level = 'easy' THEN 
-              LEAST(100, ROUND((COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) * 100.0) / 20))
+              LEAST(100, ROUND((COALESCE(g.earned_points, 0) * 100.0) / 20))
             WHEN g.difficulty_level = 'medium' THEN 
-              LEAST(100, ROUND((COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) * 100.0) / 35))
+              LEAST(100, ROUND((COALESCE(g.earned_points, 0) * 100.0) / 35))
             WHEN g.difficulty_level = 'hard' THEN 
-              LEAST(100, ROUND((COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) * 100.0) / 50))
+              LEAST(100, ROUND((COALESCE(g.earned_points, 0) * 100.0) / 50))
             ELSE 
-              LEAST(100, ROUND((COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) * 100.0) / 35))
+              LEAST(100, ROUND((COALESCE(g.earned_points, 0) * 100.0) / 35))
           END as calculated_progress_percentage
         FROM goals g
-        LEFT JOIN goal_challenges gc ON g.id = gc.goal_id
-        LEFT JOIN challenges c ON gc.challenge_id = c.id
         WHERE g.user_id = $1
-        GROUP BY g.id
         ORDER BY g.created_at DESC
       `;
       

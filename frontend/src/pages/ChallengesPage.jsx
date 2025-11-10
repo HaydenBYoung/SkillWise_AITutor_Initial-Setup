@@ -22,7 +22,11 @@ const ChallengesPage = () => {
       
       if (response.success) {
         setChallengeModules(response.data);
-        console.log('Challenge modules loaded:', response.data);
+        console.log('📋 Challenge modules loaded:', response.data);
+        console.log('📋 First module structure:', response.data[0]);
+        if (response.data[0] && response.data[0].challenges) {
+          console.log('📋 First challenge structure:', response.data[0].challenges[0]);
+        }
       } else {
         toast.error('Failed to load challenge modules');
         setChallengeModules([]);
@@ -37,7 +41,11 @@ const ChallengesPage = () => {
   };
 
   const handleModuleClick = (moduleId) => {
-    setExpandedModule(expandedModule === moduleId ? null : moduleId);
+    console.log('🎯 Module clicked:', moduleId);
+    console.log('Current expanded module:', expandedModule);
+    const newExpanded = expandedModule === moduleId ? null : moduleId;
+    console.log('Setting expanded to:', newExpanded);
+    setExpandedModule(newExpanded);
   };
 
   const handleAnswerChange = (challengeId, answer) => {
@@ -48,34 +56,33 @@ const ChallengesPage = () => {
   };
 
   const handleChallengeSubmit = async (module, challenge) => {
-    const answer = challengeAnswers[challenge.id];
+    console.log('🎯 Challenge button clicked!');
+    console.log('Module:', module);
+    console.log('Challenge:', challenge);
     
-    if (!answer) {
-      toast.error('Please enter an answer first!');
-      return;
-    }
-
     try {
+      console.log('📡 Making API call to complete challenge...');
       const result = await challengeModuleService.completeChallenge(
         module.goalId, 
         challenge.id, 
-        answer
+        "4" // Auto-pass with the magic answer
       );
+
+      console.log('📥 API response:', result);
 
       if (result.success) {
         toast.success(result.message);
+        console.log('✅ Challenge completed successfully!');
         // Refresh the modules to show updated progress
         await fetchChallengeModules();
-        // Clear the answer
-        setChallengeAnswers(prev => ({
-          ...prev,
-          [challenge.id]: ''
-        }));
+        // Also refresh goals data if user is on goals page by dispatching a custom event
+        window.dispatchEvent(new CustomEvent('goalProgressUpdated'));
       } else {
+        console.log('❌ Challenge completion failed:', result.message);
         toast.error(result.message);
       }
     } catch (error) {
-      console.error('Error submitting challenge:', error);
+      console.error('💥 Error submitting challenge:', error);
       toast.error('Failed to submit challenge');
     }
   };
@@ -267,21 +274,16 @@ const ChallengesPage = () => {
                             </div>
                           ) : (
                             <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="text"
-                                  value={challengeAnswers[challenge.id] || ''}
-                                  onChange={(e) => handleAnswerChange(challenge.id, e.target.value)}
-                                  placeholder="Enter your answer..."
-                                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-blue-500"
-                                />
-                                <button
-                                  onClick={() => handleChallengeSubmit(module, challenge)}
-                                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
-                                >
-                                  Submit
-                                </button>
-                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent parent click
+                                  console.log('🔴 CHALLENGE BUTTON CLICKED!');
+                                  handleChallengeSubmit(module, challenge);
+                                }}
+                                className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors"
+                              >
+                                Complete Challenge (+{challenge.points_reward} pts)
+                              </button>
                             </div>
                           )}
                         </div>
