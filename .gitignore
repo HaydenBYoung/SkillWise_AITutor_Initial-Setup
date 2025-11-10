@@ -198,3 +198,9 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+
+# Cypress test artifacts
+cypress/screenshots/
+cypress/videos/
+*/cypress/screenshots/
+*/cypress/videos/

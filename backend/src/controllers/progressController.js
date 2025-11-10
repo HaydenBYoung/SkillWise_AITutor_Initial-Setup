@@ -12,6 +12,15 @@ const progressController = {
       
       const progress = await progressService.getUserProgress(userId);
       
+      logger.info(`Progress data returned:`, progress);
+      
+      // Add cache-busting headers
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+      
       res.status(200).json({
         success: true,
         data: progress

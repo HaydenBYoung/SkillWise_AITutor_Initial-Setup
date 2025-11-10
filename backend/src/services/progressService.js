@@ -17,45 +17,29 @@ const progressService = {
                 ELSE 35
               END
             ), 0) as total_target_points,
-            COALESCE(SUM(
-              CASE 
-                WHEN difficulty_level = 'easy' THEN 20
-                WHEN difficulty_level = 'medium' THEN 35
-                WHEN difficulty_level = 'hard' THEN 50
-                ELSE 35
-              END
-            ) FILTER (WHERE is_completed = true), 0) as completed_goal_points
+            COALESCE(SUM(earned_points), 0) as total_earned_points,
+            -- Estimate completed challenges based on earned points
+            -- Each challenge gives 1-3 points, so we estimate based on total earned points
+            COALESCE(SUM(earned_points), 0) as estimated_completed_challenges,
+            -- Total possible challenges (3 per goal: easy=1pt, medium=2pts, hard=3pts)
+            COUNT(*) * 3 as total_possible_challenges
           FROM goals 
           WHERE user_id = $1
-        ),
-        challenge_stats AS (
-          SELECT 
-            COUNT(DISTINCT gc.challenge_id) as total_challenges,
-            COUNT(DISTINCT gc.challenge_id) FILTER (WHERE gc.status = 'completed') as completed_challenges,
-            COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) as earned_points,
-            COUNT(DISTINCT gc.goal_id) as active_goals
-          FROM goal_challenges gc
-          JOIN challenges c ON gc.challenge_id = c.id
-          WHERE gc.user_id = $1
-        ),
-        recent_activity AS (
-          SELECT 
-            DATE(gc.updated_at) as activity_date,
-            COUNT(*) FILTER (WHERE gc.status = 'completed' AND DATE(gc.updated_at) >= CURRENT_DATE - INTERVAL '7 days') as challenges_last_7_days,
-            COUNT(*) FILTER (WHERE gc.status = 'completed' AND DATE(gc.updated_at) >= CURRENT_DATE - INTERVAL '30 days') as challenges_last_30_days
-          FROM goal_challenges gc
-          WHERE gc.user_id = $1 AND gc.status = 'completed'
-          GROUP BY DATE(gc.updated_at)
         )
         SELECT 
           gs.total_goals,
           gs.completed_goals,
           gs.total_target_points,
-          gs.completed_goal_points,
-          cs.total_challenges,
-          cs.completed_challenges,
-          cs.earned_points,
-          cs.active_goals,
+          gs.total_earned_points as earned_points,
+          gs.estimated_completed_challenges as completed_challenges,
+          gs.total_possible_challenges as total_challenges,
+          gs.total_goals as active_goals,
+          COALESCE(
+            CASE 
+              WHEN gs.total_goals > 0 THEN ROUND((gs.completed_goals::DECIMAL / gs.total_goals) * 100)
+              ELSE 0 
+            END, 0
+          ) as completion_rate,
           COALESCE(
             CASE 
               WHEN gs.total_goals > 0 THEN ROUND((gs.completed_goals::DECIMAL / gs.total_goals) * 100)
@@ -64,13 +48,13 @@ const progressService = {
           ) as goal_completion_rate,
           COALESCE(
             CASE 
-              WHEN cs.total_challenges > 0 THEN ROUND((cs.completed_challenges::DECIMAL / cs.total_challenges) * 100)
+              WHEN gs.total_possible_challenges > 0 THEN ROUND((gs.estimated_completed_challenges::DECIMAL / gs.total_possible_challenges) * 100)
               ELSE 0 
             END, 0
           ) as challenge_completion_rate,
-          (SELECT COUNT(*) FROM recent_activity WHERE challenges_last_7_days > 0) as active_days_last_7,
-          (SELECT COUNT(*) FROM recent_activity WHERE challenges_last_30_days > 0) as active_days_last_30
-        FROM goal_stats gs, challenge_stats cs
+          1 as active_days_last_7,
+          1 as active_days_last_30
+        FROM goal_stats gs
       `;
       
       const result = await db.query(query, [userId]);
@@ -83,7 +67,28 @@ const progressService = {
   // Get activity timeline for charts
   getActivityData: async (userId, timeframe = '30d') => {
     try {
-      const days = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : timeframe === '90d' ? 90 : 365;
+      // Map frontend timeframes to backend format
+      let days;
+      switch (timeframe) {
+        case 'week':
+        case '7d':
+          days = 7;
+          break;
+        case 'month':
+        case '30d':
+          days = 30;
+          break;
+        case 'quarter':
+        case '90d':
+          days = 90;
+          break;
+        case 'year':
+        case '365d':
+          days = 365;
+          break;
+        default:
+          days = 30;
+      }
       
       const query = `
         WITH date_series AS (
@@ -96,18 +101,18 @@ const progressService = {
         ),
         daily_activity AS (
           SELECT 
-            DATE(gc.updated_at) as activity_date,
-            COUNT(*) FILTER (WHERE gc.status = 'completed') as challenges_completed,
-            COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) as points_earned
-          FROM goal_challenges gc
-          JOIN challenges c ON gc.challenge_id = c.id
-          WHERE gc.user_id = $1 
-            AND DATE(gc.updated_at) >= CURRENT_DATE - INTERVAL '${days - 1} days'
-          GROUP BY DATE(gc.updated_at)
+            DATE(g.updated_at) as activity_date,
+            COUNT(*) as goals_worked_on,
+            COALESCE(SUM(g.earned_points), 0) as points_earned
+          FROM goals g
+          WHERE g.user_id = $1 
+            AND DATE(g.updated_at) >= CURRENT_DATE - INTERVAL '${days - 1} days'
+            AND g.earned_points > 0
+          GROUP BY DATE(g.updated_at)
         )
         SELECT 
           ds.date,
-          COALESCE(da.challenges_completed, 0) as challenges_completed,
+          COALESCE(da.goals_worked_on, 0) as challenges_completed,
           COALESCE(da.points_earned, 0) as points_earned
         FROM date_series ds
         LEFT JOIN daily_activity da ON ds.date = da.activity_date
@@ -129,9 +134,7 @@ const progressService = {
           g.category,
           COUNT(g.id) as total_goals,
           COUNT(g.id) FILTER (WHERE g.is_completed = true) as completed_goals,
-          COUNT(DISTINCT gc.challenge_id) as total_challenges,
-          COUNT(DISTINCT gc.challenge_id) FILTER (WHERE gc.status = 'completed') as completed_challenges,
-          COALESCE(SUM(c.points_reward) FILTER (WHERE gc.status = 'completed'), 0) as earned_points,
+          COALESCE(SUM(g.earned_points), 0) as earned_points,
           COALESCE(SUM(
             CASE 
               WHEN g.difficulty_level = 'easy' THEN 20
@@ -141,8 +144,6 @@ const progressService = {
             END
           ), 0) as target_points
         FROM goals g
-        LEFT JOIN goal_challenges gc ON g.id = gc.goal_id AND gc.user_id = g.user_id
-        LEFT JOIN challenges c ON gc.challenge_id = c.id
         WHERE g.user_id = $1
         GROUP BY g.category
         ORDER BY earned_points DESC
@@ -151,11 +152,11 @@ const progressService = {
       const result = await db.query(query, [userId]);
       return result.rows.map(row => ({
         ...row,
-        completion_percentage: row.total_goals > 0 ? 
-          Math.round((row.completed_goals / row.total_goals) * 100) : 0
+        completion_percentage: row.total_goals > 0 ? Math.round((row.completed_goals / row.total_goals) * 100) : 0,
+        points_percentage: row.target_points > 0 ? Math.round((row.earned_points / row.target_points) * 100) : 0
       }));
     } catch (error) {
-      throw new Error(`Error retrieving progress by category: ${error.message}`);
+      throw new Error(`Error retrieving category progress: ${error.message}`);
     }
   },
 
@@ -249,11 +250,11 @@ const progressService = {
             active_days as value,
             CURRENT_TIMESTAMP as achieved_at
           FROM (
-            SELECT COUNT(DISTINCT DATE(gc.updated_at)) as active_days
-            FROM goal_challenges gc
-            WHERE gc.user_id = $1 
-              AND gc.status = 'completed'
-              AND gc.updated_at >= CURRENT_DATE - INTERVAL '30 days'
+            SELECT COUNT(DISTINCT DATE(g.updated_at)) as active_days
+            FROM goals g
+            WHERE g.user_id = $1 
+              AND g.updated_at >= CURRENT_DATE - INTERVAL '30 days'
+              AND g.earned_points > 0
           ) streak_data
           WHERE active_days >= 1
         )
@@ -274,39 +275,17 @@ const progressService = {
     try {
       const query = `
         SELECT 
-          'challenge' as type,
-          c.title as title,
-          c.description,
-          c.difficulty_level,
-          c.points_reward as points,
-          g.title as goal_title,
-          g.category,
-          gc.updated_at as completed_at
-        FROM goal_challenges gc
-        JOIN challenges c ON gc.challenge_id = c.id
-        JOIN goals g ON gc.goal_id = g.id
-        WHERE gc.user_id = $1 AND gc.status = 'completed'
-        
-        UNION ALL
-        
-        SELECT 
           'goal' as type,
           g.title,
           g.description,
           g.difficulty_level,
-          CASE 
-            WHEN g.difficulty_level = 'easy' THEN 20
-            WHEN g.difficulty_level = 'medium' THEN 35
-            WHEN g.difficulty_level = 'hard' THEN 50
-            ELSE 35
-          END as points,
+          g.earned_points as points,
           g.title as goal_title,
           g.category,
-          g.completion_date as completed_at
+          g.updated_at as completed_at
         FROM goals g
-        WHERE g.user_id = $1 AND g.is_completed = true
-        
-        ORDER BY completed_at DESC
+        WHERE g.user_id = $1 AND g.earned_points > 0
+        ORDER BY g.updated_at DESC
         LIMIT $2
       `;
       

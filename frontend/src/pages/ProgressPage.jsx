@@ -81,6 +81,21 @@ const ProgressPage = () => {
       console.log('🏆 Processed achievements:', achievements);
       console.log('🏆 Achievements length:', achievements.length);
       
+      // DEBUG: Log the overview data
+      console.log('📊 DEBUG - Overview data received:', overview);
+      console.log('📊 DEBUG - earned_points:', overview.earned_points);
+      console.log('📊 DEBUG - completed_challenges:', overview.completed_challenges);
+      console.log('📊 DEBUG - total_goals:', overview.total_goals);
+      console.log('📊 DEBUG - completion_rate:', overview.completion_rate);
+      
+      // DEBUG: Log the activity data for charts
+      console.log('📈 Activity history:', activityHistory);
+      console.log('📈 Activity length:', activityHistory ? activityHistory.length : 'undefined');
+      
+      // DEBUG: Log the completion timeline
+      console.log('✅ Timeline:', completionTimeline);
+      console.log('✅ Timeline length:', completionTimeline ? completionTimeline.length : 'undefined');
+      
       // Handle goals response properly - same logic as GoalsPage
       let goals = [];
       console.log('🎯 Raw goals response:', goalsResponse);
@@ -193,6 +208,9 @@ const ProgressPage = () => {
   }
 
   const chartData = formatActivityData(progressData.activityHistory);
+  console.log('📊 Chart data:', chartData);
+  console.log('📊 Chart length:', chartData ? chartData.length : 'undefined');
+  
   const { overview } = progressData;
 
   return (
@@ -494,11 +512,11 @@ const ProgressPage = () => {
               <span className="text-2xl">✅</span>
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Completed Challenges</h3>
             </div>
-            {progressData.completionTimeline && progressData.completionTimeline.filter(item => item.type === 'challenge').length > 0 ? (
+            {progressData.completionTimeline && progressData.completionTimeline.filter(item => item.type === 'goal').length > 0 ? (
               <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4 max-h-80 overflow-y-auto">
                 <div className="space-y-3">
                   {progressData.completionTimeline
-                    .filter(item => item.type === 'challenge')
+                    .filter(item => item.type === 'goal')
                     .slice(0, 10)
                     .map((challenge, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -533,10 +551,10 @@ const ProgressPage = () => {
                     </div>
                   ))}
                 </div>
-                {progressData.completionTimeline.filter(item => item.type === 'challenge').length > 10 && (
+                {progressData.completionTimeline.filter(item => item.type === 'goal').length > 10 && (
                   <div className="text-center mt-4">
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Showing 10 of {progressData.completionTimeline.filter(item => item.type === 'challenge').length} completed challenges
+                      Showing 10 of {progressData.completionTimeline.filter(item => item.type === 'goal').length} completed challenges
                     </p>
                   </div>
                 )}
