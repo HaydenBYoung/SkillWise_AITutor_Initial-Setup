@@ -1,5 +1,4 @@
 // TODO: Implement peer review and collaboration features
-// This comment was added to avoid an empty commit quirk with ESLint and Git
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DashboardLayout from '../components/common/DashboardLayout';
@@ -100,7 +99,7 @@ const PeerReviewPage = () => {
   const filteredReviews = reviews.filter(
     (review) =>
       selectedCategory === 'all' ||
-      review.category.toLowerCase() === selectedCategory.toLowerCase()
+      review.category.toLowerCase() === selectedCategory.toLowerCase(),
   );
 
   const getStatusBadge = (status) => {
@@ -204,7 +203,7 @@ const PeerReviewPage = () => {
                           className="difficulty-badge"
                           style={{
                             backgroundColor: getDifficultyColor(
-                              review.difficulty
+                              review.difficulty,
                             ),
                           }}
                         >
@@ -280,7 +279,7 @@ const PeerReviewPage = () => {
                             className="difficulty-badge"
                             style={{
                               backgroundColor: getDifficultyColor(
-                                submission.difficulty
+                                submission.difficulty,
                               ),
                             }}
                           >
