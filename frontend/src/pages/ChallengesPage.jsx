@@ -69,7 +69,7 @@ const ChallengesPage = () => {
     if (filters.category) {
       filtered = filtered.filter(
         (challenge) =>
-          challenge.category.toLowerCase() === filters.category.toLowerCase()
+          challenge.category.toLowerCase() === filters.category.toLowerCase(),
       );
     }
 
@@ -77,7 +77,7 @@ const ChallengesPage = () => {
       filtered = filtered.filter(
         (challenge) =>
           challenge.difficulty.toLowerCase() ===
-          filters.difficulty.toLowerCase()
+          filters.difficulty.toLowerCase(),
       );
     }
 
@@ -91,8 +91,8 @@ const ChallengesPage = () => {
             .toLowerCase()
             .includes(filters.search.toLowerCase()) ||
           challenge.tags.some((tag) =>
-            tag.toLowerCase().includes(filters.search.toLowerCase())
-          )
+            tag.toLowerCase().includes(filters.search.toLowerCase()),
+          ),
       );
     }
 
@@ -102,10 +102,10 @@ const ChallengesPage = () => {
   const handleToggleComplete = async (id, updated) => {
     // Optimistic update immediately
     setChallenges((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
+      prev.map((c) => (c.id === id ? { ...c, ...updated } : c)),
     );
     setFilteredChallenges((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
+      prev.map((c) => (c.id === id ? { ...c, ...updated } : c)),
     );
 
     // If there is an existing pending timer, clear it
@@ -128,19 +128,19 @@ const ChallengesPage = () => {
         window.dispatchEvent(
           new CustomEvent('challenge:persisted', {
             detail: { id, completed: true },
-          })
+          }),
         );
       } catch (err) {
         // If persistence failed, revert optimistic update and notify user
         setChallenges((prev) =>
           prev.map((c) =>
-            c.id === id ? { ...c, completed: false, progress: 0 } : c
-          )
+            c.id === id ? { ...c, completed: false, progress: 0 } : c,
+          ),
         );
         setFilteredChallenges((prev) =>
           prev.map((c) =>
-            c.id === id ? { ...c, completed: false, progress: 0 } : c
-          )
+            c.id === id ? { ...c, completed: false, progress: 0 } : c,
+          ),
         );
         // eslint-disable-next-line no-console
         console.error('Failed to persist challenge completion', err);
@@ -166,13 +166,13 @@ const ChallengesPage = () => {
     }
     setChallenges((prev) =>
       prev.map((c) =>
-        c.id === id ? { ...c, completed: false, progress: 0 } : c
-      )
+        c.id === id ? { ...c, completed: false, progress: 0 } : c,
+      ),
     );
     setFilteredChallenges((prev) =>
       prev.map((c) =>
-        c.id === id ? { ...c, completed: false, progress: 0 } : c
-      )
+        c.id === id ? { ...c, completed: false, progress: 0 } : c,
+      ),
     );
     setPendingMap((prev) => {
       const copy = { ...prev };

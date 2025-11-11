@@ -27,8 +27,8 @@ const ChallengeCard = ({
       typeof challenge?.progress === 'number'
         ? challenge.progress
         : challenge?.completed
-        ? 100
-        : 0
+          ? 100
+          : 0,
     );
   }, [challenge?.completed, challenge?.progress]);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -46,8 +46,8 @@ const ChallengeCard = ({
                 difficulty === 'Easy'
                   ? 'bg-green-100 text-green-800'
                   : difficulty === 'Hard'
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-yellow-100 text-yellow-800'
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-yellow-100 text-yellow-800'
               }`}
             >
               {difficulty}
@@ -121,7 +121,7 @@ const ChallengeCard = ({
                     window.dispatchEvent(
                       new CustomEvent('challenge:updated', {
                         detail: { challenge: updated },
-                      })
+                      }),
                     );
 
                     try {
@@ -135,8 +135,8 @@ const ChallengeCard = ({
                         typeof challenge?.progress === 'number'
                           ? challenge.progress
                           : challenge?.completed
-                          ? 100
-                          : 0
+                            ? 100
+                            : 0,
                       );
                       // eslint-disable-next-line no-console
                       console.error('Failed to mark challenge complete', err);
@@ -161,7 +161,7 @@ const ChallengeCard = ({
                     setProgress(
                       typeof challenge?.progress === 'number'
                         ? challenge.progress
-                        : 0
+                        : 0,
                     );
                   }}
                   className="px-3 py-2 bg-yellow-50 text-yellow-800 rounded-md text-sm border border-yellow-200 hover:bg-yellow-100"
