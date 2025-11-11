@@ -9,11 +9,11 @@ const { query } = require('../src/database/connection');
 
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS) || 12;
 
-async function seedUser(
+async function seedUser (
   email = 'testuser@example.com',
   password = 'Password123!',
   firstName = 'Test',
-  lastName = 'User'
+  lastName = 'User',
 ) {
   try {
     const { rows } = await query('SELECT id FROM users WHERE email = $1', [
@@ -25,13 +25,13 @@ async function seedUser(
       console.log(`User ${email} already exists - updating password.`);
       await query(
         'UPDATE users SET password_hash = $1, first_name = $2, last_name = $3 WHERE email = $4',
-        [passwordHash, firstName, lastName, email]
+        [passwordHash, firstName, lastName, email],
       );
     } else {
       console.log(`Creating user ${email}`);
       await query(
         'INSERT INTO users (email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4)',
-        [email, passwordHash, firstName, lastName]
+        [email, passwordHash, firstName, lastName],
       );
     }
 
@@ -49,7 +49,7 @@ if (require.main === module) {
   const lastName = process.env.CYPRESS_TEST_USER_LASTNAME || 'User';
 
   seedUser(email, password, firstName, lastName).then(() =>
-    process.exit(process.exitCode || 0)
+    process.exit(process.exitCode || 0),
   );
 }
 

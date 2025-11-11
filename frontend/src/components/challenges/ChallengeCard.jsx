@@ -2,19 +2,19 @@
 // Renders title, description, status and a Start button.
 const statusClasses = (status) => {
   switch ((status || '').toLowerCase()) {
-    case 'open':
-    case 'available':
-      return 'bg-green-100 text-green-800';
-    case 'in-progress':
-    case 'started':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'closed':
-    case 'completed':
-      return 'bg-gray-100 text-gray-700';
-    case 'locked':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-indigo-100 text-indigo-800';
+  case 'open':
+  case 'available':
+    return 'bg-green-100 text-green-800';
+  case 'in-progress':
+  case 'started':
+    return 'bg-yellow-100 text-yellow-800';
+  case 'closed':
+  case 'completed':
+    return 'bg-gray-100 text-gray-700';
+  case 'locked':
+    return 'bg-red-100 text-red-800';
+  default:
+    return 'bg-indigo-100 text-indigo-800';
   }
 };
 
@@ -41,7 +41,7 @@ const ChallengeCard = ({ challenge = {}, onStart }) => {
         <div className="flex flex-col items-end gap-2">
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClasses(
-              status
+              status,
             )}`}
             data-testid="challenge-status"
           >

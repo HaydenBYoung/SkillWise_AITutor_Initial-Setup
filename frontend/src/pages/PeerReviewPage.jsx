@@ -101,7 +101,7 @@ const PeerReviewPage = () => {
   const filteredReviews = reviews.filter(
     (review) =>
       selectedCategory === 'all' ||
-      review.category.toLowerCase() === selectedCategory.toLowerCase()
+      review.category.toLowerCase() === selectedCategory.toLowerCase(),
   );
 
   const getStatusBadge = (status) => {
@@ -205,7 +205,7 @@ const PeerReviewPage = () => {
                           className="difficulty-badge"
                           style={{
                             backgroundColor: getDifficultyColor(
-                              review.difficulty
+                              review.difficulty,
                             ),
                           }}
                         >
@@ -281,7 +281,7 @@ const PeerReviewPage = () => {
                             className="difficulty-badge"
                             style={{
                               backgroundColor: getDifficultyColor(
-                                submission.difficulty
+                                submission.difficulty,
                               ),
                             }}
                           >

@@ -58,7 +58,7 @@ api.interceptors.request.use(
     // Log request in development
     if (process.env.NODE_ENV === 'development') {
       console.log(
-        `🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`
+        `🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`,
       );
     }
 
@@ -67,7 +67,7 @@ api.interceptors.request.use(
   (error) => {
     console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor for token refresh logic
@@ -78,7 +78,7 @@ api.interceptors.response.use(
       console.log(
         `✅ API Response: ${response.config.method?.toUpperCase()} ${
           response.config.url
-        } - ${response.status}`
+        } - ${response.status}`,
       );
     }
 
@@ -92,7 +92,7 @@ api.interceptors.response.use(
       console.log(
         `❌ API Error: ${originalRequest?.method?.toUpperCase()} ${
           originalRequest?.url
-        } - ${error.response?.status}`
+        } - ${error.response?.status}`,
       );
     }
 
@@ -125,7 +125,7 @@ api.interceptors.response.use(
           {
             withCredentials: true, // Send httpOnly refresh cookie
             timeout: 5000,
-          }
+          },
         );
 
         const { accessToken } = refreshResponse.data;
@@ -159,7 +159,7 @@ api.interceptors.response.use(
         window.dispatchEvent(
           new CustomEvent('auth:logout', {
             detail: { reason: 'token_refresh_failed' },
-          })
+          }),
         );
 
         // Redirect to login page
@@ -180,7 +180,7 @@ api.interceptors.response.use(
       window.dispatchEvent(
         new CustomEvent('api:server-error', {
           detail: { error: error.response.data },
-        })
+        }),
       );
     }
 
@@ -196,7 +196,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // API service methods
@@ -280,7 +280,7 @@ export const apiService = {
       (
         await api.post(
           `/peer-review/submissions/${submissionId}/review`,
-          review
+          review,
         )
       ).data,
     getReviewDetails: async (submissionId) =>

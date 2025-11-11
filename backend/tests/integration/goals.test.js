@@ -35,7 +35,7 @@ describe('Goals API Integration', () => {
     test('should return user goals', async () => {
       const sample = [{ id: 'g1', title: 'Goal 1' }];
       mockGetGoals.mockImplementation((req, res) =>
-        res.status(200).json({ success: true, data: sample })
+        res.status(200).json({ success: true, data: sample }),
       );
 
       const res = await request(app)
@@ -53,7 +53,7 @@ describe('Goals API Integration', () => {
     test('should create new goal', async () => {
       const created = { id: 'g2', title: 'New Goal' };
       mockCreateGoal.mockImplementation((req, res) =>
-        res.status(201).json({ success: true, data: created })
+        res.status(201).json({ success: true, data: created }),
       );
 
       const res = await request(app)
@@ -71,7 +71,7 @@ describe('Goals API Integration', () => {
     test('should update existing goal', async () => {
       const updated = { id: 'g2', title: 'Updated Goal' };
       mockUpdateGoal.mockImplementation((req, res) =>
-        res.status(200).json({ success: true, data: updated })
+        res.status(200).json({ success: true, data: updated }),
       );
 
       const res = await request(app)
@@ -89,7 +89,7 @@ describe('Goals API Integration', () => {
   test('GET /api/goals/:id returns a single goal', async () => {
     const goal = { id: 'g1', title: 'Goal 1' };
     mockGetGoalById.mockImplementation((req, res) =>
-      res.status(200).json({ success: true, data: goal })
+      res.status(200).json({ success: true, data: goal }),
     );
 
     const res = await request(app)
@@ -104,7 +104,7 @@ describe('Goals API Integration', () => {
   test('DELETE /api/goals/:id deletes a goal', async () => {
     const deleted = { id: 'g3', title: 'To Delete' };
     mockDeleteGoal.mockImplementation((req, res) =>
-      res.status(200).json({ success: true, data: deleted })
+      res.status(200).json({ success: true, data: deleted }),
     );
 
     const res = await request(app)

@@ -53,7 +53,7 @@ const ChallengesPage = () => {
     if (filters.category) {
       filtered = filtered.filter(
         (challenge) =>
-          challenge.category.toLowerCase() === filters.category.toLowerCase()
+          challenge.category.toLowerCase() === filters.category.toLowerCase(),
       );
     }
 
@@ -61,7 +61,7 @@ const ChallengesPage = () => {
       filtered = filtered.filter(
         (challenge) =>
           challenge.difficulty.toLowerCase() ===
-          filters.difficulty.toLowerCase()
+          filters.difficulty.toLowerCase(),
       );
     }
 
@@ -75,8 +75,8 @@ const ChallengesPage = () => {
             .toLowerCase()
             .includes(filters.search.toLowerCase()) ||
           challenge.tags.some((tag) =>
-            tag.toLowerCase().includes(filters.search.toLowerCase())
-          )
+            tag.toLowerCase().includes(filters.search.toLowerCase()),
+          ),
       );
     }
 

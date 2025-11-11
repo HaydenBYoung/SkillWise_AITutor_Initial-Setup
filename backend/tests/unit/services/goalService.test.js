@@ -10,7 +10,7 @@ describe('GoalService', () => {
   describe('getUserGoals', () => {
     test('throws when no userId', async () => {
       await expect(goalService.getUserGoals()).rejects.toThrow(
-        'User ID is required'
+        'User ID is required',
       );
     });
 
@@ -30,13 +30,13 @@ describe('GoalService', () => {
   describe('createGoal', () => {
     test('throws when no userId', async () => {
       await expect(goalService.createGoal({ title: 't' })).rejects.toThrow(
-        'User ID is required'
+        'User ID is required',
       );
     });
 
     test('throws when title missing', async () => {
       await expect(
-        goalService.createGoal({ description: 'x' }, 'u1')
+        goalService.createGoal({ description: 'x' }, 'u1'),
       ).rejects.toThrow('Goal title is required');
     });
 
@@ -51,7 +51,7 @@ describe('GoalService', () => {
   describe('getGoalById', () => {
     test('throws when no goalId', async () => {
       await expect(goalService.getGoalById()).rejects.toThrow(
-        'Goal ID is required'
+        'Goal ID is required',
       );
     });
 
@@ -89,7 +89,7 @@ describe('GoalService', () => {
   describe('updateGoal', () => {
     test('throws when no goalId', async () => {
       await expect(goalService.updateGoal()).rejects.toThrow(
-        'Goal ID is required'
+        'Goal ID is required',
       );
     });
 
@@ -115,7 +115,7 @@ describe('GoalService', () => {
       const res = await goalService.updateGoal(
         'g1',
         { title: 'updated' },
-        'u1'
+        'u1',
       );
       expect(res).toEqual(updated);
     });
@@ -124,7 +124,7 @@ describe('GoalService', () => {
   describe('deleteGoal', () => {
     test('throws when no goalId', async () => {
       await expect(goalService.deleteGoal()).rejects.toThrow(
-        'Goal ID is required'
+        'Goal ID is required',
       );
     });
 
@@ -165,7 +165,7 @@ describe('GoalService', () => {
 
     test('returns 100 for completed status', () => {
       expect(goalService.calculateCompletion({ status: 'completed' })).toBe(
-        100
+        100,
       );
       expect(goalService.calculateCompletion({ status: 'done' })).toBe(100);
     });
@@ -180,7 +180,7 @@ describe('GoalService', () => {
   test('createGoal should propagate model errors', async () => {
     jest.spyOn(Goal, 'create').mockRejectedValue(new Error('insert failed'));
     await expect(goalService.createGoal({ title: 't' }, 'u1')).rejects.toThrow(
-      'insert failed'
+      'insert failed',
     );
   });
 

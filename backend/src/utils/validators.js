@@ -13,11 +13,11 @@ const validatePassword = (password) => {
     .min(8, 'Password must be at least 8 characters')
     .max(128, 'Password too long')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number');
-  
+
   const result = passwordSchema.safeParse(password);
   return {
     isValid: result.success,
-    errors: result.success ? [] : result.error.errors.map(e => e.message)
+    errors: result.success ? [] : result.error.errors.map(e => e.message),
   };
 };
 
@@ -27,7 +27,7 @@ const validateUsername = (username) => {
     .min(3, 'Username must be at least 3 characters')
     .max(30, 'Username must be less than 30 characters')
     .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores');
-  
+
   return usernameSchema.safeParse(username).success;
 };
 
@@ -35,7 +35,7 @@ const validateUsername = (username) => {
 const validatePhoneNumber = (phone) => {
   const phoneSchema = z.string()
     .regex(/^\+?[\d\s\-\(\)]+$/, 'Invalid phone number format');
-  
+
   return phoneSchema.safeParse(phone).success;
 };
 
@@ -60,7 +60,7 @@ const validateObjectId = (id) => {
 // TODO: Sanitize input to prevent XSS
 const sanitizeString = (str) => {
   if (typeof str !== 'string') return str;
-  
+
   return str
     .replace(/[<>]/g, '') // Remove < and >
     .replace(/javascript:/gi, '') // Remove javascript: protocol
@@ -73,7 +73,7 @@ const validateFileUpload = (file, options = {}) => {
   const {
     maxSize = 5 * 1024 * 1024, // 5MB default
     allowedTypes = ['image/jpeg', 'image/png', 'image/gif'],
-    allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']
+    allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'],
   } = options;
 
   const errors = [];
@@ -93,7 +93,7 @@ const validateFileUpload = (file, options = {}) => {
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -106,5 +106,5 @@ module.exports = {
   validateDate,
   validateObjectId,
   sanitizeString,
-  validateFileUpload
+  validateFileUpload,
 };

@@ -1,10 +1,10 @@
 // TODO: Centralized error handling middleware
 const logger = require('pino')({
-  name: 'skillwise-error-handler'
+  name: 'skillwise-error-handler',
 });
 
 class AppError extends Error {
-  constructor(message, statusCode, code = null) {
+  constructor (message, statusCode, code = null) {
     super(message);
     this.statusCode = statusCode;
     this.code = code;
@@ -47,7 +47,7 @@ const sendErrorDev = (err, req, res) => {
     stack: err.stack,
     url: req.originalUrl,
     method: req.method,
-    ip: req.ip
+    ip: req.ip,
   });
 
   return res.status(err.statusCode).json({
@@ -55,7 +55,7 @@ const sendErrorDev = (err, req, res) => {
     error: err,
     message: err.message,
     stack: err.stack,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 };
 
@@ -68,14 +68,14 @@ const sendErrorProd = (err, req, res) => {
       code: err.code,
       url: req.originalUrl,
       method: req.method,
-      ip: req.ip
+      ip: req.ip,
     });
 
     const response = {
       status: err.status,
       message: err.message,
       code: err.code,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     if (err.errors) {
@@ -91,13 +91,13 @@ const sendErrorProd = (err, req, res) => {
     stack: err.stack,
     url: req.originalUrl,
     method: req.method,
-    ip: req.ip
+    ip: req.ip,
   });
 
   return res.status(500).json({
     status: 'error',
     message: 'Something went wrong!',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 };
 
@@ -109,7 +109,7 @@ const errorHandler = (err, req, res, next) => {
   // Create proper error copy that preserves prototype chain
   let error = Object.create(
     Object.getPrototypeOf(err),
-    Object.getOwnPropertyDescriptors(err)
+    Object.getOwnPropertyDescriptors(err),
   );
 
   // Handle specific error types

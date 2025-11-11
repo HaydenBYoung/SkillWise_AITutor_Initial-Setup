@@ -114,7 +114,7 @@ describe('ChallengeController', () => {
 
       expect(challengeService.updateChallenge).toHaveBeenCalledWith(
         'c1',
-        req.body
+        req.body,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: updated });

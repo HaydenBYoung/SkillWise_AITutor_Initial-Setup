@@ -45,14 +45,14 @@ describe('AuthService', () => {
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
 
       await expect(authService.login('a@b.com', 'bad')).rejects.toThrow(
-        'Invalid credentials'
+        'Invalid credentials',
       );
     });
 
     test('should reject when user not found', async () => {
       jest.spyOn(db, 'query').mockResolvedValue({ rows: [] });
       await expect(authService.login('no@exist', 'x')).rejects.toThrow(
-        'Invalid credentials'
+        'Invalid credentials',
       );
     });
   });
@@ -141,7 +141,7 @@ describe('AuthService', () => {
       });
 
       await expect(
-        authService.register({ email: 'e@e.com', password: 'p' })
+        authService.register({ email: 'e@e.com', password: 'p' }),
       ).rejects.toThrow('Email already registered');
     });
   });
@@ -169,7 +169,7 @@ describe('AuthService', () => {
 
     await authService.login('a@b.com', 'pass');
     expect(
-      queries.some((q) => q.startsWith('INSERT INTO refresh_tokens'))
+      queries.some((q) => q.startsWith('INSERT INTO refresh_tokens')),
     ).toBe(true);
   });
 });

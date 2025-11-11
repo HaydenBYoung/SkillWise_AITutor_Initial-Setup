@@ -37,8 +37,8 @@ describe('Validators', () => {
       // error messages should mention requirements
       expect(
         result.errors.some((e) =>
-          /lowercase|uppercase|number|Password must contain/i.test(e)
-        )
+          /lowercase|uppercase|number|Password must contain/i.test(e),
+        ),
       ).toBe(true);
     });
   });

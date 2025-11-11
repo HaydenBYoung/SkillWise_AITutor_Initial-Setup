@@ -37,7 +37,7 @@ describe('AuthService', () => {
       expect(db.query).toHaveBeenCalledTimes(2);
       expect(bcrypt.compare).toHaveBeenCalledWith(
         'password123',
-        'hashedPassword123'
+        'hashedPassword123',
       );
     });
 
@@ -45,7 +45,7 @@ describe('AuthService', () => {
       db.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(
-        authService.login('nonexistent@example.com', 'password123')
+        authService.login('nonexistent@example.com', 'password123'),
       ).rejects.toThrow('Invalid credentials');
     });
 
@@ -54,7 +54,7 @@ describe('AuthService', () => {
       bcrypt.compare.mockResolvedValueOnce(false);
 
       await expect(
-        authService.login('test@example.com', 'wrongpassword')
+        authService.login('test@example.com', 'wrongpassword'),
       ).rejects.toThrow('Invalid credentials');
     });
   });
@@ -93,7 +93,7 @@ describe('AuthService', () => {
       expect(db.query).toHaveBeenCalledTimes(3);
       expect(bcrypt.hash).toHaveBeenCalledWith(
         mockUserData.password,
-        expect.any(Number)
+        expect.any(Number),
       );
     });
 
@@ -101,7 +101,7 @@ describe('AuthService', () => {
       db.query.mockResolvedValueOnce({ rows: [{ id: 1 }] }); // existing user
 
       await expect(authService.register(mockUserData)).rejects.toThrow(
-        'Email already registered'
+        'Email already registered',
       );
     });
   });
@@ -135,9 +135,9 @@ describe('AuthService', () => {
       db.query.mockResolvedValueOnce({
         rows: [{ ...mockTokenRecord, is_revoked: true }],
       }),
-        await expect(authService.refreshToken(mockToken)).rejects.toThrow(
-          'Refresh token revoked'
-        );
+      await expect(authService.refreshToken(mockToken)).rejects.toThrow(
+        'Refresh token revoked',
+      );
     });
 
     it('should throw error for expired token', async () => {
@@ -146,7 +146,7 @@ describe('AuthService', () => {
       });
 
       await expect(authService.refreshToken(mockToken)).rejects.toThrow(
-        'Refresh token expired'
+        'Refresh token expired',
       );
     });
   });
@@ -159,7 +159,7 @@ describe('AuthService', () => {
 
       expect(db.query).toHaveBeenCalledWith(
         'UPDATE refresh_tokens SET is_revoked = true WHERE token = $1',
-        ['token123']
+        ['token123'],
       );
     });
 

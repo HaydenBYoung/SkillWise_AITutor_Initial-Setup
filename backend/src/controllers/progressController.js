@@ -62,7 +62,7 @@ const progressController = {
       const timeframe = req.query.timeframe || 'week';
       const analytics = await progressService.generateAnalytics(
         userId,
-        timeframe
+        timeframe,
       );
       return res.status(200).json({ success: true, data: analytics });
     } catch (err) {

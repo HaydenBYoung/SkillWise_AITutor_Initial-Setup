@@ -2,7 +2,7 @@ const db = require('../database/connection');
 
 class Progress {
   // Return recent progress events (mapped from progress_events)
-  static async findByUserId(userId) {
+  static async findByUserId (userId) {
     try {
       const query =
         'SELECT * FROM progress_events WHERE user_id = $1 ORDER BY timestamp_occurred DESC';
@@ -44,7 +44,7 @@ class Progress {
     }
   }
 
-  static async findByUserAndChallenge(userId, challengeId) {
+  static async findByUserAndChallenge (userId, challengeId) {
     try {
       const query =
         'SELECT * FROM progress_events WHERE user_id = $1 AND related_challenge_id = $2 ORDER BY timestamp_occurred DESC LIMIT 1';
@@ -82,7 +82,7 @@ class Progress {
     }
   }
 
-  static async getUserStats(userId) {
+  static async getUserStats (userId) {
     try {
       const query = `
         SELECT
@@ -101,7 +101,7 @@ class Progress {
   }
 
   // Create a progress event (append-only). eventData should include event_type and event_data JSON
-  static async create(progressData) {
+  static async create (progressData) {
     try {
       const {
         user_id,
@@ -156,7 +156,7 @@ class Progress {
   }
 
   // Update an existing progress event (by id) - keeps event_data as JSONB
-  static async update(progressId, updateData) {
+  static async update (progressId, updateData) {
     try {
       const { event_type, event_data, points_earned, timestamp_occurred } =
         updateData;
@@ -205,7 +205,7 @@ class Progress {
     }
   }
 
-  static async getLeaderboardData(limit = 10) {
+  static async getLeaderboardData (limit = 10) {
     try {
       const query = `
         SELECT 

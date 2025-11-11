@@ -49,7 +49,7 @@ const challengeController = {
       const id = req.params.id;
       const updated = await challengeService.updateChallenge(
         id,
-        req.body || {}
+        req.body || {},
       );
       if (!updated)
         return res

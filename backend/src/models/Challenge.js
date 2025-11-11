@@ -1,7 +1,7 @@
 const db = require('../database/connection');
 
 class Challenge {
-  static async findAll() {
+  static async findAll () {
     try {
       const query = 'SELECT * FROM challenges ORDER BY created_at DESC';
       const result = await db.query(query);
@@ -11,7 +11,7 @@ class Challenge {
     }
   }
 
-  static async findById(id) {
+  static async findById (id) {
     try {
       const query = 'SELECT * FROM challenges WHERE id = $1';
       const result = await db.query(query, [id]);
@@ -21,7 +21,7 @@ class Challenge {
     }
   }
 
-  static async findByDifficulty(level) {
+  static async findByDifficulty (level) {
     try {
       const query =
         'SELECT * FROM challenges WHERE LOWER(difficulty_level) = LOWER($1) ORDER BY created_at DESC';
@@ -29,12 +29,12 @@ class Challenge {
       return result.rows;
     } catch (err) {
       throw new Error(
-        `Error fetching challenges by difficulty: ${err.message}`
+        `Error fetching challenges by difficulty: ${err.message}`,
       );
     }
   }
 
-  static async findBySubject(subject) {
+  static async findBySubject (subject) {
     try {
       const query =
         'SELECT * FROM challenges WHERE LOWER(category) = LOWER($1) ORDER BY created_at DESC';
@@ -45,7 +45,7 @@ class Challenge {
     }
   }
 
-  static async findByGoalId(goalId) {
+  static async findByGoalId (goalId) {
     try {
       const query =
         'SELECT * FROM challenges WHERE goal_id = $1 ORDER BY created_at DESC';
@@ -53,12 +53,12 @@ class Challenge {
       return result.rows;
     } catch (err) {
       throw new Error(
-        `Error fetching challenges for goal ${goalId}: ${err.message}`
+        `Error fetching challenges for goal ${goalId}: ${err.message}`,
       );
     }
   }
 
-  static async create(data) {
+  static async create (data) {
     try {
       const {
         title,
@@ -111,7 +111,7 @@ class Challenge {
     }
   }
 
-  static async update(id, updateData) {
+  static async update (id, updateData) {
     try {
       const {
         title,
@@ -176,7 +176,7 @@ class Challenge {
     }
   }
 
-  static async delete(id) {
+  static async delete (id) {
     try {
       const query = 'DELETE FROM challenges WHERE id = $1 RETURNING *';
       const result = await db.query(query, [id]);

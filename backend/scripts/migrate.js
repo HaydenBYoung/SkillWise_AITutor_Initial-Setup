@@ -13,7 +13,7 @@ const pool = new Pool({
 
 const migrationsDir = path.join(__dirname, '../database/migrations');
 
-async function runMigrations() {
+async function runMigrations () {
   try {
     console.log('Starting database migrations...');
 
@@ -34,7 +34,7 @@ async function runMigrations() {
         // Check if migration already executed
         const result = await pool.query(
           'SELECT * FROM migrations WHERE filename = $1',
-          [file]
+          [file],
         );
 
         if (result.rows.length === 0) {
@@ -56,16 +56,16 @@ async function runMigrations() {
               err.code === '42710'
             ) {
               console.warn(
-                `⚠️  Migration ${file} reported 'already exists' - marking as applied and skipping.`
+                `⚠️  Migration ${file} reported 'already exists' - marking as applied and skipping.`,
               );
               try {
                 await pool.query(
                   'INSERT INTO migrations (filename) VALUES ($1)',
-                  [file]
+                  [file],
                 );
               } catch (insErr) {
                 console.warn(
-                  `Could not mark migration ${file} as applied: ${insErr.message}`
+                  `Could not mark migration ${file} as applied: ${insErr.message}`,
                 );
               }
               continue;

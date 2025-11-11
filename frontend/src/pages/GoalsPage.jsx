@@ -55,12 +55,12 @@ const GoalsPage = () => {
       setGoals((prev) =>
         Array.isArray(prev)
           ? prev.map((g) => (g.id === updated.id ? updated : g))
-          : [updated]
+          : [updated],
       );
     } else {
       const created = savedGoal && savedGoal.data ? savedGoal.data : savedGoal;
       setGoals((prev) =>
-        Array.isArray(prev) ? [...prev, created] : [created]
+        Array.isArray(prev) ? [...prev, created] : [created],
       );
     }
     setShowForm(false);
@@ -77,7 +77,7 @@ const GoalsPage = () => {
       setGoals((prevGoals) =>
         Array.isArray(prevGoals)
           ? prevGoals.map((goal) => (goal.id === id ? updatedGoal : goal))
-          : [updatedGoal]
+          : [updatedGoal],
       );
 
       // Optionally, update progress tracking too:

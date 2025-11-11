@@ -16,7 +16,9 @@
     "rebuild": "docker-compose build --no-cache",
     "reset": "docker-compose down -v && docker-compose up -d",
     "test": "echo \"Run tests in individual services\" && exit 0",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
   },
   "keywords": ["ai", "tutor", "education", "react", "node", "postgresql"],
   "author": "",
