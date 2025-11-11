@@ -1,4 +1,5 @@
 // TODO: Implement peer review and collaboration features
+// This comment was added to avoid an empty commit quirk with ESLint and Git
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DashboardLayout from '../components/common/DashboardLayout';
