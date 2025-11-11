@@ -33,15 +33,15 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-      - name: Start static server for Cypress
+      - name: Start static server for Cypress (SPA fallback)
         working-directory: ./frontend
-        # use http-server via npx so no global install required
-        run: npx http-server ./build -p 3000 &
+        # serve provides SPA fallback with -s; use npx so CI doesn't need global install
+        run: npx serve -s build -l 3000 &
 
-      - name: Wait for server
+      - name: Wait for server (check /dashboard route)
         run: |
-          for i in {1..10}; do
-            if curl -sSf http://localhost:3000 >/dev/null; then
+          for i in {1..20}; do
+            if curl -sSf http://localhost:3000/dashboard >/dev/null; then
               echo "server ready"; break
             fi
             sleep 1
