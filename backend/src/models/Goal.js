@@ -1,7 +1,7 @@
 const db = require('../database/connection');
 
 class Goal {
-  static async findByUserId(userId) {
+  static async findByUserId (userId) {
     try {
       const query =
         'SELECT * FROM goals WHERE user_id = $1 ORDER BY created_at DESC';
@@ -12,7 +12,7 @@ class Goal {
     }
   }
 
-  static async findById(goalId) {
+  static async findById (goalId) {
     try {
       const query = 'SELECT * FROM goals WHERE id = $1';
       const result = await db.query(query, [goalId]);
@@ -22,7 +22,7 @@ class Goal {
     }
   }
 
-  static async create(goalData) {
+  static async create (goalData) {
     try {
       // Accept both legacy (target_date) and canonical (target_completion_date)
       const {
@@ -52,7 +52,7 @@ class Goal {
     }
   }
 
-  static async update(goalId, updateData) {
+  static async update (goalId, updateData) {
     try {
       // Support both legacy and canonical field names. Canonical fields on DB:
       // target_completion_date (DATE), progress_percentage (INTEGER), is_completed (BOOLEAN)
@@ -103,7 +103,7 @@ class Goal {
     }
   }
 
-  static async delete(goalId) {
+  static async delete (goalId) {
     try {
       const query = 'DELETE FROM goals WHERE id = $1 RETURNING *';
       const result = await db.query(query, [goalId]);

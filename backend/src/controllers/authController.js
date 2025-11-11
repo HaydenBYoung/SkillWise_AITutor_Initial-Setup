@@ -1,7 +1,7 @@
 const authService = require('../services/authService');
 
 // small helper to parse refreshToken from cookie header if cookie-parser isn't used
-function parseCookie(req, name) {
+function parseCookie (req, name) {
   const header = req.headers && req.headers.cookie;
   if (!header) return null;
   const pairs = header.split(';').map((p) => p.trim());
@@ -45,7 +45,7 @@ const authController = {
           ? '*'.repeat(Math.min(3, password.length))
           : '(no password)';
         console.log(
-          `[auth] Login attempt for email=${email} password_mask=${masked}`
+          `[auth] Login attempt for email=${email} password_mask=${masked}`,
         );
       } catch (e) {
         console.log('[auth] Login attempt (unable to log details)');

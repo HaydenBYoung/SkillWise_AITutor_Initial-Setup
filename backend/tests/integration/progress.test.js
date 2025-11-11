@@ -83,7 +83,7 @@ describe('Progress integration (track event + overview)', () => {
     expect(ev.body.success).toBe(true);
     expect(ev.body.data).toHaveProperty('progress');
     expect(String(ev.body.data.progress.challenge_id)).toBe(
-      String(challengeId)
+      String(challengeId),
     );
     expect(ev.body.data.progress.points_earned).toBeGreaterThanOrEqual(15);
   });

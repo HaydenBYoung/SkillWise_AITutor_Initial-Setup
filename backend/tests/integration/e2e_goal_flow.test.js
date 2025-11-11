@@ -83,7 +83,7 @@ describe('E2E: login -> create goal -> add challenge -> mark complete', () => {
     expect(res.body.data).toHaveProperty('id');
     challengeId = res.body.data.id;
     expect(Number(res.body.data.goal_id || res.body.data.goalId)).toBe(
-      Number(goalId)
+      Number(goalId),
     );
   });
 
@@ -114,7 +114,7 @@ describe('E2E: login -> create goal -> add challenge -> mark complete', () => {
     expect(res.body.data).toHaveProperty('progress');
     expect(res.body.data.progress).toHaveProperty('challenge_id');
     expect(String(res.body.data.progress.challenge_id)).toBe(
-      String(challengeId)
+      String(challengeId),
     );
     expect(res.body.data.progress.completed).toBe(true);
   });

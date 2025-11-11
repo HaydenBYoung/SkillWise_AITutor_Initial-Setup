@@ -21,7 +21,7 @@ const authService = {
   login: async (email, password) => {
     const { rows } = await db.query(
       'SELECT id, email, password_hash, first_name, last_name, role FROM users WHERE email = $1',
-      [email]
+      [email],
     );
 
     console.log('[login] Query result:', rows);
@@ -57,7 +57,7 @@ const authService = {
 
     await db.query(
       'INSERT INTO refresh_tokens(token, user_id, expires_at, is_revoked) VALUES($1, $2, $3, false)',
-      [refreshToken, user.id, expiresAt]
+      [refreshToken, user.id, expiresAt],
     );
 
     return {
@@ -80,7 +80,7 @@ const authService = {
     // check existing
     const { rows: existing } = await db.query(
       'SELECT id FROM users WHERE email = $1',
-      [email]
+      [email],
     );
     if (existing.length > 0) {
       throw new AppError('Email already registered', 400, 'EMAIL_EXISTS');
@@ -95,7 +95,7 @@ const authService = {
       const insert = await db.query(
         `INSERT INTO users (email, password_hash, first_name, last_name)
          VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name, role`,
-        [email, passwordHash, firstName, lastName]
+        [email, passwordHash, firstName, lastName],
       );
       user = insert.rows[0];
       console.log('[register] Created user id:', user && user.id);
@@ -110,7 +110,7 @@ const authService = {
     console.log(
       '[register] Tokens generated (access/refresh lengths):',
       accessToken.length,
-      refreshToken.length
+      refreshToken.length,
     );
 
     // Store refresh token
@@ -118,18 +118,18 @@ const authService = {
     try {
       await db.query(
         'INSERT INTO refresh_tokens(token, user_id, expires_at, is_revoked) VALUES($1,$2,$3,false)',
-        [refreshToken, user.id, expiresAt]
+        [refreshToken, user.id, expiresAt],
       );
     } catch (err) {
       console.error(
         '[register] Failed storing refresh token:',
-        err && err.message
+        err && err.message,
       );
       // attempt to rollback created user could be added here
       throw new AppError(
         'Registration failed (token storage)',
         500,
-        'REGISTRATION_FAILED'
+        'REGISTRATION_FAILED',
       );
     }
 
@@ -155,7 +155,7 @@ const authService = {
     // Check token in DB
     const { rows } = await db.query(
       'SELECT id, token, user_id, expires_at, is_revoked FROM refresh_tokens WHERE token = $1',
-      [token]
+      [token],
     );
     const record = rows[0];
     if (!record) {
@@ -194,7 +194,7 @@ const authService = {
     if (!token) return;
     await db.query(
       'UPDATE refresh_tokens SET is_revoked = true WHERE token = $1',
-      [token]
+      [token],
     );
   },
 
