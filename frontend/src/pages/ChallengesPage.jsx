@@ -14,6 +14,7 @@ const ChallengesPage = () => {
     difficulty: '',
     search: '',
   });
+  const [pendingMap, setPendingMap] = useState({});
   // Track pending persistence timers so we can support Undo before server call
   const pendingTimersRef = useRef({});
 
@@ -23,7 +24,8 @@ const ChallengesPage = () => {
       {
         id: 1,
         title: 'Build a React Component',
-        description: 'Create a reusable React component with props and state management.',
+        description:
+          'Create a reusable React component with props and state management.',
         category: 'Programming',
         difficulty: 'Medium',
         points: 50,
@@ -33,7 +35,8 @@ const ChallengesPage = () => {
       {
         id: 2,
         title: 'Design a Logo',
-        description: 'Design a professional logo using design principles and color theory.',
+        description:
+          'Design a professional logo using design principles and color theory.',
         category: 'Design',
         difficulty: 'Easy',
         points: 30,
@@ -43,7 +46,8 @@ const ChallengesPage = () => {
       {
         id: 3,
         title: 'Database Optimization',
-        description: 'Optimize a slow database query and improve performance metrics.',
+        description:
+          'Optimize a slow database query and improve performance metrics.',
         category: 'Backend',
         difficulty: 'Hard',
         points: 100,
@@ -52,11 +56,10 @@ const ChallengesPage = () => {
       },
     ];
 
-    setTimeout(() => {
-      setChallenges(mockChallenges);
-      setFilteredChallenges(mockChallenges);
-      setLoading(false);
-    }, 1000);
+    // Load mock challenges immediately (avoid artificial delay so tests and UI render predictably)
+    setChallenges(mockChallenges);
+    setFilteredChallenges(mockChallenges);
+    setLoading(false);
   }, []);
 
   // Filter challenges based on current filters
@@ -64,22 +67,32 @@ const ChallengesPage = () => {
     let filtered = challenges;
 
     if (filters.category) {
-      filtered = filtered.filter(challenge =>
-        challenge.category.toLowerCase() === filters.category.toLowerCase(),
+      filtered = filtered.filter(
+        (challenge) =>
+          challenge.category.toLowerCase() === filters.category.toLowerCase()
       );
     }
 
     if (filters.difficulty) {
-      filtered = filtered.filter(challenge =>
-        challenge.difficulty.toLowerCase() === filters.difficulty.toLowerCase(),
+      filtered = filtered.filter(
+        (challenge) =>
+          challenge.difficulty.toLowerCase() ===
+          filters.difficulty.toLowerCase()
       );
     }
 
     if (filters.search) {
-      filtered = filtered.filter(challenge =>
-        challenge.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        challenge.description.toLowerCase().includes(filters.search.toLowerCase()) ||
-        challenge.tags.some(tag => tag.toLowerCase().includes(filters.search.toLowerCase())),
+      filtered = filtered.filter(
+        (challenge) =>
+          challenge.title
+            .toLowerCase()
+            .includes(filters.search.toLowerCase()) ||
+          challenge.description
+            .toLowerCase()
+            .includes(filters.search.toLowerCase()) ||
+          challenge.tags.some((tag) =>
+            tag.toLowerCase().includes(filters.search.toLowerCase())
+          )
       );
     }
 
@@ -88,8 +101,12 @@ const ChallengesPage = () => {
 
   const handleToggleComplete = async (id, updated) => {
     // Optimistic update immediately
-    setChallenges(prev => prev.map(c => (c.id === id ? { ...c, ...updated } : c)));
-    setFilteredChallenges(prev => prev.map(c => (c.id === id ? { ...c, ...updated } : c)));
+    setChallenges((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
+    );
+    setFilteredChallenges((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
+    );
 
     // If there is an existing pending timer, clear it
     if (pendingTimersRef.current[id]) {
@@ -97,20 +114,44 @@ const ChallengesPage = () => {
       delete pendingTimersRef.current[id];
     }
 
+    // Mark as pending so UI shows Undo
+    setPendingMap((prev) => ({ ...prev, [id]: true }));
+
     // Start a delayed persistence (gives user a small Undo window)
     const timer = setTimeout(async () => {
       try {
-        await apiService.progress.trackEvent({ eventType: 'toggle_complete', eventData: { challengeId: id, completed: true } });
+        await apiService.progress.trackEvent({
+          eventType: 'toggle_complete',
+          eventData: { challengeId: id, completed: true },
+        });
         // dispatch global event so other components can react
-        window.dispatchEvent(new CustomEvent('challenge:persisted', { detail: { id, completed: true } }));
+        window.dispatchEvent(
+          new CustomEvent('challenge:persisted', {
+            detail: { id, completed: true },
+          })
+        );
       } catch (err) {
         // If persistence failed, revert optimistic update and notify user
-        setChallenges(prev => prev.map(c => (c.id === id ? { ...c, completed: false, progress: 0 } : c)));
-        setFilteredChallenges(prev => prev.map(c => (c.id === id ? { ...c, completed: false, progress: 0 } : c)));
+        setChallenges((prev) =>
+          prev.map((c) =>
+            c.id === id ? { ...c, completed: false, progress: 0 } : c
+          )
+        );
+        setFilteredChallenges((prev) =>
+          prev.map((c) =>
+            c.id === id ? { ...c, completed: false, progress: 0 } : c
+          )
+        );
         // eslint-disable-next-line no-console
         console.error('Failed to persist challenge completion', err);
       } finally {
+        // clear pending state and timer
         delete pendingTimersRef.current[id];
+        setPendingMap((prev) => {
+          const copy = { ...prev };
+          delete copy[id];
+          return copy;
+        });
       }
     }, 5000); // 5s undo window
 
@@ -123,14 +164,27 @@ const ChallengesPage = () => {
       clearTimeout(pendingTimersRef.current[id].timer);
       delete pendingTimersRef.current[id];
     }
-    setChallenges(prev => prev.map(c => (c.id === id ? { ...c, completed: false, progress: 0 } : c)));
-    setFilteredChallenges(prev => prev.map(c => (c.id === id ? { ...c, completed: false, progress: 0 } : c)));
+    setChallenges((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, completed: false, progress: 0 } : c
+      )
+    );
+    setFilteredChallenges((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, completed: false, progress: 0 } : c
+      )
+    );
+    setPendingMap((prev) => {
+      const copy = { ...prev };
+      delete copy[id];
+      return copy;
+    });
     // Optionally notify other parts of the app
     window.dispatchEvent(new CustomEvent('challenge:undo', { detail: { id } }));
   };
 
   const handleFilterChange = (filterType, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       [filterType]: value,
     }));
@@ -178,7 +232,9 @@ const ChallengesPage = () => {
               <select
                 id="difficulty"
                 value={filters.difficulty}
-                onChange={(e) => handleFilterChange('difficulty', e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange('difficulty', e.target.value)
+                }
               >
                 <option value="">All Levels</option>
                 <option value="easy">Easy</option>
@@ -189,7 +245,10 @@ const ChallengesPage = () => {
           </div>
 
           <div className="results-summary">
-            <p>Showing {filteredChallenges.length} of {challenges.length} challenges</p>
+            <p>
+              Showing {filteredChallenges.length} of {challenges.length}{' '}
+              challenges
+            </p>
           </div>
         </div>
 
@@ -198,12 +257,12 @@ const ChallengesPage = () => {
             <LoadingSpinner message="Loading challenges..." />
           ) : filteredChallenges.length > 0 ? (
             <div className="challenges-grid">
-              {filteredChallenges.map(challenge => (
+              {filteredChallenges.map((challenge) => (
                 <ChallengeCard
                   key={challenge.id}
                   challenge={challenge}
                   onToggleComplete={handleToggleComplete}
-                  pending={Boolean(pendingTimersRef.current[challenge.id])}
+                  pending={Boolean(pendingMap[challenge.id])}
                   onUndo={handleUndo}
                 />
               ))}
@@ -214,9 +273,11 @@ const ChallengesPage = () => {
               <p>Try adjusting your filters or search terms.</p>
               <button
                 className="btn-secondary"
-                onClick={() => setFilters({ category: '', difficulty: '', search: '' })}
+                onClick={() =>
+                  setFilters({ category: '', difficulty: '', search: '' })
+                }
               >
-              Clear Filters
+                Clear Filters
               </button>
             </div>
           )}
