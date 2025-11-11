@@ -41,7 +41,7 @@ jobs:
 
       - name: Install backend deps
         working-directory: backend
-        run: npm ci
+        run: npm install #was changed
 
       - name: Wait for Postgres
         run: |
@@ -73,7 +73,7 @@ jobs:
 
       - name: Install frontend deps
         working-directory: frontend
-        run: npm ci
+        run: npm install #was changed
 
       - name: Build frontend
         working-directory: frontend
