@@ -1,7 +1,7 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import {} from 'react';
+import { useLocation } from 'react-router-dom'; //Took off Navigate
 import { useAuth } from '../hooks/useAuth';
-import LoadingSpinner from './common/LoadingSpinner';
+import {} from './common/LoadingSpinner';
 
 const ProtectedRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -18,13 +18,7 @@ const ProtectedRoute = ({ children }) => {
 
   // If user is not authenticated, redirect to login with return path
   if (!user) {
-    return (
-      <Navigate 
-        to="/login" 
-        state={{ from: location.pathname }}
-        replace 
-      />
-    );
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // User is authenticated, render the protected component

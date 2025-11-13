@@ -5,7 +5,7 @@ const { AppError } = require('./errorHandler');
 // TODO: Validation schemas
 const loginSchema = z.object({
   email: z.string().email('Invalid email format'),
-  password: z.string().min(1, 'password is required')
+  password: z.string().min(1, 'password is required'),
 });
 
 const registerSchema = z.object({
@@ -16,10 +16,10 @@ const registerSchema = z.object({
   confirmPassword: z.string()
     .min(1, 'confirm password is required'),
   firstName: z.string().min(1, 'first name is required').max(50, 'first name too long'),
-  lastName: z.string().min(1, 'last name is required').max(50, 'last name too long')
+  lastName: z.string().min(1, 'last name is required').max(50, 'last name too long'),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "passwords don't match",
-  path: ["confirmPassword"]
+  message: 'passwords don\'t match',
+  path: ['confirmPassword'],
 });
 
 const goalSchema = z.object({
@@ -28,8 +28,8 @@ const goalSchema = z.object({
     description: z.string().optional(),
     category: z.string().optional(),
     difficulty: z.enum(['easy', 'medium', 'hard']).default('medium'),
-    targetCompletionDate: z.string().datetime().optional()
-  })
+    targetCompletionDate: z.string().datetime().optional(),
+  }),
 });
 
 const challengeSchema = z.object({
@@ -41,8 +41,8 @@ const challengeSchema = z.object({
     difficulty: z.enum(['easy', 'medium', 'hard']).default('medium'),
     estimatedTimeMinutes: z.number().int().positive().optional(),
     pointsReward: z.number().int().positive().default(10),
-    maxAttempts: z.number().int().positive().default(3)
-  })
+    maxAttempts: z.number().int().positive().default(3),
+  }),
 });
 
 // TODO: Generic validation middleware
@@ -54,7 +54,7 @@ const validate = (schema) => {
       if (!result.success) {
         const errors = result.error.errors.map(err => ({
           field: err.path.join('.'),
-          message: err.message
+          message: err.message,
         }));
 
         // Format validation error response with all error details
@@ -90,6 +90,6 @@ module.exports = {
     loginSchema,
     registerSchema,
     goalSchema,
-    challengeSchema
-  }
+    challengeSchema,
+  },
 };

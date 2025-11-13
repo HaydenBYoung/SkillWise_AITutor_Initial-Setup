@@ -8,33 +8,33 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import ConfettiCelebration from '../components/common/ConfettiCelebration';
 
 // Signup form validation schema
-const signupSchema = z.object({
-  firstName: z
-    .string()
-    .min(1, 'First name is required')
-    .min(2, 'First name must be at least 2 characters'),
-  lastName: z
-    .string()
-    .min(1, 'Last name is required')
-    .min(2, 'Last name must be at least 2 characters'),
-  email: z
-    .string()
-    .min(1, 'Email is required')
-    .email('Please enter a valid email address'),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
-  confirmPassword: z
-    .string()
-    .min(1, 'Please confirm your password')
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword']
-});
+const signupSchema = z
+  .object({
+    firstName: z
+      .string()
+      .min(1, 'First name is required')
+      .min(2, 'First name must be at least 2 characters'),
+    lastName: z
+      .string()
+      .min(1, 'Last name is required')
+      .min(2, 'Last name must be at least 2 characters'),
+    email: z
+      .string()
+      .min(1, 'Email is required')
+      .email('Please enter a valid email address'),
+    password: z
+      .string()
+      .min(1, 'Password is required')
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least one number'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 const SignupPage = () => {
   const [error, setError] = useState('');
@@ -46,10 +46,10 @@ const SignupPage = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(signupSchema),
-    mode: 'onSubmit'
+    mode: 'onSubmit',
   });
 
   const onSubmit = async (formData) => {
@@ -58,19 +58,19 @@ const SignupPage = () => {
     try {
       setIsLoading(true);
       setError('');
-      
+
       const result = await registerUser({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        confirmPassword: formData.confirmPassword
+        confirmPassword: formData.confirmPassword,
       });
-      
+
       if (result.success) {
         // Show celebration!
         setShowConfetti(true);
-        
+
         // Wait a moment for confetti, then navigate
         setTimeout(() => {
           navigate('/dashboard');
@@ -106,7 +106,11 @@ const SignupPage = () => {
           {isLoading ? (
             <LoadingSpinner message="Creating your account..." />
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="signup-form" noValidate>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="signup-form"
+              noValidate
+            >
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="firstName">First Name</label>
@@ -117,7 +121,9 @@ const SignupPage = () => {
                     className={errors.firstName ? 'input-error' : ''}
                   />
                   {errors.firstName && (
-                    <span className="error-text">{errors.firstName.message}</span>
+                    <span className="error-text">
+                      {errors.firstName.message}
+                    </span>
                   )}
                 </div>
 
@@ -130,7 +136,9 @@ const SignupPage = () => {
                     className={errors.lastName ? 'input-error' : ''}
                   />
                   {errors.lastName && (
-                    <span className="error-text">{errors.lastName.message}</span>
+                    <span className="error-text">
+                      {errors.lastName.message}
+                    </span>
                   )}
                 </div>
               </div>
@@ -159,7 +167,10 @@ const SignupPage = () => {
                 {errors.password && (
                   <span className="error-text">{errors.password.message}</span>
                 )}
-                <small>Must be at least 8 characters with uppercase, lowercase, and number</small>
+                <small>
+                  Must be at least 8 characters with uppercase, lowercase, and
+                  number
+                </small>
               </div>
 
               <div className="form-group">
@@ -171,16 +182,20 @@ const SignupPage = () => {
                   className={errors.confirmPassword ? 'input-error' : ''}
                 />
                 {errors.confirmPassword && (
-                  <span className="error-text">{errors.confirmPassword.message}</span>
+                  <span className="error-text">
+                    {errors.confirmPassword.message}
+                  </span>
                 )}
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn-primary"
                 disabled={isSubmitting || isLoading}
               >
-                {isSubmitting || isLoading ? 'Creating Account...' : 'Create Account'}
+                {isSubmitting || isLoading
+                  ? 'Creating Account...'
+                  : 'Create Account'}
               </button>
             </form>
           )}
@@ -208,7 +223,7 @@ const SignupPage = () => {
           </div>
         </div>
       </div>
-      
+
       {showConfetti && (
         <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
       )}

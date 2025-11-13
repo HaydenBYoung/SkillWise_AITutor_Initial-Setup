@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './ConfettiCelebration.css';
 
 const ConfettiCelebration = ({ onComplete }) => {
@@ -15,7 +15,7 @@ const ConfettiCelebration = ({ onComplete }) => {
       rotation: Math.random() * 360, // Random rotation
       size: 30 + Math.random() * 30, // Random size (30-60px)
     }));
-    
+
     setEmojis(newEmojis);
 
     // Clean up after animation completes

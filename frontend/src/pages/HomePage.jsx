@@ -1,4 +1,4 @@
-import React from 'react';
+import {} from 'react';
 import { Link } from 'react-router-dom';
 
 const HomePage = () => {
@@ -9,11 +9,11 @@ const HomePage = () => {
           min-height: 100vh;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
+
         .dark-mode .home-page {
-          background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
+          background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
         }
-        
+
         .hero {
           min-height: 90vh;
           display: flex;
@@ -23,28 +23,28 @@ const HomePage = () => {
           padding: 2rem;
           color: white;
         }
-        
+
         .hero-content h1 {
           font-size: 3.5rem;
           margin-bottom: 1rem;
           font-weight: 800;
           color: white;
-          text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
-        
+
         .hero-content p {
           font-size: 1.5rem;
           margin-bottom: 2rem;
-          color: rgba(255,255,255,0.9);
+          color: rgba(255, 255, 255, 0.9);
         }
-        
+
         .hero-actions {
           display: flex;
           gap: 1rem;
           justify-content: center;
           flex-wrap: wrap;
         }
-        
+
         .hero-actions .btn {
           padding: 1rem 2rem;
           font-size: 1.125rem;
@@ -52,84 +52,84 @@ const HomePage = () => {
           font-weight: 600;
           transition: all 0.3s;
         }
-        
+
         .hero-actions .btn-primary {
           background: white;
           color: #667eea;
         }
-        
+
         .hero-actions .btn-primary:hover {
           transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
-        
+
         .hero-actions .btn-secondary {
-          background: rgba(255,255,255,0.2);
+          background: rgba(255, 255, 255, 0.2);
           color: white;
           border: 2px solid white;
         }
-        
+
         .hero-actions .btn-secondary:hover {
-          background: rgba(255,255,255,0.3);
+          background: rgba(255, 255, 255, 0.3);
         }
-        
+
         .features {
           background: white;
           padding: 4rem 2rem;
         }
-        
+
         .dark-mode .features {
           background: var(--bg-secondary);
         }
-        
+
         .container {
           max-width: 1200px;
           margin: 0 auto;
         }
-        
+
         .features h2 {
           text-align: center;
           font-size: 2.5rem;
           margin-bottom: 3rem;
-          color: #1F2937;
+          color: #1f2937;
         }
-        
+
         .features-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
           gap: 2rem;
         }
-        
+
         .feature-card {
           background: white;
           padding: 2rem;
           border-radius: 1rem;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
           transition: all 0.3s;
-          border: 1px solid #E5E7EB;
+          border: 1px solid #e5e7eb;
         }
-        
+
         .dark-mode .feature-card {
           background: var(--bg-primary);
           border-color: var(--gray-200);
         }
-        
+
         .feature-card:hover {
           transform: translateY(-5px);
-          box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
-        
+
         .feature-card h3 {
           color: #667eea;
           font-size: 1.5rem;
           margin-bottom: 0.75rem;
         }
-        
+
         .feature-card p {
-          color: #6B7280;
+          color: #6b7280;
           line-height: 1.6;
         }
-        
+
         @media (max-width: 768px) {
           .hero-content h1 {
             font-size: 2.5rem;
@@ -139,7 +139,7 @@ const HomePage = () => {
           }
         }
       `}</style>
-      
+
       <section className="hero">
         <div className="hero-content">
           <h1>Welcome to SkillWise 🎓</h1>
@@ -161,19 +161,31 @@ const HomePage = () => {
           <div className="features-grid">
             <div className="feature-card">
               <h3>🤖 AI-Powered Feedback</h3>
-              <p>Get personalized, instant feedback on your work from advanced AI technology</p>
+              <p>
+                Get personalized, instant feedback on your work from advanced AI
+                technology
+              </p>
             </div>
             <div className="feature-card">
               <h3>🎯 Goal Tracking</h3>
-              <p>Set clear learning goals and track your progress with intuitive dashboards</p>
+              <p>
+                Set clear learning goals and track your progress with intuitive
+                dashboards
+              </p>
             </div>
             <div className="feature-card">
               <h3>👥 Peer Reviews</h3>
-              <p>Learn collaboratively through constructive peer feedback and discussions</p>
+              <p>
+                Learn collaboratively through constructive peer feedback and
+                discussions
+              </p>
             </div>
             <div className="feature-card">
               <h3>🏆 Achievements</h3>
-              <p>Earn badges, climb leaderboards, and celebrate your learning milestones</p>
+              <p>
+                Earn badges, climb leaderboards, and celebrate your learning
+                milestones
+              </p>
             </div>
           </div>
         </div>

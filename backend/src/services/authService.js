@@ -7,7 +7,7 @@ const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS) || 12;
 
 const authService = {
   // User login: verifies credentials, returns { user, accessToken, refreshToken }
-  login: async (email, password) => {
+  /*login: async (email, password) => {
     const { rows } = await db.query('SELECT id, email, password_hash, first_name, last_name, role FROM users WHERE email = $1', [email]);
     const user = rows[0];
     if (!user) {
@@ -17,8 +17,28 @@ const authService = {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
       throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
+    } */
+  login: async (email, password) => {
+    const { rows } = await db.query(
+      'SELECT id, email, password_hash, first_name, last_name, role FROM users WHERE email = $1',
+      [email],
+    );
+
+    console.log('[login] Query result:', rows);
+
+    const user = rows[0];
+    if (!user) {
+      console.log('[login] No user found for email:', email);
+      throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
     }
 
+    const valid = await bcrypt.compare(password, user.password_hash);
+    console.log('[login] Password match result:', valid);
+
+    if (!valid) {
+      console.log('[login] Password mismatch for user:', email);
+      throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
+    }
     const payload = { id: user.id, email: user.email, role: user.role };
     const accessToken = jwt.generateToken(payload);
     const refreshToken = jwt.generateRefreshToken(payload);
@@ -37,7 +57,7 @@ const authService = {
 
     await db.query(
       'INSERT INTO refresh_tokens(token, user_id, expires_at, is_revoked) VALUES($1, $2, $3, false)',
-      [refreshToken, user.id, expiresAt]
+      [refreshToken, user.id, expiresAt],
     );
 
     return {
@@ -46,10 +66,10 @@ const authService = {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role
+        role: user.role,
       },
       accessToken,
-      refreshToken
+      refreshToken,
     };
   },
 
@@ -58,28 +78,60 @@ const authService = {
     const { email, password, firstName, lastName } = userData;
 
     // check existing
-    const { rows: existing } = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    const { rows: existing } = await db.query(
+      'SELECT id FROM users WHERE email = $1',
+      [email],
+    );
     if (existing.length > 0) {
       throw new AppError('Email already registered', 400, 'EMAIL_EXISTS');
     }
 
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-    const insert = await db.query(
-      `INSERT INTO users (email, password_hash, first_name, last_name)
-       VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name, role`,
-      [email, passwordHash, firstName, lastName]
-    );
-
-    const user = insert.rows[0];
+    // Insert user and log for diagnostics
+    let user;
+    try {
+      console.log('[register] Creating user for email:', email);
+      const insert = await db.query(
+        `INSERT INTO users (email, password_hash, first_name, last_name)
+         VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name, role`,
+        [email, passwordHash, firstName, lastName],
+      );
+      user = insert.rows[0];
+      console.log('[register] Created user id:', user && user.id);
+    } catch (err) {
+      console.error('[register] DB insert error:', err && err.message);
+      throw new AppError('Registration failed', 500, 'REGISTRATION_FAILED');
+    }
 
     const payload = { id: user.id, email: user.email, role: user.role };
     const accessToken = jwt.generateToken(payload);
     const refreshToken = jwt.generateRefreshToken(payload);
+    console.log(
+      '[register] Tokens generated (access/refresh lengths):',
+      accessToken.length,
+      refreshToken.length,
+    );
 
     // Store refresh token
     let expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await db.query('INSERT INTO refresh_tokens(token, user_id, expires_at, is_revoked) VALUES($1,$2,$3,false)', [refreshToken, user.id, expiresAt]);
+    try {
+      await db.query(
+        'INSERT INTO refresh_tokens(token, user_id, expires_at, is_revoked) VALUES($1,$2,$3,false)',
+        [refreshToken, user.id, expiresAt],
+      );
+    } catch (err) {
+      console.error(
+        '[register] Failed storing refresh token:',
+        err && err.message,
+      );
+      // attempt to rollback created user could be added here
+      throw new AppError(
+        'Registration failed (token storage)',
+        500,
+        'REGISTRATION_FAILED',
+      );
+    }
 
     return {
       user: {
@@ -87,10 +139,10 @@ const authService = {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role
+        role: user.role,
       },
       accessToken,
-      refreshToken
+      refreshToken,
     };
   },
 
@@ -101,7 +153,10 @@ const authService = {
     }
 
     // Check token in DB
-    const { rows } = await db.query('SELECT id, token, user_id, expires_at, is_revoked FROM refresh_tokens WHERE token = $1', [token]);
+    const { rows } = await db.query(
+      'SELECT id, token, user_id, expires_at, is_revoked FROM refresh_tokens WHERE token = $1',
+      [token],
+    );
     const record = rows[0];
     if (!record) {
       throw new AppError('Refresh token not found', 401, 'INVALID_REFRESH');
@@ -126,21 +181,28 @@ const authService = {
     }
 
     // Issue new access token
-    const accessToken = jwt.generateToken({ id: payload.id, email: payload.email, role: payload.role });
+    const accessToken = jwt.generateToken({
+      id: payload.id,
+      email: payload.email,
+      role: payload.role,
+    });
     return { accessToken };
   },
 
   // Revoke refresh token (logout)
   revokeRefreshToken: async (token) => {
     if (!token) return;
-    await db.query('UPDATE refresh_tokens SET is_revoked = true WHERE token = $1', [token]);
+    await db.query(
+      'UPDATE refresh_tokens SET is_revoked = true WHERE token = $1',
+      [token],
+    );
   },
 
   // Password reset placeholder
-  resetPassword: async (email) => {
+  resetPassword: async () => {
     // Implementation would generate token and email user
     return true;
-  }
+  },
 };
 
 module.exports = authService;

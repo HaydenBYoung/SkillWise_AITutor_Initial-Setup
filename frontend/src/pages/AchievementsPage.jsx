@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const AchievementsPage = () => {
   const [achievements, setAchievements] = useState([]);
@@ -10,7 +10,10 @@ const AchievementsPage = () => {
       setLoading(true);
       try {
         // Use explicit backend base URL from environment (fallback to /api)
-        const base = (process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.replace(/\/$/, '')) || '/api';
+        const base =
+          (process.env.REACT_APP_API_URL &&
+            process.env.REACT_APP_API_URL.replace(/\/$/, '')) ||
+          '/api';
         const res = await fetch(`${base}/achievements`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -34,9 +37,10 @@ const AchievementsPage = () => {
         <p>No achievements found.</p>
       ) : (
         <ul>
-          {achievements.map(a => (
+          {achievements.map((a) => (
             <li key={a.id}>
-              <strong>{a.title}</strong> — {a.description} {a.points ? `(+${a.points} pts)` : ''}
+              <strong>{a.title}</strong> — {a.description}{' '}
+              {a.points ? `(+${a.points} pts)` : ''}
             </li>
           ))}
         </ul>

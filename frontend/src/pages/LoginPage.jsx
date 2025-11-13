@@ -1,7 +1,9 @@
-// TODO: Implement login page with form handling
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+// Login page with form handling and post-login flow
+import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; //Link
+
 import { useAuth } from '../hooks/useAuth';
+
 import LoginForm from '../components/auth/LoginForm';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ConfettiCelebration from '../components/common/ConfettiCelebration';
@@ -21,12 +23,12 @@ const LoginPage = () => {
     try {
       setIsLoading(true);
       setError('');
-      
+
       const result = await login({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
       });
-      
+
       if (result.success) {
         setShowConfetti(true);
         // Navigate after a short delay to show the celebration
@@ -74,7 +76,7 @@ const LoginPage = () => {
                 Sign up here
               </Link>
             </p>
-            
+
             <p>
               <Link to="/forgot-password" className="auth-link">
                 Forgot your password?
@@ -86,13 +88,14 @@ const LoginPage = () => {
         <div className="auth-background">
           <div className="auth-testimonial">
             <blockquote>
-              "SkillWise transformed how I learn. The AI feedback is incredibly helpful!"
+              "SkillWise transformed how I learn. The AI feedback is incredibly
+              helpful!"
             </blockquote>
             <cite>— Sarah K., Software Developer</cite>
           </div>
         </div>
       </div>
-      
+
       {showConfetti && (
         <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
       )}

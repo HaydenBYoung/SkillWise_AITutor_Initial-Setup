@@ -1,7 +1,7 @@
 const db = require('../database/connection');
 
 class Leaderboard {
-  static async getGlobalLeaderboard(limit = 10) {
+  static async getGlobalLeaderboard (limit = 10) {
     try {
       const query = `
         SELECT 
@@ -9,12 +9,12 @@ class Leaderboard {
           u.username,
           u.first_name,
           u.last_name,
-          SUM(p.points_earned) as total_points,
-          COUNT(CASE WHEN p.completed = true THEN 1 END) as challenges_completed,
-          AVG(CASE WHEN p.completed = true THEN p.score END) as average_score,
+          COALESCE(SUM(pe.points_earned), 0) as total_points,
+          COUNT(CASE WHEN pe.event_type = 'challenge_completed' THEN 1 END) as challenges_completed,
+          AVG( (pe.event_data->>'score')::numeric ) as average_score,
           u.created_at as join_date
         FROM users u
-        LEFT JOIN progress p ON u.id = p.user_id
+        LEFT JOIN progress_events pe ON u.id = pe.user_id
         WHERE u.active = true
         GROUP BY u.id, u.username, u.first_name, u.last_name, u.created_at
         ORDER BY total_points DESC, challenges_completed DESC, average_score DESC
@@ -27,7 +27,7 @@ class Leaderboard {
     }
   }
 
-  static async getWeeklyLeaderboard(limit = 10) {
+  static async getWeeklyLeaderboard (limit = 10) {
     try {
       const query = `
         SELECT 
@@ -35,12 +35,12 @@ class Leaderboard {
           u.username,
           u.first_name,
           u.last_name,
-          SUM(p.points_earned) as weekly_points,
-          COUNT(CASE WHEN p.completed = true THEN 1 END) as weekly_completions
+          COALESCE(SUM(pe.points_earned), 0) as weekly_points,
+          COUNT(CASE WHEN pe.event_type = 'challenge_completed' THEN 1 END) as weekly_completions
         FROM users u
-        LEFT JOIN progress p ON u.id = p.user_id
+        LEFT JOIN progress_events pe ON u.id = pe.user_id
         WHERE u.active = true 
-        AND p.created_at >= DATE_TRUNC('week', CURRENT_DATE)
+        AND pe.timestamp_occurred >= DATE_TRUNC('week', CURRENT_DATE)
         GROUP BY u.id, u.username, u.first_name, u.last_name
         ORDER BY weekly_points DESC, weekly_completions DESC
         LIMIT $1
@@ -52,7 +52,7 @@ class Leaderboard {
     }
   }
 
-  static async getMonthlyLeaderboard(limit = 10) {
+  static async getMonthlyLeaderboard (limit = 10) {
     try {
       const query = `
         SELECT 
@@ -60,12 +60,12 @@ class Leaderboard {
           u.username,
           u.first_name,
           u.last_name,
-          SUM(p.points_earned) as monthly_points,
-          COUNT(CASE WHEN p.completed = true THEN 1 END) as monthly_completions
+          COALESCE(SUM(pe.points_earned), 0) as monthly_points,
+          COUNT(CASE WHEN pe.event_type = 'challenge_completed' THEN 1 END) as monthly_completions
         FROM users u
-        LEFT JOIN progress p ON u.id = p.user_id
+        LEFT JOIN progress_events pe ON u.id = pe.user_id
         WHERE u.active = true 
-        AND p.created_at >= DATE_TRUNC('month', CURRENT_DATE)
+        AND pe.timestamp_occurred >= DATE_TRUNC('month', CURRENT_DATE)
         GROUP BY u.id, u.username, u.first_name, u.last_name
         ORDER BY monthly_points DESC, monthly_completions DESC
         LIMIT $1
@@ -77,16 +77,16 @@ class Leaderboard {
     }
   }
 
-  static async getUserRank(userId) {
+  static async getUserRank (userId) {
     try {
       const query = `
         WITH user_rankings AS (
           SELECT 
             u.id,
-            SUM(p.points_earned) as total_points,
-            RANK() OVER (ORDER BY SUM(p.points_earned) DESC) as rank
+            COALESCE(SUM(pe.points_earned), 0) as total_points,
+            RANK() OVER (ORDER BY COALESCE(SUM(pe.points_earned), 0) DESC) as rank
           FROM users u
-          LEFT JOIN progress p ON u.id = p.user_id
+          LEFT JOIN progress_events pe ON u.id = pe.user_id
           WHERE u.active = true
           GROUP BY u.id
         )
@@ -101,7 +101,7 @@ class Leaderboard {
     }
   }
 
-  static async getSubjectLeaderboard(subject, limit = 10) {
+  static async getSubjectLeaderboard (subject, limit = 10) {
     try {
       const query = `
         SELECT 
@@ -109,11 +109,11 @@ class Leaderboard {
           u.username,
           u.first_name,
           u.last_name,
-          SUM(p.points_earned) as subject_points,
-          COUNT(CASE WHEN p.completed = true THEN 1 END) as subject_completions
+          COALESCE(SUM(pe.points_earned), 0) as subject_points,
+          COUNT(CASE WHEN pe.event_type = 'challenge_completed' THEN 1 END) as subject_completions
         FROM users u
-        LEFT JOIN progress p ON u.id = p.user_id
-        LEFT JOIN challenges c ON p.challenge_id = c.id
+        LEFT JOIN progress_events pe ON u.id = pe.user_id
+        LEFT JOIN challenges c ON pe.related_challenge_id = c.id
         WHERE u.active = true 
         AND c.subject = $1
         GROUP BY u.id, u.username, u.first_name, u.last_name

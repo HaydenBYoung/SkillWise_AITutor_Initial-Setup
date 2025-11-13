@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './ConfettiCelebration.css';
 
 const TrophyCelebration = ({ onComplete }) => {
@@ -16,7 +16,7 @@ const TrophyCelebration = ({ onComplete }) => {
       rotation: Math.random() * 360, // Random rotation
       size: 35 + Math.random() * 25, // Random size (35-60px)
     }));
-    
+
     setTrophies(newTrophies);
 
     // Clean up after animation completes

@@ -11,7 +11,7 @@ jest.mock('bcryptjs');
 
 describe('Auth API', () => {
   const baseUrl = '/api/auth';
-  
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -22,7 +22,7 @@ describe('Auth API', () => {
       password: 'Password123!',
       confirmPassword: 'Password123!',
       firstName: 'Test',
-      lastName: 'User'
+      lastName: 'User',
     };
 
     beforeEach(() => {
@@ -37,7 +37,9 @@ describe('Auth API', () => {
       // Mock DB responses
       db.query
         .mockResolvedValueOnce({ rows: [] }) // No existing user
-        .mockResolvedValueOnce({ rows: [{ id: 1, ...validUser, role: 'student' }] }) // Insert user
+        .mockResolvedValueOnce({
+          rows: [{ id: 1, ...validUser, role: 'student' }],
+        }) // Insert user
         .mockResolvedValueOnce({ rows: [{ id: 1 }] }); // Insert refresh token
 
       const res = await request(app)
@@ -87,7 +89,7 @@ describe('Auth API', () => {
   describe('POST /login', () => {
     const credentials = {
       email: 'test@example.com',
-      password: 'Password123!'
+      password: 'Password123!',
     };
 
     const mockUser = {
@@ -96,7 +98,7 @@ describe('Auth API', () => {
       password_hash: 'hashedPassword123',
       first_name: 'Test',
       last_name: 'User',
-      role: 'student'
+      role: 'student',
     };
 
     beforeEach(() => {
@@ -112,9 +114,7 @@ describe('Auth API', () => {
         .mockResolvedValueOnce({ rows: [mockUser] }) // Find user
         .mockResolvedValueOnce({ rows: [{ id: 1 }] }); // Insert refresh token
 
-      const res = await request(app)
-        .post(`${baseUrl}/login`)
-        .send(credentials);
+      const res = await request(app).post(`${baseUrl}/login`).send(credentials);
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('user');
@@ -128,9 +128,7 @@ describe('Auth API', () => {
       // Mock user found
       db.query.mockResolvedValueOnce({ rows: [mockUser] });
 
-      const res = await request(app)
-        .post(`${baseUrl}/login`)
-        .send(credentials);
+      const res = await request(app).post(`${baseUrl}/login`).send(credentials);
 
       expect(res.status).toBe(401);
       expect(res.body).toHaveProperty('message');
@@ -141,9 +139,7 @@ describe('Auth API', () => {
       // Mock no user found
       db.query.mockResolvedValueOnce({ rows: [] });
 
-      const res = await request(app)
-        .post(`${baseUrl}/login`)
-        .send(credentials);
+      const res = await request(app).post(`${baseUrl}/login`).send(credentials);
 
       expect(res.status).toBe(401);
       expect(res.body).toHaveProperty('message');
@@ -159,13 +155,17 @@ describe('Auth API', () => {
         token: mockRefreshToken,
         user_id: 1,
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        is_revoked: false
+        is_revoked: false,
       };
 
       // Mock token verification
-      jwt.verifyRefreshToken.mockReturnValue({ id: 1, email: 'test@example.com', role: 'student' });
+      jwt.verifyRefreshToken.mockReturnValue({
+        id: 1,
+        email: 'test@example.com',
+        role: 'student',
+      });
       jwt.generateToken.mockReturnValue('newAccessToken123');
-      
+
       // Mock DB response
       db.query.mockResolvedValueOnce({ rows: [mockTokenRecord] });
 
@@ -194,7 +194,7 @@ describe('Auth API', () => {
   describe('POST /logout', () => {
     it('should logout successfully', async () => {
       const mockRefreshToken = 'validRefreshToken123';
-      
+
       // Mock DB update
       db.query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
 
@@ -208,8 +208,7 @@ describe('Auth API', () => {
     });
 
     it('should succeed even without refresh token', async () => {
-      const res = await request(app)
-        .post(`${baseUrl}/logout`);
+      const res = await request(app).post(`${baseUrl}/logout`);
 
       expect(res.status).toBe(204);
     });
