@@ -494,7 +494,7 @@ cd backend
 npm install
 npm run dev
 
-# 5. Start frontend (in new terminal)
+# 5. Start frontend (in new terminal
 cd frontend
 npm install
 npm start

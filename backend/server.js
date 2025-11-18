@@ -4,6 +4,11 @@
 const app = require('./src/app');
 const logger = app.get('logger');
 
+// Require Sentry so we can capture uncaught/unhandled exceptions from the
+// process-level handlers. `app` initializes Sentry, so requiring here will
+// reference the same client instance.
+const Sentry = require('@sentry/node');
+
 const PORT = process.env.PORT || 3001;
 
 // Start server
@@ -44,32 +49,58 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  logger.error('💥 Uncaught Exception:', err);
-  // Also print to stdout/stderr so CI/terminals show the full stack
+process.on('uncaughtException', async (err) => {
   try {
-    console.error(
-      'Uncaught Exception (stack):',
-      err && err.stack ? err.stack : err,
-    );
-  } catch (e) {
-    console.error('Uncaught Exception (error):', err);
+    logger.error('💥 Uncaught Exception:', err);
+    // Capture with Sentry if available
+    if (Sentry && typeof Sentry.captureException === 'function') {
+      Sentry.captureException(err);
+      // attempt to flush events (timeout 2s) before exiting
+      try {
+        await Sentry.flush(2000);
+      } catch (e) {
+        // ignore flush errors
+      }
+    }
+    // Also print to stdout/stderr so CI/terminals show the full stack
+    try {
+      console.error(
+        'Uncaught Exception (stack):',
+        err && err.stack ? err.stack : err
+      );
+    } catch (e) {
+      console.error('Uncaught Exception (error):', err);
+    }
+  } finally {
+    process.exit(1);
   }
-  process.exit(1);
 });
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+process.on('unhandledRejection', async (reason, promise) => {
   try {
-    console.error(
-      'Unhandled Rejection reason:',
-      reason && reason.stack ? reason.stack : reason,
-    );
-  } catch (e) {
-    console.error('Unhandled Rejection reason (error):', reason);
+    logger.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+    if (Sentry && typeof Sentry.captureException === 'function') {
+      Sentry.captureException(
+        reason instanceof Error ? reason : new Error(String(reason))
+      );
+      try {
+        await Sentry.flush(2000);
+      } catch (e) {
+        // ignore
+      }
+    }
+    try {
+      console.error(
+        'Unhandled Rejection reason:',
+        reason && reason.stack ? reason.stack : reason
+      );
+    } catch (e) {
+      console.error('Unhandled Rejection reason (error):', reason);
+    }
+  } finally {
+    process.exit(1);
   }
-  process.exit(1);
 });
 
 module.exports = server;

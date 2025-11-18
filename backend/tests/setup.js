@@ -30,12 +30,19 @@ const testDbConfig = {
 
 const testPool = new Pool(testDbConfig);
 
+// Allow skipping DB setup for isolated tests (e.g. Sentry unit tests)
+const SKIP_DB_SETUP = process.env.SKIP_DB_SETUP === '1';
+
 // Global test setup
 beforeAll(async () => {
   // Set test environment
   process.env.NODE_ENV = 'test';
   process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
   process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-key-for-testing-only';
+  if (SKIP_DB_SETUP) {
+    console.log('⚠️ Skipping DB setup for tests (SKIP_DB_SETUP=1)');
+    return;
+  }
 
   // Test database connection
   try {
@@ -49,6 +56,7 @@ beforeAll(async () => {
 
 // Global test cleanup
 afterAll(async () => {
+  if (SKIP_DB_SETUP) return;
   try {
     // Clean up test data if needed
     // await testPool.query('TRUNCATE TABLE users CASCADE');
@@ -77,6 +85,7 @@ const clearTestData = async () => {
     'users',
   ];
 
+  if (SKIP_DB_SETUP) return;
   for (const table of tables) {
     try {
       await testPool.query(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
