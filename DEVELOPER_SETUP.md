@@ -386,6 +386,23 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-gmail-app-password
 ```
 
+### Monitoring with Sentry (optional)
+
+This project can report client-side and server-side errors to Sentry. It's optional for local development.
+
+Add the following to your `.env` (root or frontend `.env` for CRA):
+
+```env
+# Sentry DSN for project (optional)
+REACT_APP_SENTRY_DSN=your-frontend-sentry-dsn
+SENTRY_DSN=your-backend-sentry-dsn
+```
+
+Notes:
+
+- The frontend uses `REACT_APP_SENTRY_DSN` (CRA environment variable naming). If not set, the Sentry client will remain a no-op in local dev.
+- The backend uses `SENTRY_DSN` from its environment. Both are optional.
+
 Gmail App Password setup:
 
 1. Enable 2-factor authentication on Gmail

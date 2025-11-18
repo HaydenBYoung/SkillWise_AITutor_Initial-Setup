@@ -256,6 +256,39 @@ docker-compose exec frontend npm run test:coverage
 cd frontend && npx cypress open
 ```
 
+## 🕵️ Monitoring (Sentry)
+
+This repository supports optional error monitoring with Sentry for both frontend (browser) and backend (Node). You can enable Sentry to collect errors and breadcrumbs in staging/production or for testing.
+
+1. Create or update your environment variables.
+
+- Frontend (Create `frontend/.env` or set environment when building):
+
+  ```env
+  REACT_APP_SENTRY_DSN=your-frontend-sentry-dsn
+  ```
+
+- Backend (Create `backend/.env` or set environment on the server):
+
+  ```env
+  SENTRY_DSN=your-backend-sentry-dsn
+  ```
+
+2. Local development: it's safe to leave these unset. The frontend code initializes Sentry only when `REACT_APP_SENTRY_DSN` is present, so developers won't accidentally send telemetry from local machines.
+
+3. Testing Sentry locally:
+
+- To verify the frontend Sentry integration locally, set `REACT_APP_SENTRY_DSN` to a Sentry DSN (or a test project DSN) and reload the frontend. Trigger an error (e.g., open the console and call `throw new Error('testing sentry')` in a component). You should see the event in your Sentry project.
+
+- A basic unit/integration test for Sentry is included in `backend/tests/sentry.test.js` (the backend test mocks Sentry). For frontend tests, you can mock `@sentry/react` and assert that `Sentry.captureException` or `Sentry.addBreadcrumb` was called.
+
+4. Recommended settings in production/staging:
+
+- Set `tracesSampleRate` appropriately (e.g., 0.05–0.2) if you enable performance monitoring.
+- Configure `environment` to `staging` or `production` so Sentry groups events correctly.
+
+If you want me to add a short script to deliberately trigger a Sentry event from the UI for testing, I can add a hidden developer button or a test page — tell me where you'd prefer it.
+
 ## 📝 API Documentation
 
 Once the backend is running, you can access:

@@ -1,12 +1,27 @@
 import {} from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { addBreadcrumb } from '../../utils/sentry';
 
 const ThemeToggle = () => {
   const { isDark, toggleTheme } = useTheme();
 
+  const handleToggle = () => {
+    try {
+      addBreadcrumb({
+        category: 'ui.action',
+        message: 'theme.toggle',
+        level: 'info',
+      });
+    } catch (e) {
+      // ignore
+    }
+
+    toggleTheme();
+  };
+
   return (
     <button
-      onClick={toggleTheme}
+      onClick={handleToggle}
       className="theme-toggle"
       aria-label="Toggle dark mode"
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}

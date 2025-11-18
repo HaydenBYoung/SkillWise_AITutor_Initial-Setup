@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@sentry/react": "^7.81.1",
+    "@sentry/tracing": "^7.81.1",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@hookform/resolvers": "^3.3.2",
