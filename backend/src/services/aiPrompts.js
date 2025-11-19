@@ -70,12 +70,42 @@ Target learning objectives:\n${joinObjectives(targetObjectives)}
 Task: Suggest 5 next challenges or activities, each with a short reason why it helps reach the objectives. Order them from best match to least.
 Format: Provide a numbered list where each item includes the challenge title, difficulty, and 1 sentence rationale.`;
   },
+  generateChallenge: ({
+    title,
+    category,
+    difficulty,
+    learningObjectives = [],
+    constraints = '',
+    examples = [],
+  }) => {
+    return `You are an expert curriculum designer and challenge author.
+Task: Generate a single programming challenge that matches the following metadata.
+
+Title: ${title || 'Untitled Challenge'}
+Category: ${category || 'General'}
+Difficulty: ${difficulty || 'medium'}
+Learning objectives:\n${joinObjectives(learningObjectives)}
+
+Constraints or requirements: ${constraints || 'None specified.'}
+
+Examples or starter code: ${
+      examples && examples.length ? examples.join('\n---\n') : 'None provided.'
+    }
+
+Instructions:
+- Provide a JSON object only (no surrounding commentary) with the following fields: 'title', 'description', 'instructions', 'inputDescription', 'outputDescription', 'examples' (array), 'difficulty', 'estimatedTimeMinutes' (integer), and 'tags' (array of short strings).
+- Keep descriptions concise but clear. Ensure examples include input and expected output where applicable.
+- Set 'difficulty' to one of: easy, medium, hard.
+- If constraints affect the solution (e.g., time/memory bounds), include them in 'instructions'.
+`;
+  },
 };
 
 module.exports = {
   generateFeedbackPrompt: (params) => templates.feedback(params),
   generateHintsPrompt: (params) => templates.hints(params),
   generateSuggestionPrompt: (params) => templates.suggestNext(params),
+  generateChallengePrompt: (params) => templates.generateChallenge(params),
   // expose raw templates for advanced uses/tests
   templates,
 };
