@@ -1,7 +1,21 @@
 // Lightweight Sentry wrapper to make client optional and safe in dev
-import * as Sentry from '@sentry/react';
+let Sentry = null;
+let isInitialized = false;
 
-const isInitialized = Boolean(process.env.REACT_APP_SENTRY_DSN);
+try {
+  // Attempt to require so missing optional dependency doesn't break the app
+  // (some test environments may not have the package installed)
+  // eslint-disable-next-line global-require, import/no-dynamic-require
+  Sentry = require('@sentry/react');
+  isInitialized = Boolean(process.env.REACT_APP_SENTRY_DSN) && Sentry;
+} catch (e) {
+  // Sentry isn't available — use noop fallback
+  Sentry = {
+    addBreadcrumb: () => {},
+    captureException: () => {},
+  };
+  isInitialized = false;
+}
 
 export function addBreadcrumb(breadcrumb) {
   if (isInitialized && typeof Sentry.addBreadcrumb === 'function') {

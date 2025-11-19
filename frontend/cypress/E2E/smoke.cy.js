@@ -1,7 +1,6 @@
 /* global Cypress */
 // First attempt at smoke test below
-import {} from 'react';
-import { cy, it, describe } from 'cypress';
+// Note: avoid importing from 'cypress' or 'react' in E2E specs — Cypress provides `cy`/`Cypress` globals.
 
 describe('Smoke Test: Login → Create Goal → Add Challenge → Complete', () => {
   const email = Cypress.env('TEST_USER_EMAIL') || 'testuser@example.com';

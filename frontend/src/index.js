@@ -2,25 +2,33 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
-import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
+let Sentry = null;
+let BrowserTracing = null;
+let SENTRY_DSN = process.env.REACT_APP_SENTRY_DSN || '';
 
-// Use CRA environment variable naming convention
-const SENTRY_DSN = process.env.REACT_APP_SENTRY_DSN || '';
+try {
+  // Attempt to require optional Sentry packages — guard so missing packages don't break E2E
+  // eslint-disable-next-line global-require, import/no-dynamic-require
+  Sentry = require('@sentry/react');
+  // eslint-disable-next-line global-require, import/no-dynamic-require
+  BrowserTracing = require('@sentry/tracing').BrowserTracing;
 
-if (SENTRY_DSN) {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    integrations: [new BrowserTracing()],
-    // Keep traces disabled by default; enable only for performance testing
-    tracesSampleRate: 0.0,
-    environment: process.env.NODE_ENV || 'development',
-  });
-} else {
-  // No-op: Sentry will not send events when DSN is not configured
-  // Useful for local development where developers don't want production telemetry
+  if (SENTRY_DSN && Sentry && BrowserTracing) {
+    Sentry.init({
+      dsn: SENTRY_DSN,
+      integrations: [new BrowserTracing()],
+      tracesSampleRate: 0.0,
+      environment: process.env.NODE_ENV || 'development',
+    });
+  } else {
+    // eslint-disable-next-line no-console
+    console.info('Sentry not configured or optional packages unavailable');
+  }
+} catch (e) {
+  // If Sentry is not installed in this environment, keep a noop Sentry
   // eslint-disable-next-line no-console
-  console.info('Sentry not configured (REACT_APP_SENTRY_DSN not set)');
+  console.info('Optional Sentry packages not available in this environment');
+  Sentry = null;
 }
 
 const container = document.getElementById('root');
@@ -28,21 +36,25 @@ const root = createRoot(container);
 
 root.render(
   <StrictMode>
-    <Sentry.ErrorBoundary
-      fallback={({ error, componentStack, resetError }) => (
-        <div style={{ padding: 24 }}>
-          <h2>Something went wrong.</h2>
-          <details style={{ whiteSpace: 'pre-wrap' }}>
-            {String(error)}
-            {componentStack}
-          </details>
-          <button onClick={resetError} style={{ marginTop: 12 }}>
-            Try again
-          </button>
-        </div>
-      )}
-    >
+    {Sentry ? (
+      <Sentry.ErrorBoundary
+        fallback={({ error, componentStack, resetError }) => (
+          <div style={{ padding: 24 }}>
+            <h2>Something went wrong.</h2>
+            <details style={{ whiteSpace: 'pre-wrap' }}>
+              {String(error)}
+              {componentStack}
+            </details>
+            <button onClick={resetError} style={{ marginTop: 12 }}>
+              Try again
+            </button>
+          </div>
+        )}
+      >
+        <App />
+      </Sentry.ErrorBoundary>
+    ) : (
       <App />
-    </Sentry.ErrorBoundary>
+    )}
   </StrictMode>
 );
