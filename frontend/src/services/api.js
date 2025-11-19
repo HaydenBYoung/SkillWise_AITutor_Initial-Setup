@@ -301,6 +301,11 @@ export const apiService = {
     // Returns the normalized response from backend: { success, data, ai }
     submitForFeedback: async (payload) =>
       (await api.post('/ai/feedback', payload)).data,
+    // Generate a challenge using AI. Expects an object with optional
+    // title, category, difficulty, learningObjectives (array), constraints, examples (array).
+    // Returns backend response: { success, data }
+    generateChallenge: async (payload) =>
+      (await api.post('/ai/generateChallenge', payload)).data,
   },
 };
 

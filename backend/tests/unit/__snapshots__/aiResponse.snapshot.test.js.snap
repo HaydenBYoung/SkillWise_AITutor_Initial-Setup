@@ -1,0 +1,88 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AI service snapshot tests generateChallenge parses model response and matches snapshot 1`] = `
+{
+  "description": "Given two integers, return their sum.",
+  "difficulty": "easy",
+  "estimatedTimeMinutes": 10,
+  "examples": [],
+  "inputDescription": "Two space-separated integers",
+  "instructions": "Read two integers and output their sum.",
+  "outputDescription": "Single integer equal to the sum",
+  "tags": [
+    "math",
+    "basics",
+  ],
+  "title": "Sum of Two Numbers",
+}
+`;
+
+exports[`AI service snapshot tests generateChallenge parses model response and matches snapshot 2`] = `
+"You are an expert curriculum designer and challenge author.
+Task: Generate a single programming challenge that matches the following metadata.
+
+Title: Sum of Two Numbers
+Category: Math
+Difficulty: easy
+Learning objectives:
+1. addition
+
+Constraints or requirements: None specified.
+
+Examples or starter code: None provided.
+
+Instructions:
+- Provide a JSON object only (no surrounding commentary) with the following fields: 'title', 'description', 'instructions', 'inputDescription', 'outputDescription', 'examples' (array), 'difficulty', 'estimatedTimeMinutes' (integer), and 'tags' (array of short strings).
+- Keep descriptions concise but clear. Ensure examples include input and expected output where applicable.
+- Set 'difficulty' to one of: easy, medium, hard.
+- If constraints affect the solution (e.g., time/memory bounds), include them in 'instructions'.
+"
+`;
+
+exports[`AI service snapshot tests generateChallenge parses model response and matches snapshot 3`] = `"{"title":"Sum of Two Numbers","description":"Given two integers, return their sum.","instructions":"Read two integers and output their sum.","inputDescription":"Two space-separated integers","outputDescription":"Single integer equal to the sum","examples":[],"difficulty":"easy","estimatedTimeMinutes":10,"tags":["math","basics"]}"`;
+
+exports[`AI service snapshot tests generateFeedback parses model response and matches snapshot 1`] = `
+{
+  "confidence": 0.85,
+  "improvements": [
+    "Optimize the loop to O(n)",
+    "Avoid repeating work in nested functions",
+  ],
+  "strengths": [
+    "Readable code",
+    "Clear variable names",
+  ],
+  "suggestions": [
+    "Add unit tests",
+    "Handle edge cases",
+  ],
+  "summary": "Well done on the implementation.",
+}
+`;
+
+exports[`AI service snapshot tests generateFeedback parses model response and matches snapshot 2`] = `
+"You are an expert tutor for the subject area: JavaScript.
+Task: Provide constructive, actionable feedback on the student's submission.
+
+Context:
+- Challenge title: Example challenge
+- Difficulty: unspecified
+- Learning objectives:
+1. Loops
+2. I/O
+
+Student submission:
+"""
+console.log("hi")
+"""
+
+Instructions:
+- Provide a short summary (1-2 sentences) of what the student did well.
+- Identify up to 3 areas for improvement with concrete examples.
+- Offer 2 actionable next steps or practice items tailored to the learning objectives.
+- If applicable, provide a suggested rubric score (0-100) and a brief justification.
+
+Keep the tone encouraging and clear."
+`;
+
+exports[`AI service snapshot tests generateFeedback parses model response and matches snapshot 3`] = `"{"summary":"Well done on the implementation.","suggestions":["Add unit tests","Handle edge cases"],"strengths":["Readable code","Clear variable names"],"improvements":["Optimize the loop to O(n)","Avoid repeating work in nested functions"],"confidence":0.85}"`;

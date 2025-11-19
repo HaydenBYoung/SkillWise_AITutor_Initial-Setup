@@ -1,0 +1,9 @@
+{
+  "choices": [
+    {
+      "message": {
+        "content": "{\"title\":\"Sum of Two Numbers\",\"description\":\"Given two integers, return their sum.\",\"instructions\":\"Read two integers and output their sum.\",\"inputDescription\":\"Two space-separated integers\",\"outputDescription\":\"Single integer equal to the sum\",\"examples\":[],\"difficulty\":\"easy\",\"estimatedTimeMinutes\":10,\"tags\":[\"math\",\"basics\"]}"
+      }
+    }
+  ]
+}

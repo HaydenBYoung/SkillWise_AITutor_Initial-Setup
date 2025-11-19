@@ -1,0 +1,9 @@
+{
+  "choices": [
+    {
+      "message": {
+        "content": "{\"summary\":\"Well done on the implementation.\",\"suggestions\":[\"Add unit tests\",\"Handle edge cases\"],\"strengths\":[\"Readable code\",\"Clear variable names\"],\"improvements\":[\"Optimize the loop to O(n)\",\"Avoid repeating work in nested functions\"],\"confidence\":0.85}"
+      }
+    }
+  ]
+}

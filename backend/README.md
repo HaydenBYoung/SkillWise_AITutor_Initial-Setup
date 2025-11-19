@@ -249,6 +249,19 @@ backend/
 - AI service mocking
 - Authentication flow testing
 
+### Snapshots
+
+- **Purpose**: We use Jest snapshot tests for AI response parsing to detect accidental changes to prompt templates or parsing logic.
+- **When to update**: If you intentionally change prompt wording or parsing expectations, update snapshots with the Jest `-u` flag.
+- **How to update locally**:
+
+  ```powershell
+  cd backend
+  npm test -- -u
+  ```
+
+- **CI guidance**: Do not update snapshots automatically in CI. Instead, run tests in CI and fail the build if snapshots changed; update snapshots locally and open a PR with the changes and rationale.
+
 ## Logging and Monitoring
 
 - Structured logging with pino
