@@ -1,19 +1,23 @@
-// TODO: Implement AI routes
+// AI Routes - Stories 3.2, 3.5
 const express = require('express');
 const router = express.Router();
 const aiController = require('../controllers/aiController');
 const auth = require('../middleware/auth');
 
-// TODO: Add POST /feedback route for generating AI feedback
-router.post('/feedback', auth, aiController.generateFeedback);
+// Story 3.2: Generate AI challenge
+router.post('/generateChallenge', auth, aiController.generateChallenge);
 
-// TODO: Add GET /hints/:challengeId route for getting hints
-router.get('/hints/:challengeId', auth, aiController.getHints);
+// Story 3.5: Submit for AI feedback
+router.post('/submitForFeedback', auth, aiController.submitForFeedback);
 
-// TODO: Add GET /suggestions route for challenge suggestions
-router.get('/suggestions', auth, aiController.suggestChallenges);
+// Get feedback for a submission
+router.get('/feedback/:submissionId', auth, aiController.getFeedback);
 
-// TODO: Add GET /analysis route for progress analysis
-router.get('/analysis', auth, aiController.analyzeProgress);
+// Get all feedback for a challenge
+router.get(
+  '/challenge/:challengeId/feedback',
+  auth,
+  aiController.getChallengeFeedback
+);
 
 module.exports = router;

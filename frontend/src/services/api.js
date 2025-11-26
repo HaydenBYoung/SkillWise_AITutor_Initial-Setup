@@ -58,7 +58,7 @@ api.interceptors.request.use(
     // Log request in development
     if (process.env.NODE_ENV === 'development') {
       console.log(
-        `🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`,
+        `🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`
       );
     }
 
@@ -67,7 +67,7 @@ api.interceptors.request.use(
   (error) => {
     console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
-  },
+  }
 );
 
 // Response interceptor for token refresh logic
@@ -78,7 +78,7 @@ api.interceptors.response.use(
       console.log(
         `✅ API Response: ${response.config.method?.toUpperCase()} ${
           response.config.url
-        } - ${response.status}`,
+        } - ${response.status}`
       );
     }
 
@@ -92,7 +92,7 @@ api.interceptors.response.use(
       console.log(
         `❌ API Error: ${originalRequest?.method?.toUpperCase()} ${
           originalRequest?.url
-        } - ${error.response?.status}`,
+        } - ${error.response?.status}`
       );
     }
 
@@ -125,7 +125,7 @@ api.interceptors.response.use(
           {
             withCredentials: true, // Send httpOnly refresh cookie
             timeout: 5000,
-          },
+          }
         );
 
         const { accessToken } = refreshResponse.data;
@@ -159,7 +159,7 @@ api.interceptors.response.use(
         window.dispatchEvent(
           new CustomEvent('auth:logout', {
             detail: { reason: 'token_refresh_failed' },
-          }),
+          })
         );
 
         // Redirect to login page
@@ -180,7 +180,7 @@ api.interceptors.response.use(
       window.dispatchEvent(
         new CustomEvent('api:server-error', {
           detail: { error: error.response.data },
-        }),
+        })
       );
     }
 
@@ -196,7 +196,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 // API service methods
@@ -238,6 +238,8 @@ export const apiService = {
   challenges: {
     getAll: async (params) => (await api.get('/challenges', { params })).data,
     getById: async (id) => (await api.get(`/challenges/${id}`)).data,
+    create: async (challenge) =>
+      (await api.post('/challenges', challenge)).data,
     submit: async (id, submission) =>
       (await api.post(`/challenges/${id}/submit`, submission)).data,
     getSubmissions: async (id) =>
@@ -280,7 +282,7 @@ export const apiService = {
       (
         await api.post(
           `/peer-review/submissions/${submissionId}/review`,
-          review,
+          review
         )
       ).data,
     getReviewDetails: async (submissionId) =>
@@ -292,6 +294,22 @@ export const apiService = {
     getAll: async () => (await api.get('/notifications')).data,
     markAsRead: async (id) => (await api.put(`/notifications/${id}/read`)).data,
     markAllAsRead: async () => (await api.put('/notifications/read-all')).data,
+  },
+
+  // AI methods - Stories 3.1, 3.2, 3.4, 3.5, 3.6
+  ai: {
+    // Story 3.2: Generate challenge using AI
+    generateChallenge: async (params) =>
+      (await api.post('/ai/generateChallenge', params)).data,
+    // Story 3.5: Submit for AI feedback
+    submitForFeedback: async (feedbackData) =>
+      (await api.post('/ai/submitForFeedback', feedbackData)).data,
+    // Get feedback for submission
+    getFeedback: async (submissionId) =>
+      (await api.get(`/ai/feedback/${submissionId}`)).data,
+    // Get all feedback for a challenge
+    getChallengeFeedback: async (challengeId) =>
+      (await api.get(`/ai/challenge/${challengeId}/feedback`)).data,
   },
 };
 

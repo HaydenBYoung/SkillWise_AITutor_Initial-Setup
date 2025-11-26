@@ -19,4 +19,11 @@ router.put('/:id', auth, challengeController.updateChallenge);
 // DELETE /:id - delete challenge (admin only)
 router.delete('/:id', auth, challengeController.deleteChallenge);
 
+// POST /:id/submit - submit solution for challenge
+router.post(
+  '/:id/submit',
+  auth,
+  require('../controllers/submissionController').submitWork
+);
+
 module.exports = router;

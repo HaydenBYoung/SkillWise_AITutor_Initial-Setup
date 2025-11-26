@@ -84,12 +84,21 @@ const query = async (text, params = []) => {
     return result;
   } catch (err) {
     const duration = Date.now() - start;
+    console.error(`[${queryId}] DATABASE QUERY FAILED:`);
+    console.error('Query:', text);
+    console.error('Params:', params);
+    console.error('Error:', err.message);
+    console.error('Code:', err.code);
+    console.error('Detail:', err.detail);
+    console.error('Full Error:', err);
+
     logger.error(`[${queryId}] Query failed:`, {
       text: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
       error: err.message,
       duration: `${duration}ms`,
       code: err.code,
       detail: err.detail,
+      stack: err.stack,
     });
     throw err;
   }
@@ -161,7 +170,7 @@ const getClient = async () => {
 const healthCheck = async () => {
   try {
     const result = await query(
-      'SELECT version(), now() as current_time, current_database() as database',
+      'SELECT version(), now() as current_time, current_database() as database'
     );
     return {
       healthy: true,

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import ChallengeCard from '../components/challenges/ChallengeCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DashboardLayout from '../components/common/DashboardLayout';
+import AIChallengeModal from '../components/ai/AIChallengeModal';
 import { apiService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,6 +11,7 @@ const ChallengesPage = () => {
   const [challenges, setChallenges] = useState([]);
   const [filteredChallenges, setFilteredChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAIModal, setShowAIModal] = useState(false);
   const [filters, setFilters] = useState({
     category: '',
     difficulty: '',
@@ -53,7 +55,7 @@ const ChallengesPage = () => {
     if (filters.category) {
       filtered = filtered.filter(
         (challenge) =>
-          challenge.category.toLowerCase() === filters.category.toLowerCase(),
+          challenge.category.toLowerCase() === filters.category.toLowerCase()
       );
     }
 
@@ -61,7 +63,7 @@ const ChallengesPage = () => {
       filtered = filtered.filter(
         (challenge) =>
           challenge.difficulty.toLowerCase() ===
-          filters.difficulty.toLowerCase(),
+          filters.difficulty.toLowerCase()
       );
     }
 
@@ -75,8 +77,8 @@ const ChallengesPage = () => {
             .toLowerCase()
             .includes(filters.search.toLowerCase()) ||
           challenge.tags.some((tag) =>
-            tag.toLowerCase().includes(filters.search.toLowerCase()),
-          ),
+            tag.toLowerCase().includes(filters.search.toLowerCase())
+          )
       );
     }
 
@@ -90,12 +92,75 @@ const ChallengesPage = () => {
     }));
   };
 
+  const handleAIChallengeCreated = async (challenge) => {
+    // Save the AI-generated challenge to the database
+    try {
+      const response = await apiService.challenges.create({
+        title: challenge.title,
+        description: challenge.description,
+        instructions: challenge.description, // Use description as instructions
+        category: challenge.skills?.[0] || 'General', // Use first skill as category
+        difficulty_level: challenge.difficulty?.toLowerCase() || 'medium',
+        estimated_time_minutes: challenge.timeEstimate || 30,
+        points_reward: challenge.points || 20,
+        tags: challenge.skills || [],
+        starter_code: challenge.starterCode,
+        test_cases: challenge.testCases
+          ? JSON.stringify(challenge.testCases)
+          : null,
+        hints: challenge.hints || [],
+      });
+
+      // Add the new challenge to the list
+      if (response.success) {
+        setChallenges((prev) => [response.data, ...prev]);
+        setFilteredChallenges((prev) => [response.data, ...prev]);
+      }
+
+      setShowAIModal(false);
+    } catch (error) {
+      console.error('Failed to save AI-generated challenge:', error);
+      alert(
+        'Failed to save challenge: ' +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="challenges-page">
         <div className="page-header">
-          <h1>Learning Challenges</h1>
-          <p>Enhance your skills with hands-on learning experiences</p>
+          <div>
+            <h1>Learning Challenges</h1>
+            <p>Enhance your skills with hands-on learning experiences</p>
+          </div>
+          <button
+            className="ai-generate-btn"
+            onClick={() => setShowAIModal(true)}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#6366f1',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s',
+            }}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.backgroundColor = '#4f46e5')
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.backgroundColor = '#6366f1')
+            }
+          >
+            ✨ AI Generate Challenge
+          </button>
         </div>
 
         <div className="challenges-filters">
@@ -180,6 +245,12 @@ const ChallengesPage = () => {
             </div>
           )}
         </div>
+
+        <AIChallengeModal
+          isOpen={showAIModal}
+          onClose={() => setShowAIModal(false)}
+          onChallengeCreated={handleAIChallengeCreated}
+        />
       </div>
     </DashboardLayout>
   );

@@ -1,0 +1,131 @@
+/* AI Challenge Modal Styles */
+.ai-challenge-modal {
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.ai-challenge-modal .modal-body {
+  padding: 1.5rem;
+}
+
+.ai-challenge-modal .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.ai-challenge-modal .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ai-challenge-modal .form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.ai-challenge-modal .form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.generated-challenge {
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 0.5rem;
+}
+
+.generated-challenge h3 {
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.challenge-meta {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.challenge-meta .badge {
+  padding: 0.25rem 0.75rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.challenge-meta .time {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.challenge-description {
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.challenge-examples,
+.challenge-criteria {
+  margin-top: 1.5rem;
+}
+
+.challenge-examples h4,
+.challenge-criteria h4 {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.example {
+  background: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+  border-left: 3px solid var(--primary);
+}
+
+.dark-mode .example {
+  background: var(--bg-primary);
+}
+
+.challenge-criteria ul {
+  list-style: none;
+  padding: 0;
+}
+
+.challenge-criteria li {
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background: white;
+  border-radius: 0.5rem;
+  border-left: 3px solid var(--success);
+}
+
+.dark-mode .challenge-criteria li {
+  background: var(--bg-primary);
+}
+
+.challenge-criteria li::before {
+  content: '✓ ';
+  color: var(--success);
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.alert-error {
+  padding: 1rem;
+  background: #fee;
+  color: #c33;
+  border-radius: 0.5rem;
+  border-left: 4px solid #c33;
+  margin-top: 1rem;
+}

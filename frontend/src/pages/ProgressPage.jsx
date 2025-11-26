@@ -1,5 +1,5 @@
 // Progress tracking and analytics page (Recharts-based). Replace or extend as needed.
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DashboardLayout from '../components/common/DashboardLayout';
 import { apiService } from '../services/api';
@@ -33,40 +33,33 @@ const ProgressPage = () => {
   }, [timeframe]);
   */
 
-  const fetchProgress = useCallback(async () => {
-    //change back to data?
-    try {
-      setLoading(true);
-      const response = await apiService.progress.getOverview(timeframe);
-      setProgressData(response.data.data);
-    } catch (error) {
-      console.error('Error fetching progress:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [timeframe]);
-
   useEffect(() => {
-    fetchProgress();
-  }, [fetchProgress]);
+    const fetchProgress = async () => {
+      try {
+        setLoading(true);
+        const data = await apiService.progress.getOverview(timeframe);
+        setProgressData(data);
+      } catch (error) {
+        console.error('Error fetching progress:', error);
+        setProgressData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  /**
-   * Handle dynamic updates (e.g., when a challenge is completed)
-   */
-  const handleChallengeCompletion = async (challengeId) => {
-    try {
-      await apiService.progress.update({ challengeId });
-      await fetchProgress(); // re-fetch to update stats and charts
-    } catch (error) {
-      console.error('Error updating progress after completion:', error);
-    }
-  };
+    fetchProgress();
+  }, [timeframe]);
 
   if (loading || !progressData) {
     return <LoadingSpinner message="Loading your progress..." />;
   }
-  const { overall, weeklyProgress, skillBreakdown, recentActivity } =
-    progressData;
+
+  const {
+    overall = {},
+    weeklyProgress = [],
+    skillBreakdown = [],
+    recentActivity = [],
+  } = progressData || {};
 
   return (
     <DashboardLayout>
@@ -81,7 +74,7 @@ const ProgressPage = () => {
             <div className="stat-card">
               <div className="stat-icon">🎯</div>
               <div className="stat-content">
-                <h3>{progressData.overall.totalPoints}</h3>
+                <h3>{overall.totalPoints || 0}</h3>
                 <p>Total Points</p>
               </div>
             </div>
@@ -89,23 +82,24 @@ const ProgressPage = () => {
             <div className="stat-card">
               <div className="stat-icon">⭐</div>
               <div className="stat-content">
-                <h3>Level {progressData.overall.level}</h3>
+                <h3>Level {overall.level || 1}</h3>
                 <p>Current Level</p>
                 <div className="progress-bar">
                   <div
                     className="progress-fill"
                     style={{
                       width: `${
-                        (progressData.overall.experiencePoints /
-                          progressData.overall.nextLevelXP) *
-                        100
+                        overall.experiencePoints && overall.nextLevelXP
+                          ? (overall.experiencePoints / overall.nextLevelXP) *
+                            100
+                          : 0
                       }%`,
                     }}
                   ></div>
                 </div>
                 <small>
-                  {progressData.overall.experiencePoints}/
-                  {progressData.overall.nextLevelXP} XP
+                  {overall.experiencePoints || 0}/{overall.nextLevelXP || 100}{' '}
+                  XP
                 </small>
               </div>
             </div>
@@ -113,7 +107,7 @@ const ProgressPage = () => {
             <div className="stat-card">
               <div className="stat-icon">✅</div>
               <div className="stat-content">
-                <h3>{progressData.overall.completedGoals}</h3>
+                <h3>{overall.completedGoals || 0}</h3>
                 <p>Goals Completed</p>
               </div>
             </div>
@@ -121,7 +115,7 @@ const ProgressPage = () => {
             <div className="stat-card">
               <div className="stat-icon">🚀</div>
               <div className="stat-content">
-                <h3>{progressData.overall.completedChallenges}</h3>
+                <h3>{overall.completedChallenges || 0}</h3>
                 <p>Challenges Done</p>
               </div>
             </div>
@@ -129,11 +123,9 @@ const ProgressPage = () => {
             <div className="stat-card">
               <div className="stat-icon">🔥</div>
               <div className="stat-content">
-                <h3>{progressData.overall.currentStreak}</h3>
+                <h3>{overall.currentStreak || 0}</h3>
                 <p>Day Streak</p>
-                <small>
-                  Longest: {progressData.overall.longestStreak} days
-                </small>
+                <small>Longest: {overall.longestStreak || 0} days</small>
               </div>
             </div>
           </div>
@@ -194,7 +186,7 @@ const ProgressPage = () => {
             <div className="recent-activity-section">
               <h2>Recent Activity</h2>
               <div className="activity-list">
-                {progressData.recentActivity.map((activity) => (
+                {recentActivity.map((activity) => (
                   <div key={activity.id} className="activity-item">
                     <div className="activity-icon">
                       {activity.type === 'challenge_completed' && '🚀'}
@@ -220,7 +212,7 @@ const ProgressPage = () => {
           <div className="skills-section">
             <h2>Skill Breakdown</h2>
             <div className="skills-grid">
-              {progressData.skillBreakdown.map((skill, index) => (
+              {skillBreakdown.map((skill, index) => (
                 <div key={index} className="skill-item">
                   <div className="skill-header">
                     <h4>{skill.skill}</h4>

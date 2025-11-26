@@ -4,7 +4,7 @@ const logger = require('pino')({
 });
 
 class AppError extends Error {
-  constructor (message, statusCode, code = null) {
+  constructor(message, statusCode, code = null) {
     super(message);
     this.statusCode = statusCode;
     this.code = code;
@@ -28,20 +28,37 @@ const handleDuplicateFieldsDB = (err) => {
 };
 
 const handleValidationErrorDB = (err) => {
-  const errors = Object.values(err.errors).map(el => el.message);
+  const errors = Object.values(err.errors).map((el) => el.message);
   const message = `Invalid input data. ${errors.join('. ')}`;
   return new AppError(message, 400, 'VALIDATION_ERROR');
 };
 
 const handleJWTError = () => {
-  return new AppError('Invalid token. Please log in again.', 401, 'INVALID_TOKEN');
+  return new AppError(
+    'Invalid token. Please log in again.',
+    401,
+    'INVALID_TOKEN'
+  );
 };
 
 const handleJWTExpiredError = () => {
-  return new AppError('Your token has expired. Please log in again.', 401, 'TOKEN_EXPIRED');
+  return new AppError(
+    'Your token has expired. Please log in again.',
+    401,
+    'TOKEN_EXPIRED'
+  );
 };
 
 const sendErrorDev = (err, req, res) => {
+  // Log full error details including original error
+  console.error('=== DEVELOPMENT ERROR ===');
+  console.error('Message:', err.message);
+  console.error('Status Code:', err.statusCode);
+  console.error('Code:', err.code);
+  console.error('Stack:', err.stack);
+  console.error('Original Error:', err);
+  console.error('========================');
+
   logger.error('Development Error:', {
     error: err.message,
     stack: err.stack,
@@ -109,7 +126,7 @@ const errorHandler = (err, req, res, next) => {
   // Create proper error copy that preserves prototype chain
   let error = Object.create(
     Object.getPrototypeOf(err),
-    Object.getOwnPropertyDescriptors(err),
+    Object.getOwnPropertyDescriptors(err)
   );
 
   // Handle specific error types

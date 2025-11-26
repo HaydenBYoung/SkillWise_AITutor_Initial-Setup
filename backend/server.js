@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 // TODO: Server entry point with graceful shutdown and error handling
 
+// Load environment variables
+require('dotenv').config();
+
 const app = require('./src/app');
 const logger = app.get('logger');
 
@@ -50,7 +53,7 @@ process.on('uncaughtException', (err) => {
   try {
     console.error(
       'Uncaught Exception (stack):',
-      err && err.stack ? err.stack : err,
+      err && err.stack ? err.stack : err
     );
   } catch (e) {
     console.error('Uncaught Exception (error):', err);
@@ -64,7 +67,7 @@ process.on('unhandledRejection', (reason, promise) => {
   try {
     console.error(
       'Unhandled Rejection reason:',
-      reason && reason.stack ? reason.stack : reason,
+      reason && reason.stack ? reason.stack : reason
     );
   } catch (e) {
     console.error('Unhandled Rejection reason (error):', reason);

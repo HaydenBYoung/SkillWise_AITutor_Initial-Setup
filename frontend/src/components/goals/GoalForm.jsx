@@ -42,6 +42,7 @@ const GoalForm = ({ defaultValues, onSubmitSuccess, onCancel }) => {
         <label>Title</label>
         <input
           id="title"
+          autoComplete="off"
           data-testid="goal-title-input"
           {...register('title', { required: 'Title is required' })}
           placeholder="Enter goal title"
@@ -51,6 +52,7 @@ const GoalForm = ({ defaultValues, onSubmitSuccess, onCancel }) => {
         <label>Description</label>
         <textarea
           id="description"
+          autoComplete="off"
           data-testid="goal-description-input"
           {...register('description')}
           placeholder="Enter goal description"

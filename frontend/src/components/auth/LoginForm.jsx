@@ -32,6 +32,8 @@ const LoginForm = ({ onSubmit }) => {
         <input
           type="email"
           id="email"
+          autoComplete="email"
+          data-testid="email-input"
           {...register('email')}
           className={errors.email ? 'input-error' : ''}
           placeholder="you@example.com"
@@ -46,6 +48,8 @@ const LoginForm = ({ onSubmit }) => {
         <input
           type="password"
           id="password"
+          autoComplete="current-password"
+          data-testid="password-input"
           {...register('password')}
           className={errors.password ? 'input-error' : ''}
           placeholder="Enter your password"
@@ -55,21 +59,14 @@ const LoginForm = ({ onSubmit }) => {
         )}
       </div>
 
-      <button type="submit" className="btn-primary" disabled={isSubmitting}>
+      <button
+        type="submit"
+        className="btn-primary"
+        disabled={isSubmitting}
+        data-testid="login-button"
+      >
         {isSubmitting ? 'Signing in...' : 'Sign In'}
       </button>
-
-      {/*below is for cypress testing*/}
-      <input data-testid="email-input" type="email" {...register('email')} />
-      <input
-        data-testid="password-input"
-        type="password"
-        {...register('password')}
-      />
-      <button data-testid="login-button" type="submit">
-        Login
-      </button>
-      {/*above is for cypress testing*/}
     </form>
   );
 };
