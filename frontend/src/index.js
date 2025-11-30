@@ -8,9 +8,8 @@ let SENTRY_DSN = process.env.REACT_APP_SENTRY_DSN || '';
 
 try {
   // Attempt to require optional Sentry packages — guard so missing packages don't break E2E
-  // eslint-disable-next-line global-require, import/no-dynamic-require
+
   Sentry = require('@sentry/react');
-  // eslint-disable-next-line global-require, import/no-dynamic-require
   BrowserTracing = require('@sentry/tracing').BrowserTracing;
 
   if (SENTRY_DSN && Sentry && BrowserTracing) {

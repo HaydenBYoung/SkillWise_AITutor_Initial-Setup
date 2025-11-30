@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import ChallengeCard from '../components/challenges/ChallengeCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import GenerateChallengeButton from '../components/ai/GenerateChallengeButton';
 import DashboardLayout from '../components/common/DashboardLayout';
 import { apiService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -53,7 +54,7 @@ const ChallengesPage = () => {
     if (filters.category) {
       filtered = filtered.filter(
         (challenge) =>
-          challenge.category.toLowerCase() === filters.category.toLowerCase(),
+          challenge.category.toLowerCase() === filters.category.toLowerCase()
       );
     }
 
@@ -61,7 +62,7 @@ const ChallengesPage = () => {
       filtered = filtered.filter(
         (challenge) =>
           challenge.difficulty.toLowerCase() ===
-          filters.difficulty.toLowerCase(),
+          filters.difficulty.toLowerCase()
       );
     }
 
@@ -75,8 +76,8 @@ const ChallengesPage = () => {
             .toLowerCase()
             .includes(filters.search.toLowerCase()) ||
           challenge.tags.some((tag) =>
-            tag.toLowerCase().includes(filters.search.toLowerCase()),
-          ),
+            tag.toLowerCase().includes(filters.search.toLowerCase())
+          )
       );
     }
 
@@ -93,9 +94,15 @@ const ChallengesPage = () => {
   return (
     <DashboardLayout>
       <div className="challenges-page">
-        <div className="page-header">
-          <h1>Learning Challenges</h1>
-          <p>Enhance your skills with hands-on learning experiences</p>
+        <div className="page-header flex items-center justify-between">
+          <div>
+            <h1>Learning Challenges</h1>
+            <p>Enhance your skills with hands-on learning experiences</p>
+          </div>
+
+          <div className="ml-4">
+            <GenerateChallengeButton className="px-3 py-1.5 bg-indigo-600 text-white rounded-md" />
+          </div>
         </div>
 
         <div className="challenges-filters">

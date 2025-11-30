@@ -1,14 +1,25 @@
 import axios from 'axios';
 
+// Normalize API base URL so callers can use relative paths like `/ai/generateChallenge`.
+// If the environment provides `REACT_APP_API_URL` without `/api`, append it.
+const rawApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const apiBase = rawApiUrl.replace(/\/$/, '');
+const baseURL = apiBase.endsWith('/api') ? apiBase : `${apiBase}/api`;
+
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api',
+  baseURL,
   withCredentials: true, // Include cookies for httpOnly refresh token
   timeout: 10000, // 10 second timeout
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Warn in dev if REACT_APP_API_URL looks unexpected
+if (process.env.NODE_ENV === 'development') {
+  console.info(`🔗 API baseURL set to: ${baseURL}`);
+}
 
 // Token management utilities
 const TOKEN_KEY = 'access_token';

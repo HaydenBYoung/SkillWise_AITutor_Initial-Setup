@@ -369,13 +369,32 @@ SkillWise_AITutor/
 
 ### For AI Features (OpenAI Integration)
 
-Create `.env` file in project root:
+This project uses the OpenAI API for AI feedback, hints and challenge generation. In
+staging and production you MUST provide the OpenAI API key and model settings via
+environment variables or your platform's secret manager. Do NOT commit secrets to
+the repository or to `.env` files in the repo.
+
+Required environment variables (set these in your staging/production environment):
 
 ```env
-OPENAI_API_KEY=your-openai-api-key
+# Your OpenAI secret (store in secret manager / CI secrets)
+OPENAI_API_KEY=REPLACE_WITH_OPENAI_API_KEY
+# Model name to use (e.g. gpt-4, gpt-4o, gpt-4o-mini, gpt-3.5-turbo)
+OPENAI_MODEL=gpt-3.5-turbo
+# Optional: tune response size/temperature
+OPENAI_MAX_TOKENS=1000
+OPENAI_TEMPERATURE=0.2
 ```
 
-Get API key from: https://platform.openai.com/api-keys
+Get an API key from: https://platform.openai.com/api-keys
+
+If you run services with Docker or in CI, make sure the runtime injects these
+values (for example via your cloud provider secrets, Docker Compose env or
+`docker-compose --env-file`, or CI environment variables). The included
+`backend/.env.example` and top-level `.env.example` show the supported keys.
+
+Local development: if you want to test AI features locally, copy `backend/.env.example`
+to `backend/.env` or set the variables in your shell. Avoid committing `backend/.env`.
 
 ### For Email Features (Password Reset)
 
@@ -402,6 +421,36 @@ Notes:
 
 - The frontend uses `REACT_APP_SENTRY_DSN` (CRA environment variable naming). If not set, the Sentry client will remain a no-op in local dev.
 - The backend uses `SENTRY_DSN` from its environment. Both are optional.
+
+### CI / Staging Sentry smoke test
+
+There is a lightweight smoke test script to verify backend Sentry configuration during CI or staging runs. It initializes `@sentry/node` with a provided DSN, sends a test message, flushes the SDK, and exits with a success/failure code.
+
+File: `backend/scripts/sentry_smoke.js`
+
+Usage examples:
+
+PowerShell (recommended for CI job step):
+
+```powershell
+# Use a real DSN in staging/CI
+$env:SENTRY_DSN = 'https://publickey@o0.ingest.sentry.io/0'
+node backend/scripts/sentry_smoke.js
+
+# Or run in mock mode (no network) to validate the script path
+node backend/scripts/sentry_smoke.js MOCK
+```
+
+Exit codes:
+
+- `0` — success (flush OK)
+- `2` — no DSN provided
+- `3` — flush returned false
+- `4` — exception while running
+
+CI recommendation:
+
+- Add a job step in your pipeline (staging only) that sets `SENTRY_DSN` and runs `node backend/scripts/sentry_smoke.js`. Use a short timeout and treat non-zero exit as a failure to prevent deployments with misconfigured Sentry.
 
 Gmail App Password setup:
 

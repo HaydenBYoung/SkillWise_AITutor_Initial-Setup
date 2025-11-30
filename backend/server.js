@@ -11,6 +11,27 @@ const Sentry = require('@sentry/node');
 
 const PORT = process.env.PORT || 3001;
 
+// Environment checks for OpenAI configuration in production-like environments
+const nodeEnv = process.env.NODE_ENV || 'development';
+if (['production', 'staging'].includes(nodeEnv)) {
+  if (!process.env.OPENAI_API_KEY) {
+    // Log a visible warning so deploys will notice missing credentials
+    logger.warn(
+      '⚠️ OPENAI_API_KEY is not set. AI features will fail if invoked.'
+    );
+  } else {
+    logger.info(
+      `✅ OPENAI_API_KEY detected. Using model: ${
+        process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
+      }`
+    );
+  }
+
+  if (!process.env.OPENAI_MODEL) {
+    logger.info('ℹ️ OPENAI_MODEL not set; using default model.');
+  }
+}
+
 // Start server
 const server = app.listen(PORT, () => {
   logger.info(`🚀 SkillWise API Server running on port ${PORT}`);

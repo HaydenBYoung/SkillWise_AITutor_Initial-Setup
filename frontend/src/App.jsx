@@ -19,6 +19,8 @@ import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import ErrorPage from './pages/ErrorPage';
 import AchievementsPage from './pages/AchievementsPage';
+import AIFeedbackPage from './pages/AIFeedbackPage';
+import ChallengeDetailPage from './pages/ChallengeDetailPage';
 
 // Import layout components (TODO: Create these)
 // import Navbar from './components/layout/Navbar';
@@ -67,6 +69,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/challenges/:id"
+                  element={
+                    <ProtectedRoute>
+                      <ChallengeDetailPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/progress"
                   element={
                     <ProtectedRoute>
@@ -103,6 +113,24 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* AI Feedback page (form) */}
+                <Route
+                  path="/ai/feedback"
+                  element={
+                    <ProtectedRoute>
+                      <AIFeedbackPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/ai/feedback/:id"
+                  element={
+                    <ProtectedRoute>
+                      <AIFeedbackPage />
                     </ProtectedRoute>
                   }
                 />

@@ -5,7 +5,6 @@ let isInitialized = false;
 try {
   // Attempt to require so missing optional dependency doesn't break the app
   // (some test environments may not have the package installed)
-  // eslint-disable-next-line global-require, import/no-dynamic-require
   Sentry = require('@sentry/react');
   isInitialized = Boolean(process.env.REACT_APP_SENTRY_DSN) && Sentry;
 } catch (e) {

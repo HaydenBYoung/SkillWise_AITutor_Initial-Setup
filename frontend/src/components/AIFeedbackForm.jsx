@@ -15,8 +15,8 @@ const allowedTypes = [
 ];
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
-export default function AIFeedbackForm({ onResult }) {
-  const [text, setText] = useState('');
+export default function AIFeedbackForm({ onResult, initialText = '' }) {
+  const [text, setText] = useState(initialText);
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);

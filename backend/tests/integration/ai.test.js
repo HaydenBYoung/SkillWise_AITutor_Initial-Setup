@@ -44,7 +44,8 @@ describe('AI Integration Tests', () => {
       const res = await request(app)
         .post('/api/ai/feedback')
         .set('Authorization', `Bearer ${authToken}`)
-        .send({ submissionText: 'my code', challengeId: 'c1' })
+        // use snake_case keys to match controller/validation
+        .send({ submission_text: 'my code', challenge_id: 'c1' })
         .expect(200);
 
       expect(res.body.success).toBe(true);
@@ -62,7 +63,7 @@ describe('AI Integration Tests', () => {
       const res = await request(app)
         .post('/api/ai/feedback')
         .set('Authorization', `Bearer ${authToken}`)
-        .send({ submissionText: 'broken', challengeId: 'c1' })
+        .send({ submission_text: 'broken', challenge_id: 'c1' })
         .expect(500);
 
       expect(res.body.success).toBe(false);

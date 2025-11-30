@@ -62,7 +62,8 @@ describe('POST /api/ai/feedback', () => {
 
   test('handles OpenAI errors gracefully', async () => {
     const openAI = require('../../src/services/openAIService');
-    openAI.callOpenAIAPI.mockRejectedValueOnce(new Error('API down'));
+    // Simulate persistent API failure (all attempts fail)
+    openAI.callOpenAIAPI.mockRejectedValue(new Error('API down'));
 
     const auth = jwt.generateToken({ id: 'test-user', email: 'user@test.com' });
 
@@ -70,9 +71,13 @@ describe('POST /api/ai/feedback', () => {
       .post('/api/ai/feedback')
       .set('Authorization', `Bearer ${auth}`)
       .send({ submission_text: 'broken' })
-      .expect(500);
+      .expect(200);
 
-    expect(res.body.message || res.body.error).toBeDefined();
+    // The aiService returns a graceful object on provider errors; controller
+    // surfaces that under `ai`. Expect ai.success to be false and an error message.
+    expect(res.body.ai).toBeDefined();
+    expect(res.body.ai.success).toBe(false);
+    expect(res.body.ai.error).toBeDefined();
   });
 });
 
