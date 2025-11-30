@@ -1,0 +1,369 @@
+/* AI Feedback Panel Styles */
+.ai-feedback-panel {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ai-feedback-panel h3 {
+  margin: 0 0 24px 0;
+  color: #333;
+  font-size: 22px;
+}
+
+.ai-feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.ai-feedback-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-feedback-form label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.ai-feedback-form select,
+.ai-feedback-form textarea {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.ai-feedback-form textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: 'Courier New', monospace;
+}
+
+.ai-feedback-form select:focus,
+.ai-feedback-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.ai-feedback-error {
+  background-color: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #c33;
+  font-size: 14px;
+}
+
+.ai-feedback-submit-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transition: all 0.2s;
+}
+
+.ai-feedback-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.ai-feedback-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-feedback-result {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.ai-feedback-result h4 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.feedback-score {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+}
+
+.score-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 4px solid;
+}
+
+.score-circle.score-high {
+  background-color: #e8f5e9;
+  border-color: #4caf50;
+  color: #2e7d32;
+}
+
+.score-circle.score-medium {
+  background-color: #fff3e0;
+  border-color: #ff9800;
+  color: #e65100;
+}
+
+.score-circle.score-low {
+  background-color: #ffebee;
+  border-color: #f44336;
+  color: #c62828;
+}
+
+.score-value {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.confidence-bar {
+  flex: 1;
+}
+
+.confidence-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.confidence-progress {
+  height: 24px;
+  background-color: #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.3s ease;
+}
+
+.feedback-section {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.feedback-section h5 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.feedback-section p {
+  margin: 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+.feedback-section ul {
+  margin: 0;
+  padding-left: 24px;
+  color: #666;
+}
+
+.feedback-section li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.feedback-section.strengths {
+  border-left: 4px solid #4caf50;
+}
+
+.feedback-section.improvements {
+  border-left: 4px solid #ff9800;
+}
+
+.feedback-section.suggestions {
+  border-left: 4px solid #2196f3;
+}
+
+.feedback-followup {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.feedback-followup h5 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.followup-input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.followup-input-group input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.followup-input-group button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background-color: #667eea;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.followup-input-group button:hover:not(:disabled) {
+  background-color: #5568d3;
+}
+
+.followup-input-group button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.followup-answer {
+  background-color: #f5f7fa;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #667eea;
+}
+
+.followup-answer strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.followup-answer p {
+  margin: 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+.ai-feedback-history {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.ai-feedback-history h4 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.history-item {
+  background-color: #f5f7fa;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border-left: 4px solid #667eea;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.history-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.history-model {
+  font-size: 12px;
+  background-color: #667eea;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.history-feedback {
+  color: #666;
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+}
+
+.history-strengths {
+  font-size: 14px;
+  color: #666;
+}
+
+.history-strengths strong {
+  color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ai-feedback-panel {
+    padding: 16px;
+  }
+
+  .feedback-score {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .score-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .score-value {
+    font-size: 24px;
+  }
+
+  .confidence-bar {
+    width: 100%;
+  }
+
+  .followup-input-group {
+    flex-direction: column;
+  }
+
+  .followup-input-group button {
+    width: 100%;
+  }
+}

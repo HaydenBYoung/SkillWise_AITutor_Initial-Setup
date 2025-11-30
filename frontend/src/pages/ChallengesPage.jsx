@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import ChallengeCard from '../components/challenges/ChallengeCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DashboardLayout from '../components/common/DashboardLayout';
+import AIGenerateModal from '../components/challenges/AIGenerateModal';
 import { apiService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,6 +11,9 @@ const ChallengesPage = () => {
   const [challenges, setChallenges] = useState([]);
   const [filteredChallenges, setFilteredChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [userGoals, setUserGoals] = useState([]);
+  const [selectedGoalId, setSelectedGoalId] = useState(null);
   const [filters, setFilters] = useState({
     category: '',
     difficulty: '',
@@ -21,6 +25,20 @@ const ChallengesPage = () => {
   const handleStartChallenge = (challengeId) => {
     navigate(`/challenges/${challengeId}`);
   };
+
+  // Fetch user goals for AI challenge generation
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        const data = await apiService.goals.getAll();
+        const goalsList = data && data.data ? data.data : data || [];
+        setUserGoals(goalsList);
+      } catch (error) {
+        console.error('Failed to fetch goals:', error);
+      }
+    };
+    fetchGoals();
+  }, []);
 
   // Challenges are fetched from backend via apiService.challenges.getAll
   useEffect(() => {
@@ -90,12 +108,32 @@ const ChallengesPage = () => {
     }));
   };
 
+  const handleAIGenerate = (goalId = null) => {
+    setSelectedGoalId(goalId);
+    setShowAIModal(true);
+  };
+
+  const handleGenerateSuccess = (newChallenge) => {
+    // Add the new challenge to the list
+    setChallenges(prev => [newChallenge, ...prev]);
+    setFilteredChallenges(prev => [newChallenge, ...prev]);
+  };
+
   return (
     <DashboardLayout>
       <div className="challenges-page">
         <div className="page-header">
-          <h1>Learning Challenges</h1>
-          <p>Enhance your skills with hands-on learning experiences</p>
+          <div>
+            <h1>Learning Challenges</h1>
+            <p>Enhance your skills with hands-on learning experiences</p>
+          </div>
+          <button 
+            className="btn-primary"
+            onClick={() => handleAIGenerate()}
+            style={{ marginLeft: 'auto' }}
+          >
+            🤖 Generate AI Challenge
+          </button>
         </div>
 
         <div className="challenges-filters">
@@ -180,6 +218,14 @@ const ChallengesPage = () => {
             </div>
           )}
         </div>
+
+        <AIGenerateModal
+          isOpen={showAIModal}
+          onClose={() => setShowAIModal(false)}
+          onGenerateSuccess={handleGenerateSuccess}
+          goalId={selectedGoalId}
+          userGoals={userGoals}
+        />
       </div>
     </DashboardLayout>
   );

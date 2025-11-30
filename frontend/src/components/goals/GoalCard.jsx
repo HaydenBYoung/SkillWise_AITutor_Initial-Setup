@@ -1,6 +1,6 @@
 import {} from 'react';
 
-const GoalCard = ({ goal, onComplete }) => {
+const GoalCard = ({ goal, onComplete, onEdit, onDelete }) => {
   // Goal card displays title, description, progress bar and actions (edit/delete/complete)
   return (
     <div className="goal-card">
@@ -10,8 +10,14 @@ const GoalCard = ({ goal, onComplete }) => {
       </div>
 
       <div className="goal-actions">
-        {goal.status !== 'completed' && (
-          <button onClick={() => onComplete(goal.id)}>Mark Complete</button>
+        {!goal.is_completed && goal.status !== 'completed' && (
+          <button onClick={() => onComplete(goal.id)} className="btn-success">Mark Complete</button>
+        )}
+        {onEdit && (
+          <button onClick={() => onEdit(goal)} className="btn-secondary">Edit</button>
+        )}
+        {onDelete && (
+          <button onClick={() => onDelete(goal.id)} className="btn-danger">Delete</button>
         )}
       </div>
 

@@ -21,12 +21,13 @@ const challengeController = {
   getChallengeById: async (req, res, next) => {
     try {
       const id = req.params.id;
-      const challenge = await challengeService.getById(id);
+      const userId = req.user?.id;
+      const challenge = await challengeService.getById(id, userId);
       if (!challenge)
         return res
           .status(404)
           .json({ success: false, message: 'Challenge not found' });
-      return res.status(200).json({ success: true, data: challenge });
+      return res.status(200).json({ success: true, data: { challenge } });
     } catch (err) {
       return next(err);
     }

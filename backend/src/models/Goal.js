@@ -25,6 +25,7 @@ class Goal {
   static async create (goalData) {
     try {
       // Accept both legacy (target_date) and canonical (target_completion_date)
+      // Accept both 'type' and 'category' (map type -> category for DB)
       const {
         title,
         description,
@@ -32,10 +33,12 @@ class Goal {
         target_date,
         target_completion_date,
         type,
+        category,
       } = goalData;
       const targetDate = target_completion_date || target_date;
+      const categoryValue = category || type; // Use category if provided, else type
       const query = `
-        INSERT INTO goals (title, description, user_id, target_completion_date, type, created_at, updated_at)
+        INSERT INTO goals (title, description, user_id, target_completion_date, category, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
         RETURNING *
       `;
@@ -44,7 +47,7 @@ class Goal {
         description,
         user_id,
         targetDate,
-        type,
+        categoryValue,
       ]);
       return result.rows[0];
     } catch (error) {

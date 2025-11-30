@@ -34,13 +34,30 @@ const ProgressPage = () => {
   */
 
   const fetchProgress = useCallback(async () => {
-    //change back to data?
     try {
       setLoading(true);
       const response = await apiService.progress.getOverview(timeframe);
-      setProgressData(response.data.data);
+      // Handle different response structures
+      const data = response?.data?.data || response?.data || response;
+      setProgressData(data);
     } catch (error) {
       console.error('Error fetching progress:', error);
+      // Set default data structure on error
+      setProgressData({
+        overall: {
+          totalPoints: 0,
+          level: 1,
+          experiencePoints: 0,
+          nextLevelXP: 100,
+          completedGoals: 0,
+          completedChallenges: 0,
+          currentStreak: 0,
+          longestStreak: 0
+        },
+        weeklyProgress: [],
+        skillBreakdown: [],
+        recentActivity: []
+      });
     } finally {
       setLoading(false);
     }

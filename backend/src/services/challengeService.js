@@ -1,5 +1,6 @@
 // Basic challenge business logic built on top of Challenge model
 const Challenge = require('../models/Challenge');
+const db = require('../database/connection');
 
 const challengeService = {
   // Get challenges with optional filters { difficulty, subject, search }
@@ -36,9 +37,58 @@ const challengeService = {
     return created;
   },
 
-  // Get single challenge
-  getById: async (id) => {
-    return await Challenge.findById(id);
+  // Get single challenge with user's submission if exists
+  getById: async (id, userId = null) => {
+    const challenge = await Challenge.findById(id);
+    if (!challenge) return null;
+
+    // If userId provided, fetch their submission for this challenge
+    if (userId) {
+      try {
+        const submissionQuery = `
+          SELECT 
+            s.id,
+            s.submission_text as content,
+            s.status,
+            s.score,
+            s.submitted_at,
+            af.feedback_text,
+            af.strengths,
+            af.improvements,
+            af.suggestions
+          FROM submissions s
+          LEFT JOIN ai_feedback af ON af.submission_id = s.id
+          WHERE s.challenge_id = $1 AND s.user_id = $2
+          ORDER BY s.submitted_at DESC
+          LIMIT 1
+        `;
+        const result = await db.query(submissionQuery, [id, userId]);
+        
+        if (result.rows.length > 0) {
+          const sub = result.rows[0];
+          challenge.submission = {
+            id: sub.id,
+            type: 'code',
+            content: sub.content,
+            explanation: '',
+            status: sub.status,
+            score: sub.score,
+            submittedAt: sub.submitted_at,
+            aiFeedback: sub.feedback_text ? {
+              overall: sub.feedback_text,
+              positive: sub.strengths || [],
+              improvements: sub.improvements || [],
+              suggestions: sub.suggestions || []
+            } : null
+          };
+        }
+      } catch (err) {
+        console.error('Error fetching submission:', err);
+        // Continue without submission data
+      }
+    }
+
+    return challenge;
   },
 
   // Update challenge
