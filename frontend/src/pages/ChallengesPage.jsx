@@ -14,6 +14,12 @@ const ChallengesPage = () => {
   const [showAIModal, setShowAIModal] = useState(false);
   const [userGoals, setUserGoals] = useState([]);
   const [selectedGoalId, setSelectedGoalId] = useState(null);
+  const [expandedGoals, setExpandedGoals] = useState([]); // Track which goal cards are expanded
+  const [skippedChallenges, setSkippedChallenges] = useState(() => {
+    // Load skipped challenges from localStorage on mount
+    const saved = localStorage.getItem('skippedChallenges');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [filters, setFilters] = useState({
     category: '',
     difficulty: '',
@@ -53,8 +59,15 @@ const ChallengesPage = () => {
         });
         // API may return an envelope { success, data }
         const list = data && data.data ? data.data : data || [];
-        setChallenges(list);
-        setFilteredChallenges(list);
+        
+        // Mark challenges as skipped if they're in the skippedChallenges list
+        const listWithSkipped = list.map(c => ({
+          ...c,
+          status: skippedChallenges.includes(c.id) ? 'skipped' : c.status
+        }));
+        
+        setChallenges(listWithSkipped);
+        setFilteredChallenges(listWithSkipped);
       } catch (error) {
         console.error('Failed to fetch challenges:', error);
       } finally {
@@ -62,7 +75,7 @@ const ChallengesPage = () => {
       }
     };
     fetchChallenges();
-  }, [filters]); //re-fetch when filters change
+  }, [filters, skippedChallenges]); //re-fetch when filters change
 
   // Filter challenges based on current filters
   useEffect(() => {
@@ -118,6 +131,65 @@ const ChallengesPage = () => {
     setChallenges(prev => [newChallenge, ...prev]);
     setFilteredChallenges(prev => [newChallenge, ...prev]);
   };
+
+  const handleDelete = async (challengeId) => {
+    try {
+      await apiService.challenges.delete(challengeId);
+      setChallenges(prev => prev.filter(c => c.id !== challengeId));
+      setFilteredChallenges(prev => prev.filter(c => c.id !== challengeId));
+    } catch (error) {
+      console.error('Failed to delete challenge:', error);
+      alert('Failed to delete challenge');
+    }
+  };
+
+  const handleSkip = (challengeId) => {
+    // Add to skipped list and save to localStorage
+    const newSkipped = [...skippedChallenges, challengeId];
+    setSkippedChallenges(newSkipped);
+    localStorage.setItem('skippedChallenges', JSON.stringify(newSkipped));
+    
+    // Mark as skipped in the UI
+    setChallenges(prev => prev.map(c => 
+      c.id === challengeId ? { ...c, status: 'skipped' } : c
+    ));
+    setFilteredChallenges(prev => prev.map(c => 
+      c.id === challengeId ? { ...c, status: 'skipped' } : c
+    ));
+  };
+
+  const handleReopenSkipped = (challengeId) => {
+    // Remove from skipped list and save to localStorage
+    const newSkipped = skippedChallenges.filter(id => id !== challengeId);
+    setSkippedChallenges(newSkipped);
+    localStorage.setItem('skippedChallenges', JSON.stringify(newSkipped));
+    
+    // Remove the skipped status to allow re-attempting
+    setChallenges(prev => prev.map(c => 
+      c.id === challengeId ? { ...c, status: 'available' } : c
+    ));
+    setFilteredChallenges(prev => prev.map(c => 
+      c.id === challengeId ? { ...c, status: 'available' } : c
+    ));
+  };
+
+  const toggleGoalExpanded = (goalId) => {
+    setExpandedGoals(prev => 
+      prev.includes(goalId) 
+        ? prev.filter(id => id !== goalId)
+        : [...prev, goalId]
+    );
+  };
+
+  // Group challenges by goal
+  const challengesByGoal = filteredChallenges.reduce((acc, challenge) => {
+    const goalId = challenge.goal_id || 'ungrouped';
+    if (!acc[goalId]) {
+      acc[goalId] = [];
+    }
+    acc[goalId].push(challenge);
+    return acc;
+  }, {});
 
   return (
     <DashboardLayout>
@@ -194,14 +266,159 @@ const ChallengesPage = () => {
           {loading ? (
             <LoadingSpinner message="Loading challenges..." />
           ) : filteredChallenges.length > 0 ? (
-            <div className="challenges-grid">
-              {filteredChallenges.map((challenge) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  challenge={challenge}
-                  onStart={() => handleStartChallenge(challenge.id)}
-                />
-              ))}
+            <div className="goals-grouped-challenges">
+              {/* Render challenges grouped by goals */}
+              {Object.entries(challengesByGoal).map(([goalId, goalChallenges]) => {
+                const goal = userGoals.find(g => g.id === parseInt(goalId));
+                const isExpanded = expandedGoals.includes(goalId);
+                
+                return (
+                  <div key={goalId} className="goal-group-card">
+                    <div 
+                      className="goal-group-header"
+                      onClick={() => toggleGoalExpanded(goalId)}
+                      style={{ 
+                        cursor: 'pointer', 
+                        padding: '20px', 
+                        backgroundColor: 'var(--card-bg, #f8f9fa)', 
+                        borderRadius: '8px', 
+                        marginBottom: '10px',
+                        border: '1px solid var(--border-color, #dee2e6)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: '#000' }}>
+                            {goal ? goal.title : 'Ungrouped Challenges'}
+                          </h3>
+                          <p style={{ margin: '5px 0 0 0', color: '#555', fontSize: '0.9rem' }}>
+                            {goalChallenges.length} challenge{goalChallenges.length !== 1 ? 's' : ''}
+                            {goal && (
+                              <>
+                                {' • '}<span style={{ textTransform: 'capitalize' }}>{goal.difficulty_level || 'Medium'}</span>
+                                {' • '}{goal.points_earned || 0}/{goal.points_required || 100} points
+                                {' • '}{goal.progress || 0}% complete
+                              </>
+                            )}
+                          </p>
+                        </div>
+                        <span style={{ 
+                          fontSize: '1.5rem', 
+                          transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', 
+                          transition: 'transform 0.3s',
+                          color: '#000'
+                        }}>
+                          ▼
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {isExpanded && (
+                      <div className="goal-challenges-list" style={{ marginLeft: '20px', marginTop: '10px' }}>
+                        {goalChallenges.map((challenge) => (
+                          <div 
+                            key={challenge.id} 
+                            style={{ 
+                              padding: '15px', 
+                              backgroundColor: 'var(--card-bg, white)', 
+                              border: '1px solid var(--border-color, #dee2e6)', 
+                              borderRadius: '6px', 
+                              marginBottom: '10px',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                              <div style={{ flex: 1 }}>
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '500', color: '#000' }}>
+                                  {challenge.title}
+                                </h4>
+                                <p style={{ margin: '0 0 10px 0', color: '#555', fontSize: '0.9rem' }}>
+                                  {challenge.description?.substring(0, 150)}
+                                  {challenge.description?.length > 150 ? '...' : ''}
+                                </p>
+                                <div style={{ display: 'flex', gap: '10px', fontSize: '0.85rem', color: '#666' }}>
+                                  <span>🎯 {challenge.difficulty_level || 'Medium'}</span>
+                                  <span>⏱ {challenge.estimated_time_minutes || 30}m</span>
+                                  <span>⭐ {challenge.points_reward || 10} pts</span>
+                                  {challenge.status && (
+                                    <span style={{ 
+                                      color: challenge.status === 'skipped' ? '#ffc107' : '#28a745',
+                                      fontWeight: '500'
+                                    }}>
+                                      {challenge.status}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '8px', marginLeft: '15px' }}>
+                                {challenge.status?.toLowerCase() === 'skipped' ? (
+                                  <button
+                                    onClick={() => handleReopenSkipped(challenge.id)}
+                                    style={{
+                                      padding: '8px 16px',
+                                      backgroundColor: '#28a745',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer',
+                                      fontSize: '0.9rem'
+                                    }}
+                                  >
+                                    Reopen
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleStartChallenge(challenge.id)}
+                                    style={{
+                                      padding: '8px 16px',
+                                      backgroundColor: '#007bff',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer',
+                                      fontSize: '0.9rem'
+                                    }}
+                                  >
+                                    Start
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleSkip(challenge.id)}
+                                  style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: '#ffc107',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem'
+                                  }}
+                                >
+                                  Skip
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(challenge.id)}
+                                  style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: '#dc3545',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem'
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="empty-state">

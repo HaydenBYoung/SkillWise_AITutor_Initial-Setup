@@ -12,7 +12,12 @@ const goalController = {
       }
 
       const goals = await goalService.getUserGoals(userId);
-      return res.status(200).json({ success: true, data: goals });
+      // Map progress_percentage to progress for frontend compatibility
+      const mappedGoals = goals.map(g => ({
+        ...g,
+        progress: g.progress_percentage || 0
+      }));
+      return res.status(200).json({ success: true, data: mappedGoals });
     } catch (err) {
       next(err);
     }
@@ -35,7 +40,12 @@ const goalController = {
         return res
           .status(404)
           .json({ success: false, message: 'Goal not found' });
-      return res.status(200).json({ success: true, data: goal });
+      // Map progress_percentage to progress for frontend compatibility
+      const mappedGoal = {
+        ...goal,
+        progress: goal.progress_percentage || 0
+      };
+      return res.status(200).json({ success: true, data: mappedGoal });
     } catch (err) {
       next(err);
     }
@@ -53,7 +63,12 @@ const goalController = {
       const goalData = req.body || {};
       // Ensure user_id is set for creation
       const newGoal = await goalService.createGoal(goalData, userId);
-      return res.status(201).json({ success: true, data: newGoal });
+      // Map progress_percentage to progress for frontend compatibility
+      const mappedGoal = {
+        ...newGoal,
+        progress: newGoal.progress_percentage || 0
+      };
+      return res.status(201).json({ success: true, data: mappedGoal });
     } catch (err) {
       next(err);
     }
@@ -75,7 +90,12 @@ const goalController = {
         return res
           .status(404)
           .json({ success: false, message: 'Goal not found' });
-      return res.status(200).json({ success: true, data: updated });
+      // Map progress_percentage to progress for frontend compatibility
+      const mappedGoal = {
+        ...updated,
+        progress: updated.progress_percentage || 0
+      };
+      return res.status(200).json({ success: true, data: mappedGoal });
     } catch (err) {
       next(err);
     }

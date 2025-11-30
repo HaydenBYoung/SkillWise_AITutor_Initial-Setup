@@ -9,28 +9,31 @@ const aiController = {
    */
   generateChallenge: async (req, res, next) => {
     try {
-      const { category, difficulty, focusAreas, count, goalId } = req.body;
+      const { difficulty, focusAreas, count, goalId } = req.body;
       const userId = req.user?.id;
 
-      // If goalId is provided, fetch goal details
-      let goalContext = null;
-      if (goalId) {
-        const goalResult = await db.query(
-          'SELECT title, description, category FROM goals WHERE id = $1 AND user_id = $2',
-          [goalId, userId]
-        );
-        if (goalResult.rows.length > 0) {
-          goalContext = goalResult.rows[0];
-        }
-      }
-
-      // Validation
-      if (!category && !goalContext) {
+      // Goal is now required
+      if (!goalId) {
         return res.status(400).json({
           success: false,
-          error: 'Category or Goal is required'
+          error: 'Goal is required for challenge generation'
         });
       }
+
+      // Fetch goal details
+      const goalResult = await db.query(
+        'SELECT title, description, category FROM goals WHERE id = $1 AND user_id = $2',
+        [goalId, userId]
+      );
+      
+      if (goalResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Goal not found'
+        });
+      }
+      
+      const goalContext = goalResult.rows[0];
 
       const validDifficulties = ['easy', 'medium', 'hard'];
       if (difficulty && !validDifficulties.includes(difficulty)) {
@@ -42,9 +45,9 @@ const aiController = {
 
       const challengeCount = Math.min(count || 1, 5); // Limit to 5 challenges at once
 
-      // Use goal category if available
-      const effectiveCategory = category || goalContext?.category || 'General';
-      const effectiveFocusAreas = focusAreas || (goalContext ? `${goalContext.title} - ${goalContext.description}` : '');
+      // Use goal's category and description as the foundation
+      const effectiveCategory = goalContext.category || 'General';
+      const effectiveFocusAreas = `${goalContext.title}. ${goalContext.description}. ${focusAreas || ''}`.trim();
 
       // Generate challenges using AI
       const result = await aiService.generateChallenges(

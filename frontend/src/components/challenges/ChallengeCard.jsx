@@ -20,7 +20,7 @@ const statusClasses = (status) => {
   }
 };
 
-const ChallengeCard = ({ challenge = {}, onStart }) => {
+const ChallengeCard = ({ challenge = {}, onStart, onDelete, onSkip, onReopenSkipped }) => {
   const [showDetails, setShowDetails] = useState(false);
   const title = challenge.title || 'Untitled Challenge';
   const description = challenge.description || 'No description provided.';
@@ -169,22 +169,66 @@ const ChallengeCard = ({ challenge = {}, onStart }) => {
                 )}
               </div>
 
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowDetails(false);
-                    if (onStart) onStart(challenge.id);
-                  }}
-                  className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md"
-                >
-                  Start Challenge
-                </button>
-                <button
-                  onClick={() => setShowDetails(false)}
-                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-md"
-                >
-                  Close
-                </button>
+              <div className="mt-6 flex flex-col gap-3">
+                <div className="flex gap-3">
+                  {status.toLowerCase() === 'skipped' && onReopenSkipped ? (
+                    <button
+                      onClick={() => {
+                        onReopenSkipped(challenge.id);
+                        setShowDetails(false);
+                      }}
+                      className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md"
+                    >
+                      Reopen Challenge
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setShowDetails(false);
+                        if (onStart) onStart(challenge.id);
+                      }}
+                      className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md"
+                    >
+                      Start Challenge
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowDetails(false)}
+                    className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-md"
+                  >
+                    Close
+                  </button>
+                </div>
+                {status.toLowerCase() !== 'skipped' && (
+                  <div className="flex gap-3">
+                    {onSkip && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Mark this challenge as skipped (no points)?')) {
+                            onSkip(challenge.id);
+                            setShowDetails(false);
+                          }
+                        }}
+                        className="flex-1 px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-md"
+                      >
+                        Skip (No Points)
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to delete this challenge?')) {
+                            onDelete(challenge.id);
+                            setShowDetails(false);
+                          }
+                        }}
+                        className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md"
+                      >
+                        Delete Challenge
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

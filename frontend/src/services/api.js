@@ -242,6 +242,12 @@ export const apiService = {
       (await api.post(`/challenges/${id}/submit`, submission)).data,
     getSubmissions: async (id) =>
       (await api.get(`/challenges/${id}/submissions`)).data,
+    delete: async (id) => (await api.delete(`/challenges/${id}`)).data,
+  },
+
+  // Submissions methods
+  submissions: {
+    create: async (submission) => (await api.post('/submissions', submission)).data,
   },
 
   // Progress methods

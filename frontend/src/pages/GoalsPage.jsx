@@ -16,7 +16,11 @@ const GoalsPage = () => {
         const data = await apiService.goals.getAll();
         // API returns an envelope { success: true, data: [...] }
         // ensure we set the inner array (or empty array fallback)
-        setGoals(data && data.data ? data.data : []);
+        const goalsData = data && data.data ? data.data : [];
+        console.log('🎯 Goals fetched from API:', goalsData);
+        console.log('🎯 First goal progress field:', goalsData[0]?.progress);
+        console.log('🎯 First goal progress_percentage field:', goalsData[0]?.progress_percentage);
+        setGoals(goalsData);
       } catch (error) {
         console.error('Failed to fetch goals:', error);
       }
@@ -68,9 +72,25 @@ const GoalsPage = () => {
 
   //Mark chall/goal complete
   const handleChallengeCompletion = async (id) => {
+    // Find the goal to check if it has enough points
+    const goalToComplete = goals.find(g => g.id === id);
+    if (!goalToComplete) {
+      alert('Goal not found');
+      return;
+    }
+    
+    const pointsRequired = goalToComplete.points_required || 50;
+    const pointsEarned = goalToComplete.points_earned || 0;
+    
+    if (pointsEarned < pointsRequired) {
+      alert(`You need ${pointsRequired - pointsEarned} more points to complete this goal.`);
+      return;
+    }
+    
     try {
       const updatedResp = await apiService.goals.update(id, {
-        status: 'completed',
+        is_completed: true,
+        completion_date: new Date().toISOString()
       });
       const updatedGoal =
         updatedResp && updatedResp.data ? updatedResp.data : updatedResp;

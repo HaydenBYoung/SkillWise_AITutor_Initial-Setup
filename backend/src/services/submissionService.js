@@ -4,14 +4,39 @@ const db = require('../database/connection');
 const submissionService = {
   // Create a new submission
   createSubmission: async ({ userId, challengeId, content, explanation, type = 'code' }) => {
-    const query = `
-      INSERT INTO submissions (user_id, challenge_id, submission_text, status)
-      VALUES ($1, $2, $3, 'submitted')
-      RETURNING id, user_id, challenge_id, submission_text as content, status, submitted_at, score
-    `;
-    
-    const result = await db.query(query, [userId, challengeId, content]);
-    return result.rows[0];
+    try {
+      // Check if user has already earned points for this challenge (prevents resubmission if points awarded)
+      const pointsCheck = await db.query(
+        `SELECT COUNT(*)::int as count FROM progress_events 
+         WHERE user_id = $1 AND related_challenge_id = $2 AND event_type = 'challenge_completed' AND points_earned > 0`,
+        [userId, challengeId]
+      );
+      
+      if (parseInt(pointsCheck.rows[0].count) > 0) {
+        throw new Error('You have already earned points for this challenge and cannot resubmit.');
+      }
+      
+      // Get the next attempt number for this user and challenge
+      const attemptQuery = `
+        SELECT COALESCE(MAX(attempt_number), 0) + 1 as next_attempt
+        FROM submissions
+        WHERE user_id = $1 AND challenge_id = $2
+      `;
+      const attemptResult = await db.query(attemptQuery, [userId, challengeId]);
+      const nextAttempt = attemptResult.rows[0].next_attempt;
+      
+      const query = `
+        INSERT INTO submissions (user_id, challenge_id, submission_text, status, attempt_number)
+        VALUES ($1, $2, $3, 'submitted', $4)
+        RETURNING id, user_id, challenge_id, submission_text as content, status, submitted_at, score, attempt_number
+      `;
+      
+      const result = await db.query(query, [userId, challengeId, content, nextAttempt]);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error in createSubmission:', error);
+      throw error;
+    }
   },
 
   // Get submission by ID

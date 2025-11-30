@@ -30,27 +30,31 @@ const submissionController = {
         type: type || 'code'
       });
 
-      // Generate AI feedback asynchronously
-      Challenge.findById(challengeId)
-        .then(challenge => {
-          if (challenge) {
-            return aiService.generateFeedback(
-              submission.id,
-              content,
-              challenge.title,
-              challenge.description,
-              type || 'code'
-            );
-          }
-        })
-        .catch(err => {
+      // Generate AI feedback synchronously so we can return it immediately
+      const challenge = await Challenge.findById(challengeId);
+      let feedbackResult = null;
+      
+      if (challenge) {
+        try {
+          feedbackResult = await aiService.generateFeedback(
+            submission.id,
+            content,
+            challenge.title,
+            challenge.description,
+            type || 'code'
+          );
+        } catch (err) {
           console.error('Error generating AI feedback:', err);
-        });
+        }
+      }
 
       return res.status(201).json({ 
         success: true, 
-        data: { submission },
-        message: 'Submission created successfully. AI feedback will be generated shortly.' 
+        data: { 
+          submission,
+          feedback: feedbackResult?.feedback || null 
+        },
+        message: 'Submission created successfully and AI feedback generated.' 
       });
     } catch (err) {
       return next(err);

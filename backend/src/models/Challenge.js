@@ -178,6 +178,21 @@ class Challenge {
 
   static async delete (id) {
     try {
+      // Delete in order: ai_feedback -> submissions -> progress_events -> challenges
+      // First delete AI feedback for submissions of this challenge
+      await db.query(
+        `DELETE FROM ai_feedback 
+         WHERE submission_id IN (SELECT id FROM submissions WHERE challenge_id = $1)`,
+        [id]
+      );
+      
+      // Delete submissions for this challenge
+      await db.query('DELETE FROM submissions WHERE challenge_id = $1', [id]);
+      
+      // Delete progress events for this challenge
+      await db.query('DELETE FROM progress_events WHERE related_challenge_id = $1', [id]);
+      
+      // Finally delete the challenge
       const query = 'DELETE FROM challenges WHERE id = $1 RETURNING *';
       const result = await db.query(query, [id]);
       return result.rows[0];

@@ -45,6 +45,14 @@ const challengeService = {
     // If userId provided, fetch their submission for this challenge
     if (userId) {
       try {
+        // Check if user has earned points for this challenge
+        const pointsQuery = `
+          SELECT COUNT(*)::int as count FROM progress_events 
+          WHERE user_id = $1 AND related_challenge_id = $2 AND event_type = 'challenge_completed' AND points_earned > 0
+        `;
+        const pointsResult = await db.query(pointsQuery, [userId, id]);
+        challenge.hasEarnedPoints = parseInt(pointsResult.rows[0].count) > 0;
+        
         const submissionQuery = `
           SELECT 
             s.id,
@@ -59,7 +67,7 @@ const challengeService = {
           FROM submissions s
           LEFT JOIN ai_feedback af ON af.submission_id = s.id
           WHERE s.challenge_id = $1 AND s.user_id = $2
-          ORDER BY s.submitted_at DESC
+          ORDER BY s.score DESC NULLS LAST, s.submitted_at DESC
           LIMIT 1
         `;
         const result = await db.query(submissionQuery, [id, userId]);

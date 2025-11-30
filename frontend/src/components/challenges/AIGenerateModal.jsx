@@ -7,7 +7,6 @@ import './AIGenerateModal.css';
  */
 const AIGenerateModal = ({ isOpen, onClose, onGenerateSuccess, goalId = null, userGoals = [] }) => {
   const [formData, setFormData] = useState({
-    category: '',
     difficulty: 'medium',
     focusAreas: '',
     count: 1,
@@ -42,8 +41,8 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerateSuccess, goalId = null, us
   };
 
   const handleGenerate = async () => {
-    if (!formData.category && !formData.selectedGoalId) {
-      setError('Please select a category or goal');
+    if (!formData.selectedGoalId) {
+      setError('Please select a goal');
       return;
     }
 
@@ -52,6 +51,7 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerateSuccess, goalId = null, us
 
     try {
       const token = localStorage.getItem('access_token');
+      
       const response = await fetch('/api/ai/generateChallenge', {
         method: 'POST',
         headers: {
@@ -59,8 +59,10 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerateSuccess, goalId = null, us
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          ...formData,
-          goalId: formData.selectedGoalId || goalId
+          difficulty: formData.difficulty,
+          focusAreas: formData.focusAreas,
+          count: formData.count,
+          goalId: formData.selectedGoalId
         })
       });
 
@@ -111,7 +113,7 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerateSuccess, goalId = null, us
         },
         body: JSON.stringify({
           challenge,
-          goalId
+          goalId: formData.selectedGoalId || null
         })
       });
 
@@ -165,40 +167,23 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerateSuccess, goalId = null, us
           {generatedChallenges.length === 0 ? (
             // Generation Form
             <div className="ai-generation-form">
-              {userGoals && userGoals.length > 0 && (
-                <div className="form-group">
-                  <label htmlFor="selectedGoalId">Based on Goal (optional)</label>
-                  <select
-                    id="selectedGoalId"
-                    name="selectedGoalId"
-                    value={formData.selectedGoalId}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">No specific goal</option>
-                    {userGoals.map(goal => (
-                      <option key={goal.id} value={goal.id}>
-                        {goal.title} ({goal.category || 'No category'})
-                      </option>
-                    ))}
-                  </select>
-                  <small>AI will generate challenges aligned with your goal</small>
-                </div>
-              )}
-
               <div className="form-group">
-                <label htmlFor="category">Category *</label>
+                <label htmlFor="selectedGoalId">Select Goal *</label>
                 <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
+                  id="selectedGoalId"
+                  name="selectedGoalId"
+                  value={formData.selectedGoalId}
                   onChange={handleInputChange}
                   required
                 >
-                  <option value="">Select a category...</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  <option value="">Select a goal...</option>
+                  {userGoals.map(goal => (
+                    <option key={goal.id} value={goal.id}>
+                      {goal.title} - {goal.difficulty || 'Medium'}
+                    </option>
                   ))}
                 </select>
+                <small>Challenges will be generated based on this goal's content</small>
               </div>
 
               <div className="form-group">
@@ -216,7 +201,7 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerateSuccess, goalId = null, us
               </div>
 
               <div className="form-group">
-                <label htmlFor="focusAreas">Focus Areas (optional)</label>
+                <label htmlFor="focusAreas">Additional Focus Areas (optional)</label>
                 <input
                   type="text"
                   id="focusAreas"
@@ -225,7 +210,7 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerateSuccess, goalId = null, us
                   onChange={handleInputChange}
                   placeholder="e.g., loops, async/await, REST APIs"
                 />
-                <small>Comma-separated topics to focus on</small>
+                <small>Add specific topics to focus on beyond the goal description</small>
               </div>
 
               <div className="form-group">

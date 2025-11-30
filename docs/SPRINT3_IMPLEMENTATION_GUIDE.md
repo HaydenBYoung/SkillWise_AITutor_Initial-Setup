@@ -48,7 +48,7 @@ This document provides a comprehensive guide for Sprint 3 implementation, coveri
 
    Backend (`backend/.env`):
    ```env
-   GEMINI_API_KEY=AIzaSyBQ1vdMPb1LNR-MVKlXv1_5CMIQ0GmAyWI
+   GEMINI_API_KEY=your-gemini-api-key
    DATABASE_URL=postgresql://skillwise_user:skillwise_pass@localhost:5432/skillwise_db
    JWT_SECRET=your-secret-key
    SENTRY_DSN=  # Optional
