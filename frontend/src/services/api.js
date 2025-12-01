@@ -293,6 +293,16 @@ export const apiService = {
     markAsRead: async (id) => (await api.put(`/notifications/${id}/read`)).data,
     markAllAsRead: async () => (await api.put('/notifications/read-all')).data,
   },
+
+  // AI methods
+  ai: {
+    /*
+     * Request suggested challenges from AI: preferences (object), count (int), persist (bool)
+     * Backend endpoint: POST /api/ai/suggestions
+     */
+    suggest: async (payload) => (await api.post('/ai/suggestions', payload)).data,
+    publishSuggestion: async (suggestion) => (await api.post('/ai/suggestions/publish', { suggestion })).data,
+  },
 };
 
 // Export utilities for external use

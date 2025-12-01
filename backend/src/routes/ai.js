@@ -11,9 +11,15 @@ router.post('/feedback', auth, aiController.generateFeedback);
 router.get('/hints/:challengeId', auth, aiController.getHints);
 
 // TODO: Add GET /suggestions route for challenge suggestions
+// Suggestions endpoint - returns an array of generated challenges (not persisted by default)
 router.get('/suggestions', auth, aiController.suggestChallenges);
+router.post('/suggestions', auth, aiController.suggestChallenges);
+// Allow publishing a user-chosen suggestion into the challenges DB
+router.post('/suggestions/publish', auth, aiController.publishSuggestion);
 
 // TODO: Add GET /analysis route for progress analysis
 router.get('/analysis', auth, aiController.analyzeProgress);
+
+router.post('/generateChallenge', auth, aiController.generateChallenge);
 
 module.exports = router;

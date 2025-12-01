@@ -20,14 +20,25 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix ."
   },
-  "keywords": ["ai", "tutor", "education", "react", "node", "postgresql"],
+  "keywords": [
+    "ai",
+    "tutor",
+    "education",
+    "react",
+    "node",
+    "postgresql"
+  ],
   "author": "",
   "license": "ISC",
   "description": "SkillWise AI Tutor - An intelligent tutoring system",
   "devDependencies": {
+    "eslint": "^8.44.0",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.3",
-    "eslint": "^8.44.0",
     "prettier": "^2.8.8"
-  }
+  },
+  "dependencies": {
+    "@sentry/react": "^10.27.0"
+  },
+  
 }

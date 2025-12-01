@@ -34,7 +34,7 @@ const validateUsername = (username) => {
 // TODO: Phone number validation
 const validatePhoneNumber = (phone) => {
   const phoneSchema = z.string()
-    .regex(/^\+?[\d\s\-\(\)]+$/, 'Invalid phone number format');
+    .regex(/^\+?[\d\s\-()]+$/, 'Invalid phone number format');
 
   return phoneSchema.safeParse(phone).success;
 };

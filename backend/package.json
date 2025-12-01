@@ -12,6 +12,9 @@
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
     "migrate": "node scripts/migrate.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:studio": "prisma studio",
     "seed": "node scripts/seed.js",
     "seed:cypress": "node scripts/seed_cypress.js",
     "build": "echo 'No build step required for Node.js'"
@@ -28,6 +31,7 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.7",
     "openai": "^4.20.1",
+    "@prisma/client": "^5.10.0",
     "pg": "^8.16.3",
     "pino": "^8.16.2",
     "pino-http": "^8.5.1",
@@ -41,7 +45,8 @@
     "eslint": "^8.55.0",
     "jest": "^29.7.0",
     "nodemon": "^3.0.2",
-    "supertest": "^6.3.3"
+    "supertest": "^6.3.3",
+    "prisma": "^5.10.0"
   },
   "keywords": [
     "api",

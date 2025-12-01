@@ -1,6 +1,16 @@
 #!/usr/bin/env node
 // Database migration script: reads SQL files from database/migrations and records applied migrations
 
+// Load .env values when running scripts locally (try repo root and backend/.env)
+try {
+  // eslint-disable-next-line global-require
+  const path = require('path');
+  require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+  require('dotenv').config();
+} catch (_) {
+  // no-op
+}
+
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');

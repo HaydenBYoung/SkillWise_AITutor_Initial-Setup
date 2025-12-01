@@ -1,6 +1,16 @@
 #!/usr/bin/env node
 // TODO: Implement database seeding script
 
+// Load .env for local development so scripts can use process.env
+try {
+  // eslint-disable-next-line global-require
+  const path = require('path');
+  require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+  require('dotenv').config();
+} catch (_) {
+  // ignore if dotenv not installed in environment
+}
+
 const { Pool } = require('pg');
 
 const pool = new Pool({

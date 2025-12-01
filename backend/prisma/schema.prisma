@@ -1,0 +1,35 @@
+// Prisma schema for SkillWise backend
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  name      String?
+  createdAt DateTime  @default(now())
+  // relation fields
+  challenges Challenge[]
+}
+
+model Challenge {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String   @db.Text
+  category      String
+  difficulty    String
+  points        Int
+  estimatedTime Int
+  tags          Json
+  metadata      Json?
+  createdById   Int?
+  createdBy     User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+
+  @@index([createdById])
+}

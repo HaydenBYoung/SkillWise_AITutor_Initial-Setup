@@ -1,10 +1,31 @@
 #!/usr/bin/env node
-// TODO: Server entry point with graceful shutdown and error handling
+// Server entry point with graceful shutdown and error handling
+
+// Load environment variables from .env for local development. We first attempt to load from the repo root
+// so running `npm run dev` from the backend folder still picks up the workspace `.env` file.
+try {
+  // eslint-disable-next-line global-require
+  const path = require('path');
+  // Try loading repo root .env first
+  require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+  // Then load any backend/.env that may override values
+  require('dotenv').config();
+} catch (_) {
+  // no-op: continue if dotenv isn't present
+}
 
 const app = require('./src/app');
 const logger = app.get('logger');
 
 const PORT = process.env.PORT || 3001;
+
+// Ensure required environment variables are present
+if (!process.env.OPENAI_API_KEY && process.env.NODE_ENV !== 'test') {
+  logger && logger.error && logger.error('Environment variable OPENAI_API_KEY is not set. AI features will not work.');
+  // Exit to avoid running in a broken configuration
+  console.error('ERROR: OPENAI_API_KEY is not set. Set it in your environment before starting the server.');
+  process.exit(1);
+}
 
 // Start server
 const server = app.listen(PORT, () => {
