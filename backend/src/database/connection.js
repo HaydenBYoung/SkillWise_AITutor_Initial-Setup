@@ -25,7 +25,7 @@ const dbConfig = {
 const pool = new Pool(dbConfig);
 
 // Handle pool events
-pool.on('connect', (client) => {
+pool.on('connect', () => {
   logger.info('New database client connected');
 });
 
@@ -33,7 +33,7 @@ pool.on('error', (err) => {
   logger.error('Database pool error:', err);
 });
 
-pool.on('remove', (client) => {
+pool.on('remove', () => {
   logger.info('Database client removed from pool');
 });
 

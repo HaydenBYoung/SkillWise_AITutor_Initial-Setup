@@ -1,5 +1,6 @@
-// Leaderboard and rankings page UI (currently uses mock data; replace with leaderboard API calls)
+// Leaderboard and rankings page UI
 import { useState, useEffect } from 'react';
+import { apiService } from '../services/api';
 // eslint-disable-next-line no-unused-vars
 import LoadingSpinner from '../components/common/LoadingSpinner';
 // eslint-disable-next-line no-unused-vars
@@ -11,93 +12,74 @@ import { useAuth } from '../hooks/useAuth';
 const LeaderboardPage = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [timeframe, setTimeframe] = useState('all-time');
   const [category, setCategory] = useState('overall');
   const [showTrophies, setShowTrophies] = useState(false);
+  const [userRank, setUserRank] = useState(null);
   const { user: authUser } = useAuth();
 
-  // Currently using mockLeaderboardData for development; replace with apiService.leaderboard.getGlobal/getUserRank
   useEffect(() => {
-    const mockLeaderboardData = [
-      {
-        id: 1,
-        rank: 1,
-        name: 'Alex Johnson',
-        avatar: '👨‍💻',
-        points: 2450,
-        level: 8,
-        completedChallenges: 45,
-        isCurrentUser: false,
-      },
-      {
-        id: 2,
-        rank: 2,
-        name: 'Sarah Kim',
-        avatar: '👩‍🎨',
-        points: 2380,
-        level: 8,
-        completedChallenges: 42,
-        isCurrentUser: false,
-      },
-      {
-        id: 3,
-        rank: 3,
-        name: 'Mike Chen',
-        avatar: '👨‍🔬',
-        points: 2290,
-        level: 7,
-        completedChallenges: 38,
-        isCurrentUser: false,
-      },
-      {
-        id: 4,
-        rank: 4,
-        name: 'Emma Rodriguez',
-        avatar: '👩‍💼',
-        points: 2150,
-        level: 7,
-        completedChallenges: 35,
-        isCurrentUser: false,
-      },
-      {
-        id: 5,
-        rank: 5,
-        name: authUser
-          ? `${authUser.firstName ?? ''} ${authUser.lastName ?? ''}`.trim() ||
-            'You'
-          : 'You',
-        avatar: '👤',
-        points: 1850,
-        level: 6,
-        completedChallenges: 28,
-        isCurrentUser: true,
-      },
-      {
-        id: 6,
-        rank: 6,
-        name: 'David Park',
-        avatar: '👨‍🎓',
-        points: 1720,
-        level: 6,
-        completedChallenges: 25,
-        isCurrentUser: false,
-      },
-      {
-        id: 7,
-        rank: 7,
-        name: 'Lisa Zhang',
-        avatar: '👩‍🔧',
-        points: 1650,
-        level: 5,
-        completedChallenges: 23,
-        isCurrentUser: false,
-      },
-    ];
+    const fetchLeaderboardData = async () => {
+      if (!apiService?.leaderboard?.getGlobal) {
+        console.error('Leaderboard API unavailable');
+        setError('Leaderboard service unavailable');
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        setError(null);
 
-    setTimeout(() => {
-      setLeaderboardData(mockLeaderboardData);
-      setLoading(false);
-    }, 1000);
+        // Fetch global leaderboard with filters
+        const params = {
+          timeframe,
+          category,
+          limit: 50,
+        };
+
+        const leaderboardRaw = await apiService.leaderboard.getGlobal(params);
+        // backend returns either { success, data } or raw array; apiService normalizes already
+        const leaderboard = Array.isArray(leaderboardRaw?.data)
+          ? leaderboardRaw.data
+          : Array.isArray(leaderboardRaw)
+            ? leaderboardRaw
+            : leaderboardRaw?.leaderboard || [];
+
+        // Fetch current user's rank
+        let currentUserRankData = null;
+        try {
+          const rankRaw = await apiService.leaderboard.getUserRank();
+          currentUserRankData = rankRaw?.data || rankRaw;
+          setUserRank(currentUserRankData);
+        } catch (err) {
+          console.error('Failed to fetch user rank:', err);
+        }
+
+        // Transform and mark current user in leaderboard
+        const transformedData = leaderboard.map((entry, index) => ({
+          id: entry.user_id || entry.id || index + 1,
+          rank: entry.rank || index + 1,
+          name: entry.name || entry.user_name || `${entry.first_name || ''} ${entry.last_name || ''}`.trim() || 'Anonymous',
+          avatar: entry.avatar || '👤',
+          points: entry.total_points || entry.points || 0,
+          level: entry.level || Math.floor((entry.total_points || 0) / 100) + 1,
+          completedChallenges: entry.completed_challenges || entry.challenges_completed || 0,
+          isCurrentUser: authUser && (entry.user_id === authUser.id || entry.id === authUser.id),
+        }));
+
+        setLeaderboardData(transformedData);
+      } catch (err) {
+        console.error('Failed to fetch leaderboard:', err);
+        setError(err.message || 'Failed to load leaderboard');
+        // Fallback to empty data on error
+        setLeaderboardData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboardData();
   }, [timeframe, category, authUser]);
 
   const getRankIcon = (rank) => {
@@ -113,8 +95,9 @@ const LeaderboardPage = () => {
     }
   };
 
-  const currentUserRank =
-    leaderboardData.find((u) => u.isCurrentUser)?.rank || 0;
+  const currentUserRank = userRank?.rank || 
+    leaderboardData.find((u) => u.isCurrentUser)?.rank || 
+    0;
 
   return (
     <DashboardLayout>
@@ -194,6 +177,21 @@ const LeaderboardPage = () => {
       <div className="leaderboard-content">
         {loading ? (
           <LoadingSpinner message="Loading leaderboard..." />
+        ) : error ? (
+          <div className="error-message">
+            <p>❌ {error}</p>
+            <button 
+              className="btn-secondary" 
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </div>
+        ) : leaderboardData.length === 0 ? (
+          <div className="empty-state">
+            <p>🏆 No leaderboard data available yet.</p>
+            <p>Complete some challenges to get on the board!</p>
+          </div>
         ) : (
           <>
             <div className="podium-section">

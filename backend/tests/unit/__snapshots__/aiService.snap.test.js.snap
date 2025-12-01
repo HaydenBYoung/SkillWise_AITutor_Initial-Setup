@@ -1,0 +1,79 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`aiService prompt outputs (snapshot) generateChallenge normalized output 1`] = `
+{
+  "category": "Programming",
+  "description": "Practice basic array operations",
+  "difficulty": "Easy",
+  "estimatedTime": 20,
+  "points": 50,
+  "saved": false,
+  "tags": [
+    "arrays",
+    "basics",
+  ],
+  "title": "Arrays 101",
+}
+`;
+
+exports[`aiService prompt outputs (snapshot) generateFeedback normalized output 1`] = `
+{
+  "confidence_score": 0.62,
+  "feedback_text": "Good job. Improve variable naming.",
+  "improvements": [
+    "naming",
+  ],
+  "score": 78,
+  "strengths": [
+    "logic",
+    "syntax",
+  ],
+  "suggestions": [
+    "refactor for readability",
+  ],
+}
+`;
+
+exports[`aiService prompt outputs (snapshot) generateHints normalized output 1`] = `
+{
+  "ai_model": "gpt-3.5-turbo",
+  "hints": [
+    "Read problem carefully",
+    "Break into steps",
+    "Test with examples",
+  ],
+  "processing_time_ms_type": "number",
+}
+`;
+
+exports[`aiService prompt outputs (snapshot) suggestNextChallenges normalized array 1`] = `
+[
+  {
+    "category": "Programming",
+    "description": "For/while practice",
+    "difficulty": "Easy",
+    "estimatedTime": 15,
+    "points": 40,
+    "tags": [],
+    "title": "Loops Basics",
+  },
+  {
+    "category": "Programming",
+    "description": "If/else practice",
+    "difficulty": "Medium",
+    "estimatedTime": 25,
+    "points": 60,
+    "tags": [],
+    "title": "Conditional Logic",
+  },
+  {
+    "category": "Programming",
+    "description": "Write simple functions",
+    "difficulty": "Medium",
+    "estimatedTime": 30,
+    "points": 70,
+    "tags": [],
+    "title": "Functions",
+  },
+]
+`;

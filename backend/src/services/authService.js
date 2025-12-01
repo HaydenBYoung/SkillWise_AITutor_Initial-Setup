@@ -104,6 +104,15 @@ const authService = {
       throw new AppError('Registration failed', 500, 'REGISTRATION_FAILED');
     }
 
+    // Send welcome email (non-blocking)
+    const emailService = require('./emailService');
+    try {
+      await emailService.sendWelcomeEmail(user.email, user.first_name || 'Student');
+    } catch (err) {
+      console.error('Failed to send welcome email:', err.message);
+      // Don't fail registration if email fails
+    }
+
     const payload = { id: user.id, email: user.email, role: user.role };
     const accessToken = jwt.generateToken(payload);
     const refreshToken = jwt.generateRefreshToken(payload);
@@ -198,10 +207,53 @@ const authService = {
     );
   },
 
-  // Password reset placeholder
-  resetPassword: async () => {
-    // Implementation would generate token and email user
-    return true;
+  // Request password reset: generate token and send email
+  forgotPassword: async (email) => {
+    if (!email) throw new AppError('Email required', 400, 'EMAIL_REQUIRED');
+    const { rows } = await db.query('SELECT id, email, first_name FROM users WHERE email = $1', [email]);
+    const user = rows[0];
+    if (!user) {
+      // For security, don't reveal if email exists
+      return { message: 'If that email exists, a reset link has been sent' };
+    }
+    // Generate random token
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    // Store token
+    await db.query(
+      'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
+      [user.id, token, expiresAt]
+    );
+    // Send email
+    const emailService = require('./emailService');
+    try {
+      await emailService.sendPasswordResetEmail(user.email, token);
+    } catch (err) {
+      console.error('Failed to send password reset email:', err.message);
+      // Don't fail the request if email fails
+    }
+    return { message: 'If that email exists, a reset link has been sent' };
+  },
+
+  // Reset password using token
+  resetPassword: async (token, newPassword) => {
+    if (!token || !newPassword) throw new AppError('Token and new password required', 400, 'INVALID_INPUT');
+    // Verify token
+    const { rows } = await db.query(
+      'SELECT id, user_id, expires_at, used FROM password_reset_tokens WHERE token = $1',
+      [token]
+    );
+    const record = rows[0];
+    if (!record) throw new AppError('Invalid or expired token', 400, 'INVALID_TOKEN');
+    if (record.used) throw new AppError('Token already used', 400, 'TOKEN_USED');
+    if (new Date(record.expires_at) < new Date()) throw new AppError('Token expired', 400, 'TOKEN_EXPIRED');
+    // Update password
+    const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, record.user_id]);
+    // Mark token as used
+    await db.query('UPDATE password_reset_tokens SET used = true WHERE id = $1', [record.id]);
+    return { message: 'Password reset successful' };
   },
 };
 

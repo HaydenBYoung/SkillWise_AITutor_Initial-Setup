@@ -55,6 +55,50 @@ const achievementService = {
       throw err;
     }
   },
+
+  async awardAchievement (userId, achievementKey) {
+    if (!userId || !achievementKey) throw new Error('User ID and achievement key required');
+    // Check if achievement exists
+    const { rows: achievements } = await db.query('SELECT id, key, title, description, points FROM achievements WHERE key = $1', [achievementKey]);
+    const achievement = achievements[0];
+    if (!achievement) throw new Error(`Achievement with key ${achievementKey} not found`);
+    // Check if user already has this achievement
+    const { rows: existing } = await db.query('SELECT id FROM user_achievements WHERE user_id = $1 AND achievement_id = $2', [userId, achievement.id]);
+    if (existing.length > 0) {
+      return { alreadyAwarded: true, achievement };
+    }
+    // Award achievement
+    const { rows: awarded } = await db.query(
+      'INSERT INTO user_achievements (user_id, achievement_id) VALUES ($1, $2) RETURNING id, achieved_at',
+      [userId, achievement.id]
+    );
+    // Get user email for notification
+    const { rows: users } = await db.query('SELECT email FROM users WHERE id = $1', [userId]);
+    const user = users[0];
+    // Send email notification
+    if (user && user.email) {
+      const emailService = require('./emailService');
+      try {
+        await emailService.sendAchievementNotification(user.email, achievement);
+      } catch (err) {
+        console.error('Failed to send achievement email:', err.message);
+        // Don't fail achievement awarding if email fails
+      }
+    }
+    // Send in-app notification
+    const notificationService = require('./notificationService');
+    try {
+      await notificationService.sendNotification(
+        userId,
+        'achievement',
+        `Achievement Unlocked: ${achievement.title}`,
+        { achievementId: achievement.id, points: achievement.points }
+      );
+    } catch (err) {
+      console.error('Failed to send achievement notification:', err.message);
+    }
+    return { alreadyAwarded: false, achievement, awardedAt: awarded[0].achieved_at };
+  },
 };
 
 module.exports = achievementService;

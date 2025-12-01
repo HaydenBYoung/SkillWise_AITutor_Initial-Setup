@@ -402,7 +402,19 @@ button:disabled,
 .error-message {
   background-color: #FEE2E2;
   border: 1px solid #FCA5A5;
-  color: #991B1B;
+  color: #991B1B !important;
+}
+
+/* Keep error message text dark in dark mode for readability */
+.dark-mode .error-message {
+  background-color: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B !important;
+}
+
+/* Ensure all child elements also stay dark */
+.dark-mode .error-message * {
+  color: #991B1B !important;
 }
 
 .success-message {
@@ -653,3 +665,228 @@ button:disabled,
 .p-1 { padding: var(--spacing-sm); }
 .p-2 { padding: var(--spacing-md); }
 .p-3 { padding: var(--spacing-lg); }
+
+/* Settings Checkbox Styling */
+.setting-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.setting-item:hover {
+  background: var(--bg-secondary);
+}
+
+.setting-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-right: var(--spacing-md);
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.checkbox-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+}
+
+.checkbox-text {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.checkbox-status {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+}
+
+.checkbox-status:has-text('✓ Enabled') {
+  color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+/* Use attribute selector since we can't use :has with text */
+.setting-item input[type="checkbox"]:checked ~ .checkbox-label .checkbox-status {
+  color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.setting-item input[type="checkbox"]:not(:checked) ~ .checkbox-label .checkbox-status {
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+}
+
+.settings-actions {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--bg-tertiary);
+}
+
+/* ============================================
+   Notifications Popup
+   ============================================ */
+
+/* Notification Button */
+.notif-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: 8px;
+  transition: background-color var(--transition-fast);
+  color: var(--text-primary);
+}
+
+.notif-btn:hover {
+  background-color: var(--bg-secondary);
+}
+
+.notif-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--error);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 50%;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.25rem;
+}
+
+/* Popup Overlay */
+.notif-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* Notification Dropdown */
+.notif-dropdown {
+  pointer-events: auto;
+  background: var(--bg-primary);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  box-shadow: var(--shadow-xl);
+  width: 380px;
+  max-height: 500px;
+  display: flex;
+  flex-direction: column;
+  z-index: 10000;
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
+
+/* Notification Header */
+.notif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--gray-200);
+  transition: border-color var(--transition-normal);
+}
+
+.notif-header strong {
+  font-size: 1.125rem;
+  color: var(--text-primary);
+}
+
+/* Notification Body */
+.notif-body {
+  overflow-y: auto;
+  max-height: 420px;
+  padding: var(--spacing-sm);
+}
+
+.notif-body > div:first-child {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* Notification Item */
+.notif-item {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  border-left: 3px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.notif-item.unread {
+  background: rgba(79, 70, 229, 0.08);
+  border-left-color: var(--primary);
+}
+
+.dark-mode .notif-item.unread {
+  background: rgba(129, 140, 248, 0.15);
+}
+
+.notif-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.notif-message {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+  line-height: 1.5;
+}
+
+.notif-meta {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.notif-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* Link Button */
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.btn-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .notif-dropdown {
+    width: calc(100vw - 2rem);
+    left: 1rem !important;
+    right: 1rem;
+  }
+}

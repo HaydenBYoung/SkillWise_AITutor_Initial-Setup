@@ -1,5 +1,6 @@
 import {} from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import Notifications from './Notifications';
 import { useAuth } from '../../hooks/useAuth';
 
 const DashboardLayout = ({ children }) => {
@@ -26,8 +27,15 @@ const DashboardLayout = ({ children }) => {
     <div className="dashboard-layout">
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <h2>SkillWise</h2>
-          <p>Welcome, {user?.firstName || 'Student'}!</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2>SkillWise</h2>
+              <p>Welcome, {user?.firstName || 'Student'}!</p>
+            </div>
+            <div>
+              <Notifications />
+            </div>
+          </div>
         </div>
 
         <nav className="sidebar-navigation">

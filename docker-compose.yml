@@ -89,6 +89,9 @@ services:
       # Redis Configuration
       - REDIS_URL=redis://redis:6379
 
+      # Prisma Configuration - Force use of OpenSSL 3.0 binary
+      - PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node
+
       # Monitoring
       - SENTRY_DSN=${SENTRY_DSN:-your-sentry-dsn-url}
     volumes:

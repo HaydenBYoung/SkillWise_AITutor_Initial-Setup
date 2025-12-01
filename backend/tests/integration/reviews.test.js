@@ -7,6 +7,11 @@ const mockGetReviewAssignments = jest.fn();
 const mockSubmitReview = jest.fn();
 const mockGetReceivedReviews = jest.fn();
 const mockGetReviewHistory = jest.fn();
+const mockGetMySubmissions = jest.fn();
+const mockGetReviewDetails = jest.fn();
+const mockUpdateReview = jest.fn();
+const mockDeleteReview = jest.fn();
+const mockSubmitRating = jest.fn();
 
 jest.mock('../../src/controllers/peerReviewController', () => ({
   getReviewAssignments: (req, res, next) =>
@@ -15,6 +20,11 @@ jest.mock('../../src/controllers/peerReviewController', () => ({
   getReceivedReviews: (req, res, next) =>
     mockGetReceivedReviews(req, res, next),
   getReviewHistory: (req, res, next) => mockGetReviewHistory(req, res, next),
+  getMySubmissions: (req, res, next) => mockGetMySubmissions(req, res, next),
+  getReviewDetails: (req, res, next) => mockGetReviewDetails(req, res, next),
+  updateReview: (req, res, next) => mockUpdateReview(req, res, next),
+  deleteReview: (req, res, next) => mockDeleteReview(req, res, next),
+  submitRating: (req, res, next) => mockSubmitRating(req, res, next),
 }));
 
 const app = require('../../src/app');

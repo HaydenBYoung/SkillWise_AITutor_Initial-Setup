@@ -34,6 +34,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache backend dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules
+          key: backend-${{ runner.os }}-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            backend-${{ runner.os }}-
+
+      - name: Cache frontend dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: frontend-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            frontend-${{ runner.os }}-
+
       - name: Use Node 18
         uses: actions/setup-node@v4
         with:
@@ -42,6 +58,10 @@ jobs:
       - name: Install backend deps
         working-directory: backend
         run: npm install #was changed
+
+      - name: Run backend linter
+        working-directory: backend
+        run: npm run lint
 
       - name: Wait for Postgres
         run: |
@@ -65,26 +85,68 @@ jobs:
           CYPRESS_TEST_USER_LASTNAME: ${{ secrets.CYPRESS_TEST_USER_LASTNAME }}
         run: npm run seed:cypress
 
-      - name: Run backend tests (Jest)
+      - name: Run backend tests (Jest + Coverage)
         working-directory: backend
         env:
           DATABASE_URL: postgresql://skillwise_user:skillwise_pass@127.0.0.1:5432/skillwise_db
-        run: npm test -- --runInBand --detectOpenHandles
+        run: npm run test:coverage -- --runInBand --detectOpenHandles
+
+      - name: Upload backend coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage
 
       - name: Install frontend deps
         working-directory: frontend
         run: npm install #was changed
 
+      - name: Run frontend linter
+        working-directory: frontend
+        run: npm run lint
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+
+      - name: Run frontend tests (Jest + Coverage)
+        working-directory: frontend
+        env:
+          CI: true
+        run: npm run test:coverage -- --coverage --watchAll=false
+
+      - name: Upload frontend coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+
+      # --- Start backend server for Cypress E2E tests ---
+      - name: Start backend server
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-jwt-secret
+          JWT_REFRESH_SECRET: test-refresh-secret
+          DATABASE_URL: postgresql://skillwise_user:skillwise_pass@127.0.0.1:5432/skillwise_db
+        run: |
+          nohup node server.js &
+          echo "Backend server started in background"
+
+      - name: Wait for backend health endpoint
+        run: |
+          for i in {1..25}; do
+            curl -sf http://127.0.0.1:3001/healthz && echo "Backend healthy" && break || sleep 2;
+          done
 
       - name: Run Cypress (headless)
         uses: cypress-io/github-action@v5
         with:
           start: npx serve -s build -l 3000
-          wait-on: http://localhost:3000
-          wait-on-timeout: 60
+          wait-on: 'http://localhost:3000 http://localhost:3001/healthz'
+          wait-on-timeout: 90
           browser: chrome
           record: false
         env:
@@ -92,6 +154,13 @@ jobs:
           CYPRESS_TEST_USER_PASSWORD: ${{ secrets.CYPRESS_TEST_USER_PASSWORD }}
           REACT_APP_API_URL: http://localhost:3001/api
           DATABASE_URL: postgresql://skillwise_user:skillwise_pass@127.0.0.1:5432/skillwise_db
+
+      - name: Upload Cypress results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-results
+          path: frontend/cypress/results
 
       - name: Upload Cypress artifacts on failure
         if: failure()

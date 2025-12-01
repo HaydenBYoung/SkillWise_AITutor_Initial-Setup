@@ -133,6 +133,28 @@ const authController = {
       return next(err);
     }
   },
+
+  forgotPassword: async (req, res, next) => {
+    try {
+      const { email } = req.body || {};
+      if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+      const result = await authService.forgotPassword(email);
+      return res.status(200).json({ success: true, message: result.message });
+    } catch (err) {
+      return next(err);
+    }
+  },
+
+  resetPassword: async (req, res, next) => {
+    try {
+      const { token, password } = req.body || {};
+      if (!token || !password) return res.status(400).json({ success: false, message: 'Token and password required' });
+      const result = await authService.resetPassword(token, password);
+      return res.status(200).json({ success: true, message: result.message });
+    } catch (err) {
+      return next(err);
+    }
+  },
 };
 
 module.exports = authController;

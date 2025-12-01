@@ -1,5 +1,6 @@
 // Peer review UI implemented using mock data; replace mocks with API calls and wire peer-review endpoints
 import { useState, useEffect } from 'react';
+import { apiService } from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DashboardLayout from '../components/common/DashboardLayout';
 import { useAuth } from '../hooks/useAuth';
@@ -12,90 +13,36 @@ const PeerReviewPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const { user } = useAuth();
 
-  // Currently uses mock data for development; replace with real API calls (peer review endpoints)
+  // Fetch queue and my submissions from the API
   useEffect(() => {
-    const mockReviews = [
-      {
-        id: 1,
-        submissionId: 'sub_001',
-        title: 'React Component Optimization',
-        author: 'Sarah Kim',
-        authorAvatar: '👩‍🎨',
-        category: 'React',
-        difficulty: 'Intermediate',
-        submittedAt: '2024-01-15T10:00:00Z',
-        description: 'Created a custom hook for data fetching with caching',
-        codeSnippet: 'const useDataFetch = (url) => { ... }',
-        needsReview: true,
-        reviewsCount: 2,
-        maxReviews: 3,
-      },
-      {
-        id: 2,
-        submissionId: 'sub_002',
-        title: 'Algorithm Implementation',
-        author: 'Mike Chen',
-        authorAvatar: '👨‍🔬',
-        category: 'Algorithms',
-        difficulty: 'Advanced',
-        submittedAt: '2024-01-14T15:30:00Z',
-        description: 'Implemented merge sort with performance optimizations',
-        codeSnippet: 'function mergeSort(arr) { ... }',
-        needsReview: true,
-        reviewsCount: 1,
-        maxReviews: 3,
-      },
-      {
-        id: 3,
-        submissionId: 'sub_003',
-        title: 'Database Design Pattern',
-        author: 'Emma Rodriguez',
-        authorAvatar: '👩‍💼',
-        category: 'Database',
-        difficulty: 'Intermediate',
-        submittedAt: '2024-01-13T09:15:00Z',
-        description: 'Repository pattern implementation with TypeORM',
-        codeSnippet: 'class UserRepository extends Repository { ... }',
-        needsReview: false,
-        reviewsCount: 3,
-        maxReviews: 3,
-      },
-    ];
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const queue = await apiService.peerReview.getReviewQueue();
+        // Enrich queue items with submission details for better UI
+        const queueWithDetails = await Promise.all(
+          (queue || []).map(async (r) => {
+            try {
+              const details = await apiService.peerReview.getReviewDetails(r.submission_id || r.submissionId || r.submission_id);
+              return Object.assign({}, r, { submission: details?.submission || details?.data?.submission || null, title: (details?.data?.submission && details.data.submission.title) || r.title, description: (details?.data?.submission && details.data.submission.submission_text) || r.description, author: r.author || 'Anonymous', needsReview: !r.is_completed });
+            } catch (err) {
+              return r;
+            }
+          }),
+        );
+        const mine = await apiService.peerReview.getMySubmissions();
+        setReviews(queueWithDetails || []);
+        setMySubmissions(mine || []);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Error loading peer review data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    const mockMySubmissions = [
-      {
-        id: 1,
-        submissionId: 'my_sub_001',
-        title: 'CSS Grid Layout Challenge',
-        category: 'CSS',
-        difficulty: 'Beginner',
-        submittedAt: '2024-01-12T14:20:00Z',
-        status: 'under-review',
-        reviewsReceived: 2,
-        maxReviews: 3,
-        averageRating: 4.5,
-        feedback: 'Great responsive design approach!',
-      },
-      {
-        id: 2,
-        submissionId: 'my_sub_002',
-        title: 'API Integration Pattern',
-        category: 'JavaScript',
-        difficulty: 'Intermediate',
-        submittedAt: '2024-01-10T11:45:00Z',
-        status: 'completed',
-        reviewsReceived: 3,
-        maxReviews: 3,
-        averageRating: 4.7,
-        feedback: 'Excellent error handling and clean code structure',
-      },
-    ];
-
-    setTimeout(() => {
-      setReviews(mockReviews);
-      setMySubmissions(mockMySubmissions);
-      setLoading(false);
-    }, 1000);
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredReviews = reviews.filter(
@@ -136,6 +83,67 @@ const PeerReviewPage = () => {
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     return `${Math.floor(diffInHours / 24)}d ago`;
+  };
+
+  // Review modal state & handlers
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [reviewText, setReviewText] = useState('');
+  const [rating, setRating] = useState(5);
+  const [submitting, setSubmitting] = useState(false);
+
+  const openReviewModal = (submission) => {
+    setSelectedSubmission(submission);
+    setReviewText('');
+    setRating(5);
+  };
+
+  const closeReviewModal = () => {
+    setSelectedSubmission(null);
+    setSubmitting(false);
+  };
+
+  const openDetailsModal = async (submission) => {
+    try {
+      setLoading(true);
+      const details = await apiService.peerReview.getReviewDetails(submission.id || submission.submissionId);
+      // details.data contains { submission, reviews }
+      setSelectedSubmission(Object.assign({}, submission, { details: details.data }));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error loading submission details', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!selectedSubmission) return;
+    try {
+      setSubmitting(true);
+      const submissionId = selectedSubmission.submission?.id || selectedSubmission.submissionId || selectedSubmission.submission_id || selectedSubmission.id;
+      const payload = {
+        reviewText,
+        rating,
+        isCompleted: true,
+      };
+      // If the selectedSubmission includes a peer-review id or reviewer matches current user, update the existing record
+      if (selectedSubmission && (selectedSubmission.reviewer_id || selectedSubmission.reviewerId) && Number(selectedSubmission.reviewer_id || selectedSubmission.reviewerId) === Number(user?.id)) {
+        await apiService.peerReview.updateReview(selectedSubmission.id, payload);
+      } else {
+        await apiService.peerReview.submitReview(submissionId, payload);
+      }
+      // refresh data
+      const queue = await apiService.peerReview.getReviewQueue();
+      const mine = await apiService.peerReview.getMySubmissions();
+      setReviews(queue || []);
+      setMySubmissions(mine || []);
+      closeReviewModal();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error submitting review', err);
+      setSubmitting(false);
+      // TODO: show a user-friendly notification on error
+    }
   };
 
   return (
@@ -235,7 +243,7 @@ const PeerReviewPage = () => {
                       </div>
 
                       {review.needsReview ? (
-                        <button className="btn-primary">Start Review</button>
+                        <button className="btn-primary" onClick={() => openReviewModal(review)}>Start Review</button>
                       ) : (
                         <button className="btn-secondary" disabled>
                           Review Complete
@@ -291,7 +299,7 @@ const PeerReviewPage = () => {
                         </div>
                       </div>
                       <div className="submission-actions">
-                        <button className="btn-secondary">View Details</button>
+                        <button className="btn-secondary" onClick={() => openDetailsModal(submission)}>View Details</button>
                       </div>
                     </div>
 
@@ -351,6 +359,57 @@ const PeerReviewPage = () => {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Review modal */}
+        {selectedSubmission && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <div className="modal-header">
+                <h3>Review: {selectedSubmission.title}</h3>
+                <button className="btn-link" onClick={closeReviewModal}>Close</button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Author:</strong> {selectedSubmission.author || 'Anonymous'}</p>
+                <p>{selectedSubmission.description || selectedSubmission.details?.submission?.submission_text}</p>
+                <textarea
+                  placeholder="Write constructive feedback for the author"
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  rows={6}
+                  style={{ width: '100%', padding: '8px', marginTop: '8px' }}
+                />
+                <div style={{ marginTop: '8px' }}>
+                  <label>Rating:</label>
+                  <select value={rating} onChange={(e) => setRating(Number(e.target.value))}>
+                    {[5,4,3,2,1].map((r) => (
+                      <option key={r} value={r}>{r} ★</option>
+                    ))}
+                  </select>
+                </div>
+                {selectedSubmission.details && (
+                  <div style={{ marginTop: '12px' }}>
+                    <h4>Existing Reviews</h4>
+                    {Array.isArray(selectedSubmission.details.reviews) && selectedSubmission.details.reviews.length > 0 ? (
+                      <ul>
+                        {selectedSubmission.details.reviews.map((r) => (
+                          <li key={r.id}>
+                            <strong>{r.rating || 'No Rating'}</strong> — {r.review_text}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No reviews yet</p>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="btn-secondary" onClick={closeReviewModal}>Cancel</button>
+                <button className="btn-primary" onClick={handleSubmitReview} disabled={submitting}>Submit Review</button>
+              </div>
+            </div>
           </div>
         )}
 

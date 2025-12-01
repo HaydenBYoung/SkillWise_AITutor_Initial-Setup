@@ -24,7 +24,11 @@ module.exports = {
   overrides: [
     {
       files: ['frontend/**/*.{js,jsx}'],
-      extends: ['eslint:recommended'],
+      extends: [
+        'eslint:recommended',
+        'plugin:react/recommended',
+        'plugin:react-hooks/recommended',
+      ],
       env: {
         browser: true,
         es6: true,
@@ -32,6 +36,12 @@ module.exports = {
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
+        },
+      },
+      plugins: ['react', 'react-hooks'],
+      settings: {
+        react: {
+          version: 'detect',
         },
       },
     },

@@ -36,10 +36,20 @@ const LoginPage = () => {
           navigate(from, { replace: true });
         }, 1500);
       } else {
-        setError(result.error || 'Login failed. Please try again.');
+        // Provide more helpful error message
+        let errorMsg = result.error || 'Login failed. Please try again.';
+        if (errorMsg.includes('Invalid credentials')) {
+          errorMsg = 'Invalid email or password. Please check your credentials and try again.';
+        }
+        setError(errorMsg);
       }
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
+      // Provide more helpful error message
+      let errorMsg = err.message || 'Login failed. Please try again.';
+      if (errorMsg.includes('Invalid credentials') || errorMsg.includes('401')) {
+        errorMsg = 'Invalid email or password. Please check your credentials or sign up if you don\'t have an account.';
+      }
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }

@@ -33,10 +33,11 @@ const auth = async (req, res, next) => {
       );
     }
 
-    // Set user info on request
+    // Set user info on request (include role if present)
     req.user = {
       id: decoded.id,
       email: decoded.email,
+      role: decoded.role || 'user',
     };
     next();
   } catch (error) {
@@ -73,6 +74,17 @@ const auth = async (req, res, next) => {
 // TODO: Middleware to restrict access to specific roles
 const restrictTo = (...roles) => {
   return (req, res, next) => {
+    // Check if user is authenticated first
+    if (!req.user) {
+      return next(
+        new AppError(
+          'You must be logged in to access this resource',
+          401,
+          'AUTHENTICATION_REQUIRED',
+        ),
+      );
+    }
+    
     if (!roles.includes(req.user.role)) {
       return next(
         new AppError(
@@ -87,4 +99,5 @@ const restrictTo = (...roles) => {
 };
 
 module.exports = auth;
+module.exports.authenticateToken = auth;
 module.exports.restrictTo = restrictTo;

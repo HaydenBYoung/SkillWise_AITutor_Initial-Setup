@@ -1,4 +1,5 @@
-// Profile management and settings UI (uses mock data for now — replace with real API calls)
+// Profile management and settings UI
+/* eslint-disable no-console */
 import { useState, useEffect } from 'react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DashboardLayout from '../components/common/DashboardLayout';
@@ -14,100 +15,177 @@ const ProfilePage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { user, updateProfile, logout } = useAuth();
 
-  // Currently uses mockProfileData for development; replace with an API call (e.g. apiService.user.getProfile)
+  // Fetch profile data from backend if available; otherwise fall back to auth context user or local defaults
   useEffect(() => {
-    const mockProfileData = {
-      id: user?.id || 1,
-      firstName: user?.firstName || 'User',
-      lastName: user?.lastName || 'Name',
-      email: user?.email || 'user@example.com',
-      avatar: '👤',
-      bio: '',
-      location: '',
-      website: '',
-      joinedDate: user?.createdAt || new Date().toISOString(),
-      level: 1,
-      totalPoints: 0,
-      completedChallenges: 0,
-      goalsAchieved: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-      badges: [
-        {
-          id: 1,
-          name: 'First Steps',
-          icon: '🚀',
-          description: 'Complete your first challenge',
-          earned: false,
-        },
-        {
-          id: 2,
-          name: 'Streak Master',
-          icon: '🔥',
-          description: 'Maintain a 7-day learning streak',
-          earned: false,
-        },
-        {
-          id: 3,
-          name: 'Goal Crusher',
-          icon: '🎯',
-          description: 'Complete 5 learning goals',
-          earned: false,
-        },
-        {
-          id: 4,
-          name: 'Code Reviewer',
-          icon: '👥',
-          description: 'Provide 10 peer reviews',
-          earned: false,
-        },
-        {
-          id: 5,
-          name: 'Challenge Master',
-          icon: '💪',
-          description: 'Complete 50 challenges',
-          earned: false,
-        },
-      ],
-      skills: [],
-      recentActivity: [],
-      preferences: {
-        emailNotifications: true,
-        pushNotifications: false,
-        weeklyDigest: true,
-        publicProfile: true,
-        showProgress: true,
-      },
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        // Prefer apiService.user.getProfile if token and backend available
+        let data = null;
+        if (user) {
+          // If auth context has user data, use it as primary source
+          data = user;
+        }
+
+        // Attempt to fetch fresh profile from server (overrides auth user data)
+        try {
+          const resp = await apiService.user.getProfile();
+          if (resp) {
+            // Normalize response with defaults for missing fields and convert snake_case to camelCase
+            data = {
+              ...resp,
+              firstName: resp.firstName || resp.first_name || '',
+              lastName: resp.lastName || resp.last_name || '',
+              email: resp.email || '',
+              createdAt: resp.createdAt || resp.created_at,
+              updatedAt: resp.updatedAt || resp.updated_at,
+              joinedDate: resp.joinedDate || resp.created_at || new Date().toISOString(),
+              avatar: resp.avatar ?? '👤',
+              bio: resp.bio ?? '',
+              location: resp.location ?? '',
+              website: resp.website ?? '',
+              totalPoints: resp.totalPoints ?? 0,
+              completedChallenges: resp.completedChallenges ?? 0,
+              goalsAchieved: resp.goalsAchieved ?? 0,
+              currentStreak: resp.currentStreak ?? 0,
+              longestStreak: resp.longestStreak ?? 0,
+              level: resp.level ?? 1,
+              badges: resp.badges ?? [],
+              skills: resp.skills ?? [],
+              recentActivity: resp.recentActivity ?? [],
+              preferences: resp.preferences ?? {
+                emailNotifications: true,
+                pushNotifications: false,
+                weeklyDigest: true,
+                publicProfile: true,
+                showProgress: true,
+              },
+            };
+          }
+        } catch (err) {
+          // If server call fails, continue using `user` as fallback
+          // eslint-disable-next-line no-console
+          console.warn('Could not fetch profile from API, using auth context values if present', err?.message || err);
+        }
+
+        if (!data) {
+          // If still no data, build a minimal local default
+          data = {
+            id: 0,
+            firstName: 'User',
+            lastName: 'Name',
+            email: 'user@example.com',
+            avatar: '👤',
+            bio: '',
+            location: '',
+            website: '',
+            joinedDate: new Date().toISOString(),
+            level: 1,
+            totalPoints: 0,
+            completedChallenges: 0,
+            goalsAchieved: 0,
+            currentStreak: 0,
+            longestStreak: 0,
+            badges: [],
+            skills: [],
+            recentActivity: [],
+            preferences: {
+              emailNotifications: true,
+              pushNotifications: false,
+              weeklyDigest: true,
+              publicProfile: true,
+              showProgress: true,
+            },
+          };
+        }
+
+        setProfileData(data);
+        setFormData(data);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Error fetching profile:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setTimeout(() => {
-      setProfileData(mockProfileData);
-      setFormData(mockProfileData);
-      setLoading(false);
-    }, 1000);
+    fetchProfile();
   }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    
+    // Check if this is a preference field (checkbox settings)
+    const preferenceFields = ['emailNotifications', 'pushNotifications', 'weeklyDigest', 'publicProfile', 'showProgress'];
+    
+    if (preferenceFields.includes(name)) {
+      // Update nested preferences object
+      setFormData((prev) => ({
+        ...prev,
+        preferences: {
+          ...prev.preferences,
+          [name]: checked,
+        },
+      }));
+    } else {
+      // Update top-level fields
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setLoading(true);
+
+    try {
+      // Update profile with new preferences
+      const updated = await apiService.user.updateProfile({
+        ...profileData,
+        preferences: formData.preferences,
+      });
+      
+      // Normalize the updated data
+      const normalizedData = {
+        ...profileData,
+        ...updated,
+        preferences: updated.preferences || formData.preferences,
+      };
+      
+      setProfileData(normalizedData);
+      setFormData(normalizedData);
+      
+      alert('Settings saved successfully!');
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      alert('Failed to save settings. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // TODO: Replace with actual API call to update profile (e.g. apiService.user.updateProfile)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setProfileData(formData);
+      // Call backend API to update profile and update local AuthContext
+      const updated = await apiService.user.updateProfile(formData);
+      setProfileData(updated || formData);
       setIsEditing(false);
-      // Call auth context update if needed
-      // await updateProfile(formData);
+
+      // Update auth context with the latest user info (if function is available)
+      try {
+        if (updateProfile) await updateProfile(updated || formData);
+      } catch (authErr) {
+        // eslint-disable-next-line no-console
+        console.warn('Could not update auth context after profile update', authErr);
+      }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to update profile:', error);
+      alert('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -168,18 +246,23 @@ const ProfilePage = () => {
     }
   };
 
-  if (loading && !profileData) {
-    return <LoadingSpinner message="Loading profile..." />;
-  }
+  // Render page inside the DashboardLayout and show a loading overlay while fetching profile
 
   return (
     <DashboardLayout>
+      {loading && (
+        <div className="modal-overlay">
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <LoadingSpinner message="Loading profile..." />
+          </div>
+        </div>
+      )}
       <div className="profile-header">
         <div className="profile-banner">
           <div className="profile-info">
             <div className="profile-avatar">
-              <span className="avatar-icon">{profileData?.avatar}</span>
-              <div className="level-badge">Level {profileData?.level}</div>
+              <span className="avatar-icon">{profileData?.avatar ?? '👤'}</span>
+              <div className="level-badge">Level {profileData?.level ?? 1}</div>
             </div>
 
             <div className="profile-details">
@@ -207,15 +290,15 @@ const ProfilePage = () => {
 
             <div className="profile-stats">
               <div className="stat-item">
-                <strong>{profileData?.totalPoints.toLocaleString()}</strong>
+                <strong>{(profileData?.totalPoints ?? 0).toLocaleString()}</strong>
                 <span>Total Points</span>
               </div>
               <div className="stat-item">
-                <strong>{profileData?.completedChallenges}</strong>
+                <strong>{profileData?.completedChallenges ?? 0}</strong>
                 <span>Challenges</span>
               </div>
               <div className="stat-item">
-                <strong>{profileData?.currentStreak}</strong>
+                <strong>{profileData?.currentStreak ?? 0}</strong>
                 <span>Day Streak</span>
               </div>
             </div>
@@ -345,7 +428,7 @@ const ProfilePage = () => {
               <div className="recent-activity">
                 <h3>Recent Activity</h3>
                 <div className="activity-list">
-                  {profileData?.recentActivity.map((activity) => (
+                  {(profileData?.recentActivity ?? []).map((activity) => (
                     <div key={activity.id} className="activity-item">
                       <div className="activity-icon">
                         {getActivityIcon(activity.type)}
@@ -377,7 +460,7 @@ const ProfilePage = () => {
                   </div>
                   <div className="achievement-stat">
                     <strong>
-                      {profileData?.badges.filter((b) => b.earned).length}
+                      {(profileData?.badges ?? []).filter((b) => b.earned).length}
                     </strong>
                     <span>Badges Earned</span>
                   </div>
@@ -391,7 +474,7 @@ const ProfilePage = () => {
           <div className="skills-tab">
             <h3>Skill Progress</h3>
             <div className="skills-grid">
-              {profileData?.skills.map((skill, index) => (
+              {(profileData?.skills ?? []).map((skill, index) => (
                 <div key={index} className="skill-item">
                   <div className="skill-header">
                     <h4>{skill.name}</h4>
@@ -416,7 +499,7 @@ const ProfilePage = () => {
           <div className="badges-tab">
             <h3>Badge Collection</h3>
             <div className="badges-grid">
-              {profileData?.badges.map((badge) => (
+              {(profileData?.badges ?? []).map((badge) => (
                 <div
                   key={badge.id}
                   className={`badge-item ${badge.earned ? 'earned' : 'locked'}`}
@@ -444,30 +527,45 @@ const ProfilePage = () => {
                   <input
                     type="checkbox"
                     name="emailNotifications"
-                    checked={formData.preferences?.emailNotifications || false}
+                    checked={formData.preferences?.emailNotifications ?? false}
                     onChange={handleInputChange}
                   />
-                  <span>Email notifications</span>
+                  <span className="checkbox-label">
+                    <span className="checkbox-text">Email notifications</span>
+                    <span className="checkbox-status">
+                      {formData.preferences?.emailNotifications ? '✓ Enabled' : '○ Disabled'}
+                    </span>
+                  </span>
                 </label>
 
                 <label className="setting-item">
                   <input
                     type="checkbox"
                     name="pushNotifications"
-                    checked={formData.preferences?.pushNotifications || false}
+                    checked={formData.preferences?.pushNotifications ?? false}
                     onChange={handleInputChange}
                   />
-                  <span>Push notifications</span>
+                  <span className="checkbox-label">
+                    <span className="checkbox-text">Push notifications</span>
+                    <span className="checkbox-status">
+                      {formData.preferences?.pushNotifications ? '✓ Enabled' : '○ Disabled'}
+                    </span>
+                  </span>
                 </label>
 
                 <label className="setting-item">
                   <input
                     type="checkbox"
                     name="weeklyDigest"
-                    checked={formData.preferences?.weeklyDigest || false}
+                    checked={formData.preferences?.weeklyDigest ?? false}
                     onChange={handleInputChange}
                   />
-                  <span>Weekly progress digest</span>
+                  <span className="checkbox-label">
+                    <span className="checkbox-text">Weekly progress digest</span>
+                    <span className="checkbox-status">
+                      {formData.preferences?.weeklyDigest ? '✓ Enabled' : '○ Disabled'}
+                    </span>
+                  </span>
                 </label>
               </div>
             </div>
@@ -479,20 +577,30 @@ const ProfilePage = () => {
                   <input
                     type="checkbox"
                     name="publicProfile"
-                    checked={formData.preferences?.publicProfile || false}
+                    checked={formData.preferences?.publicProfile ?? false}
                     onChange={handleInputChange}
                   />
-                  <span>Public profile</span>
+                  <span className="checkbox-label">
+                    <span className="checkbox-text">Public profile</span>
+                    <span className="checkbox-status">
+                      {formData.preferences?.publicProfile ? '✓ Enabled' : '○ Disabled'}
+                    </span>
+                  </span>
                 </label>
 
                 <label className="setting-item">
                   <input
                     type="checkbox"
                     name="showProgress"
-                    checked={formData.preferences?.showProgress || false}
+                    checked={formData.preferences?.showProgress ?? false}
                     onChange={handleInputChange}
                   />
-                  <span>Show progress on leaderboard</span>
+                  <span className="checkbox-label">
+                    <span className="checkbox-text">Show progress on leaderboard</span>
+                    <span className="checkbox-status">
+                      {formData.preferences?.showProgress ? '✓ Enabled' : '○ Disabled'}
+                    </span>
+                  </span>
                 </label>
               </div>
             </div>
@@ -500,10 +608,10 @@ const ProfilePage = () => {
             <div className="settings-actions">
               <button
                 className="btn-primary"
-                onClick={handleSubmit}
+                onClick={handleSaveSettings}
                 disabled={loading}
               >
-                {loading ? 'Saving...' : 'Save Settings'}
+                {loading ? 'Saving...' : 'Update Settings'}
               </button>
             </div>
 

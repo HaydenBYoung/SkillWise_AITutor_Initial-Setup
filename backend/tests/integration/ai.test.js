@@ -7,12 +7,16 @@ const mockGenerateFeedback = jest.fn();
 const mockGetHints = jest.fn();
 const mockSuggestChallenges = jest.fn();
 const mockAnalyzeProgress = jest.fn();
+const mockGenerateChallenge = jest.fn();
+const mockPublishSuggestion = jest.fn();
 
 jest.mock('../../src/controllers/aiController', () => ({
   generateFeedback: (req, res, next) => mockGenerateFeedback(req, res, next),
   getHints: (req, res, next) => mockGetHints(req, res, next),
   suggestChallenges: (req, res, next) => mockSuggestChallenges(req, res, next),
   analyzeProgress: (req, res, next) => mockAnalyzeProgress(req, res, next),
+  generateChallenge: (req, res, next) => mockGenerateChallenge(req, res, next),
+  publishSuggestion: (req, res, next) => mockPublishSuggestion(req, res, next),
 }));
 
 const app = require('../../src/app');

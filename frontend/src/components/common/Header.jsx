@@ -1,5 +1,6 @@
 // Main navigation header (placeholder). Add navigation items, profile dropdown, and notifications.
 import {} from 'react';
+import Notifications from './Notifications';
 
 const Header = () => {
   // Navigation menu, user profile dropdown and notifications should be added here
@@ -11,7 +12,8 @@ const Header = () => {
         </div>
         <nav className="nav-menu">{/* navigation items to be added */}</nav>
         <div className="nav-actions">
-          {/* user profile and notification actions go here */}
+          <Notifications />
+          {/* user profile and other actions */}
         </div>
       </div>
     </header>
