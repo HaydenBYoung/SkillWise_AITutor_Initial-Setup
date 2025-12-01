@@ -6,50 +6,79 @@ const request = require('supertest');
 const app = require('../../src/app');
 const aiService = require('../../src/services/aiService');
 const db = require('../../src/database/connection');
+const jwt = require('../../src/utils/jwt');
 
 jest.mock('../../src/services/aiService');
 jest.mock('../../src/database/connection');
+jest.mock('../../src/utils/jwt');
 
 describe('AI Controller Integration Tests', () => {
   let authToken;
+  let mockGoalId = 1;
 
   beforeAll(() => {
     // Mock authentication token
     authToken = 'Bearer mock-jwt-token';
+
+    // Mock JWT verification to return a valid user
+    jwt.verifyToken.mockResolvedValue({
+      id: 1,
+      email: 'test@example.com',
+    });
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Re-apply JWT mock for each test
+    jwt.verifyToken.mockResolvedValue({
+      id: 1,
+      email: 'test@example.com',
+    });
+
+    // Mock db.query for goal lookup (default mock)
+    db.query.mockResolvedValue({
+      rows: [
+        {
+          id: mockGoalId,
+          title: 'Learn Node.js',
+          description: 'Master backend development',
+          category: 'Node.js',
+        },
+      ],
+    });
   });
 
   describe('POST /api/ai/generateChallenge', () => {
     it('should generate challenges successfully', async () => {
-      const mockChallenges = [{
-        title: 'Build a REST API',
-        description: 'Create a RESTful API',
-        instructions: 'Step by step',
-        category: 'Node.js',
-        difficulty_level: 'medium',
-        estimated_time_minutes: 120,
-        points_reward: 10,
-        learning_objectives: ['REST', 'APIs'],
-        tags: ['backend']
-      }];
+      const mockChallenges = [
+        {
+          title: 'Build a REST API',
+          description: 'Create a RESTful API',
+          instructions: 'Step by step',
+          category: 'Node.js',
+          difficulty_level: 'medium',
+          estimated_time_minutes: 120,
+          points_reward: 10,
+          learning_objectives: ['REST', 'APIs'],
+          tags: ['backend'],
+        },
+      ];
 
       aiService.generateChallenges.mockResolvedValue({
         success: true,
         challenges: mockChallenges,
-        processingTime: 1500
+        processingTime: 1500,
       });
 
       const response = await request(app)
         .post('/api/ai/generateChallenge')
         .set('Authorization', authToken)
         .send({
-          category: 'Node.js',
+          goalId: mockGoalId,
           difficulty: 'medium',
           focusAreas: 'REST APIs',
-          count: 1
+          count: 1,
         });
 
       expect(response.status).toBe(200);
@@ -58,16 +87,18 @@ describe('AI Controller Integration Tests', () => {
       expect(response.body.challenges[0].title).toBe('Build a REST API');
     });
 
-    it('should return 400 if category is missing', async () => {
+    it('should return 400 if goalId is missing', async () => {
       const response = await request(app)
         .post('/api/ai/generateChallenge')
         .set('Authorization', authToken)
         .send({
-          difficulty: 'medium'
+          difficulty: 'medium',
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Category is required');
+      expect(response.body.error).toBe(
+        'Goal is required for challenge generation'
+      );
     });
 
     it('should return 400 for invalid difficulty', async () => {
@@ -75,8 +106,8 @@ describe('AI Controller Integration Tests', () => {
         .post('/api/ai/generateChallenge')
         .set('Authorization', authToken)
         .send({
-          category: 'Node.js',
-          difficulty: 'invalid'
+          goalId: mockGoalId,
+          difficulty: 'invalid',
         });
 
       expect(response.status).toBe(400);
@@ -87,22 +118,23 @@ describe('AI Controller Integration Tests', () => {
       aiService.generateChallenges.mockResolvedValue({
         success: true,
         challenges: [],
-        processingTime: 1000
+        processingTime: 1000,
       });
 
       await request(app)
         .post('/api/ai/generateChallenge')
         .set('Authorization', authToken)
         .send({
-          category: 'Node.js',
-          count: 10 // Should be limited to 5
+          goalId: mockGoalId,
+          count: 10, // Should be limited to 5
         });
 
       expect(aiService.generateChallenges).toHaveBeenCalledWith(
         'Node.js',
         'medium',
-        '',
-        5
+        expect.any(String), // Focus areas includes goal description
+        5,
+        mockGoalId
       );
     });
   });
@@ -110,10 +142,12 @@ describe('AI Controller Integration Tests', () => {
   describe('POST /api/ai/submitForFeedback', () => {
     it('should generate feedback successfully', async () => {
       db.query.mockResolvedValueOnce({
-        rows: [{
-          title: 'Test Challenge',
-          description: 'Test description'
-        }]
+        rows: [
+          {
+            title: 'Test Challenge',
+            description: 'Test description',
+          },
+        ],
       });
 
       aiService.generateFeedback.mockResolvedValue({
@@ -125,8 +159,8 @@ describe('AI Controller Integration Tests', () => {
           strengths: ['Clean code'],
           improvements: ['Add tests'],
           suggestions: ['Use TypeScript'],
-          confidence_score: 0.9
-        }
+          confidence_score: 0.9,
+        },
       });
 
       const response = await request(app)
@@ -135,7 +169,7 @@ describe('AI Controller Integration Tests', () => {
         .send({
           submissionText: 'function test() { return true; }',
           challengeId: 1,
-          submissionType: 'code'
+          submissionType: 'code',
         });
 
       expect(response.status).toBe(200);
@@ -148,7 +182,7 @@ describe('AI Controller Integration Tests', () => {
         .post('/api/ai/submitForFeedback')
         .set('Authorization', authToken)
         .send({
-          challengeId: 1
+          challengeId: 1,
         });
 
       expect(response.status).toBe(400);
@@ -163,7 +197,7 @@ describe('AI Controller Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           submissionText: 'code',
-          challengeId: 999
+          challengeId: 999,
         });
 
       expect(response.status).toBe(404);
@@ -178,13 +212,13 @@ describe('AI Controller Integration Tests', () => {
           id: 1,
           feedback_text: 'First feedback',
           confidence_score: 0.9,
-          created_at: new Date().toISOString()
-        }
+          created_at: new Date().toISOString(),
+        },
       ];
 
       aiService.getFeedbackHistory.mockResolvedValue({
         success: true,
-        history: mockHistory
+        history: mockHistory,
       });
 
       const response = await request(app)
@@ -201,14 +235,14 @@ describe('AI Controller Integration Tests', () => {
     it('should answer follow-up questions', async () => {
       aiService.answerFollowUp.mockResolvedValue({
         success: true,
-        answer: 'Here is the explanation you requested.'
+        answer: 'Here is the explanation you requested.',
       });
 
       const response = await request(app)
         .post('/api/ai/feedback/1/followup')
         .set('Authorization', authToken)
         .send({
-          question: 'Can you explain more about the first improvement?'
+          question: 'Can you explain more about the first improvement?',
         });
 
       expect(response.status).toBe(200);
@@ -238,15 +272,17 @@ describe('AI Controller Integration Tests', () => {
         estimated_time_minutes: 60,
         points_reward: 10,
         learning_objectives: ['Learning'],
-        tags: ['js']
+        tags: ['js'],
       };
 
       db.query.mockResolvedValue({
-        rows: [{
-          id: 1,
-          ...mockChallenge,
-          is_ai_generated: true
-        }]
+        rows: [
+          {
+            id: 1,
+            ...mockChallenge,
+            is_ai_generated: true,
+          },
+        ],
       });
 
       const response = await request(app)
@@ -254,7 +290,7 @@ describe('AI Controller Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           challenge: mockChallenge,
-          goalId: 1
+          goalId: 1,
         });
 
       expect(response.status).toBe(201);

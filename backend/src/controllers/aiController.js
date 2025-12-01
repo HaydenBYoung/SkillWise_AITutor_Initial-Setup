@@ -16,7 +16,7 @@ const aiController = {
       if (!goalId) {
         return res.status(400).json({
           success: false,
-          error: 'Goal is required for challenge generation'
+          error: 'Goal is required for challenge generation',
         });
       }
 
@@ -25,21 +25,21 @@ const aiController = {
         'SELECT title, description, category FROM goals WHERE id = $1 AND user_id = $2',
         [goalId, userId]
       );
-      
+
       if (goalResult.rows.length === 0) {
         return res.status(404).json({
           success: false,
-          error: 'Goal not found'
+          error: 'Goal not found',
         });
       }
-      
+
       const goalContext = goalResult.rows[0];
 
       const validDifficulties = ['easy', 'medium', 'hard'];
       if (difficulty && !validDifficulties.includes(difficulty)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid difficulty level. Must be easy, medium, or hard'
+          error: 'Invalid difficulty level. Must be easy, medium, or hard',
         });
       }
 
@@ -47,22 +47,25 @@ const aiController = {
 
       // Use goal's category and description as the foundation
       const effectiveCategory = goalContext.category || 'General';
-      const effectiveFocusAreas = `${goalContext.title}. ${goalContext.description}. ${focusAreas || ''}`.trim();
+      const effectiveFocusAreas = `${goalContext.title}. ${
+        goalContext.description
+      }. ${focusAreas || ''}`.trim();
 
       // Generate challenges using AI
       const result = await aiService.generateChallenges(
         effectiveCategory,
         difficulty || 'medium',
         effectiveFocusAreas,
-        challengeCount
+        challengeCount,
+        goalId
       );
 
       // Add metadata
-      const challengesWithMetadata = result.challenges.map(challenge => ({
+      const challengesWithMetadata = result.challenges.map((challenge) => ({
         ...challenge,
         is_ai_generated: true,
         created_by: userId || null,
-        goal_id: goalId || null
+        goal_id: goalId || null,
       }));
 
       res.status(200).json({
@@ -70,14 +73,15 @@ const aiController = {
         message: `Generated ${challengesWithMetadata.length} challenge(s)`,
         challenges: challengesWithMetadata,
         processing_time_ms: result.processingTime,
-        goal_used: goalContext ? goalContext.title : null
+        goal_used: goalContext ? goalContext.title : null,
       });
     } catch (error) {
       console.error('Generate Challenge Error:', error);
       return res.status(500).json({
         success: false,
         error: 'Failed to generate challenges',
-        message: error.message || 'An error occurred while generating challenges'
+        message:
+          error.message || 'An error occurred while generating challenges',
       });
     }
   },
@@ -88,13 +92,14 @@ const aiController = {
    */
   submitForFeedback: async (req, res, next) => {
     try {
-      const { submissionId, submissionText, challengeId, submissionType } = req.body;
+      const { submissionId, submissionText, challengeId, submissionType } =
+        req.body;
 
       // Validation
       if (!submissionText || !challengeId) {
         return res.status(400).json({
           success: false,
-          error: 'Submission text and challenge ID are required'
+          error: 'Submission text and challenge ID are required',
         });
       }
 
@@ -107,7 +112,7 @@ const aiController = {
       if (challengeResult.rows.length === 0) {
         return res.status(404).json({
           success: false,
-          error: 'Challenge not found'
+          error: 'Challenge not found',
         });
       }
 
@@ -123,7 +128,7 @@ const aiController = {
         if (submissionCheck.rows.length === 0) {
           return res.status(404).json({
             success: false,
-            error: 'Submission not found'
+            error: 'Submission not found',
           });
         }
       }
@@ -140,7 +145,7 @@ const aiController = {
       res.status(200).json({
         success: true,
         message: 'Feedback generated successfully',
-        feedback: result.feedback
+        feedback: result.feedback,
       });
     } catch (error) {
       console.error('Submit for Feedback Error:', error);
@@ -160,7 +165,7 @@ const aiController = {
 
       res.status(200).json({
         success: true,
-        history: result.history
+        history: result.history,
       });
     } catch (error) {
       console.error('Get Feedback History Error:', error);
@@ -180,7 +185,7 @@ const aiController = {
       if (!question) {
         return res.status(400).json({
           success: false,
-          error: 'Question is required'
+          error: 'Question is required',
         });
       }
 
@@ -188,7 +193,7 @@ const aiController = {
 
       res.status(200).json({
         success: true,
-        answer: result.answer
+        answer: result.answer,
       });
     } catch (error) {
       console.error('Follow-up Question Error:', error);
@@ -208,7 +213,7 @@ const aiController = {
       if (!challenge) {
         return res.status(400).json({
           success: false,
-          error: 'Challenge data is required'
+          error: 'Challenge data is required',
         });
       }
 
@@ -233,24 +238,24 @@ const aiController = {
           true, // is_ai_generated
           userId,
           goalId || null,
-          true
+          true,
         ]
       );
 
       res.status(201).json({
         success: true,
         message: 'Challenge saved successfully',
-        challenge: result.rows[0]
+        challenge: result.rows[0],
       });
     } catch (error) {
       console.error('Save Challenge Error:', error);
       return res.status(500).json({
         success: false,
         error: 'Failed to save challenge',
-        message: error.message
+        message: error.message,
       });
     }
-  }
+  },
 };
 
 module.exports = aiController;

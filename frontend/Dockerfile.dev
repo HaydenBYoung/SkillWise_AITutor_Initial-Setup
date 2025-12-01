@@ -4,6 +4,15 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
+# Install dependencies for Cypress
+RUN apk add --no-cache \
+    xvfb \
+    gtk+3.0 \
+    libexif \
+    udev \
+    chromium \
+    bash
+
 # Copy package files
 COPY package*.json ./
 
@@ -12,6 +21,10 @@ RUN npm install
 
 # Copy source code
 COPY . .
+
+# Set Cypress environment variables
+ENV CYPRESS_CACHE_FOLDER=/root/.cache/Cypress
+ENV DISPLAY=:99
 
 # Expose port
 EXPOSE 3000

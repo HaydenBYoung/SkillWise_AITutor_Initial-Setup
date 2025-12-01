@@ -20,38 +20,51 @@ describe('AI Service', () => {
   describe('generateChallenges', () => {
     const mockGeminiResponse = {
       data: {
-        candidates: [{
-          content: {
-            parts: [{
-              text: JSON.stringify([{
-                title: 'Build a REST API',
-                description: 'Create a RESTful API using Node.js and Express',
-                instructions: '1. Set up Express server\n2. Create routes\n3. Test endpoints',
-                category: 'Node.js',
-                difficulty_level: 'medium',
-                estimated_time_minutes: 120,
-                points_reward: 10,
-                learning_objectives: ['Understand REST principles', 'Build APIs'],
-                tags: ['api', 'backend', 'express']
-              }])
-            }]
-          }
-        }]
-      }
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: JSON.stringify([
+                    {
+                      title: 'Sample Challenge',
+                      description: 'Create a REST API',
+                      instructions: 'Step by step guide',
+                      category: 'Node.js',
+                      difficulty_level: 'medium',
+                      estimated_time_minutes: 120,
+                      points_reward: 10,
+                      learning_objectives: [
+                        'Understand REST principles',
+                        'Build APIs',
+                      ],
+                      tags: ['api', 'backend', 'express'],
+                    },
+                  ]),
+                },
+              ],
+            },
+          },
+        ],
+      },
     };
 
     it('should generate challenges successfully', async () => {
       axios.post.mockResolvedValue(mockGeminiResponse);
-      db.query.mockResolvedValue({ rows: [{ id: 1 }] });
 
-      const result = await aiService.generateChallenges('Node.js', 'medium', 'REST APIs', 1);
+      const result = await aiService.generateChallenges(
+        'Node.js',
+        'medium',
+        'REST APIs',
+        1
+      );
 
       expect(result.success).toBe(true);
       expect(result.challenges).toHaveLength(1);
-      expect(result.challenges[0].title).toBe('Build a REST API');
+      expect(result.challenges[0].title).toBe('Sample Challenge');
       expect(result.challenges[0].category).toBe('Node.js');
       expect(axios.post).toHaveBeenCalled();
-      expect(db.query).toHaveBeenCalled();
+      // AI service generates challenges from AI API, not directly from DB
     });
 
     it('should handle API errors gracefully', async () => {
@@ -65,30 +78,44 @@ describe('AI Service', () => {
     it('should parse JSON responses with code blocks', async () => {
       const responseWithCodeBlock = {
         data: {
-          candidates: [{
-            content: {
-              parts: [{
-                text: '```json\n' + JSON.stringify([{
-                  title: 'Test Challenge',
-                  description: 'Test description',
-                  instructions: 'Test instructions',
-                  category: 'Testing',
-                  difficulty_level: 'easy',
-                  estimated_time_minutes: 30,
-                  points_reward: 5,
-                  learning_objectives: ['Testing'],
-                  tags: ['test']
-                }]) + '\n```'
-              }]
-            }
-          }]
-        }
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text:
+                      '```json\n' +
+                      JSON.stringify([
+                        {
+                          title: 'Test Challenge',
+                          description: 'Test description',
+                          instructions: 'Test instructions',
+                          category: 'Testing',
+                          difficulty_level: 'easy',
+                          estimated_time_minutes: 30,
+                          points_reward: 5,
+                          learning_objectives: ['Testing'],
+                          tags: ['test'],
+                        },
+                      ]) +
+                      '\n```',
+                  },
+                ],
+              },
+            },
+          ],
+        },
       };
 
       axios.post.mockResolvedValue(responseWithCodeBlock);
       db.query.mockResolvedValue({ rows: [{ id: 1 }] });
 
-      const result = await aiService.generateChallenges('Testing', 'easy', '', 1);
+      const result = await aiService.generateChallenges(
+        'Testing',
+        'easy',
+        '',
+        1
+      );
 
       expect(result.success).toBe(true);
       expect(result.challenges[0].title).toBe('Test Challenge');
@@ -98,31 +125,41 @@ describe('AI Service', () => {
   describe('generateFeedback', () => {
     const mockFeedbackResponse = {
       data: {
-        candidates: [{
-          content: {
-            parts: [{
-              text: JSON.stringify({
-                score: 85,
-                feedback_text: 'Great work! Your solution is well-structured.',
-                strengths: ['Clean code', 'Good documentation'],
-                improvements: ['Add error handling', 'Optimize performance'],
-                suggestions: ['Use async/await', 'Add unit tests'],
-                confidence_score: 0.92
-              })
-            }]
-          }
-        }]
-      }
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: JSON.stringify({
+                    score: 85,
+                    feedback_text:
+                      'Great work! Your solution is well-structured.',
+                    strengths: ['Clean code', 'Good documentation'],
+                    improvements: [
+                      'Add error handling',
+                      'Optimize performance',
+                    ],
+                    suggestions: ['Use async/await', 'Add unit tests'],
+                    confidence_score: 0.92,
+                  }),
+                },
+              ],
+            },
+          },
+        ],
+      },
     };
 
     it('should generate feedback successfully', async () => {
       axios.post.mockResolvedValue(mockFeedbackResponse);
       db.query.mockResolvedValue({
-        rows: [{
-          id: 1,
-          feedback_text: 'Great work! Your solution is well-structured.',
-          confidence_score: 0.92
-        }]
+        rows: [
+          {
+            id: 1,
+            feedback_text: 'Great work! Your solution is well-structured.',
+            confidence_score: 0.92,
+          },
+        ],
       });
 
       const result = await aiService.generateFeedback(
@@ -143,14 +180,18 @@ describe('AI Service', () => {
     it('should handle invalid JSON responses', async () => {
       axios.post.mockResolvedValue({
         data: {
-          candidates: [{
-            content: {
-              parts: [{
-                text: 'Invalid JSON'
-              }]
-            }
-          }]
-        }
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: 'Invalid JSON',
+                  },
+                ],
+              },
+            },
+          ],
+        },
       });
 
       await expect(
@@ -162,27 +203,36 @@ describe('AI Service', () => {
   describe('answerFollowUp', () => {
     it('should answer follow-up questions', async () => {
       db.query.mockResolvedValue({
-        rows: [{
-          feedback_text: 'Original feedback',
-          strengths: ['Good'],
-          improvements: ['Better'],
-          suggestions: ['Try this']
-        }]
+        rows: [
+          {
+            feedback_text: 'Original feedback',
+            strengths: ['Good'],
+            improvements: ['Better'],
+            suggestions: ['Try this'],
+          },
+        ],
       });
 
       axios.post.mockResolvedValue({
         data: {
-          candidates: [{
-            content: {
-              parts: [{
-                text: 'Here is a detailed explanation of the improvement suggestion.'
-              }]
-            }
-          }]
-        }
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: 'Here is a detailed explanation of the improvement suggestion.',
+                  },
+                ],
+              },
+            },
+          ],
+        },
       });
 
-      const result = await aiService.answerFollowUp(1, 'Can you explain the first improvement?');
+      const result = await aiService.answerFollowUp(
+        1,
+        'Can you explain the first improvement?'
+      );
 
       expect(result.success).toBe(true);
       expect(result.answer).toBeTruthy();
@@ -192,9 +242,9 @@ describe('AI Service', () => {
     it('should handle missing feedback gracefully', async () => {
       db.query.mockResolvedValue({ rows: [] });
 
-      await expect(
-        aiService.answerFollowUp(999, 'Question')
-      ).rejects.toThrow('Feedback not found');
+      await expect(aiService.answerFollowUp(999, 'Question')).rejects.toThrow(
+        'Feedback not found'
+      );
     });
   });
 
@@ -205,14 +255,14 @@ describe('AI Service', () => {
           id: 1,
           feedback_text: 'First feedback',
           confidence_score: 0.9,
-          created_at: new Date()
+          created_at: new Date(),
         },
         {
           id: 2,
           feedback_text: 'Second feedback',
           confidence_score: 0.85,
-          created_at: new Date()
-        }
+          created_at: new Date(),
+        },
       ];
 
       db.query.mockResolvedValue({ rows: mockHistory });

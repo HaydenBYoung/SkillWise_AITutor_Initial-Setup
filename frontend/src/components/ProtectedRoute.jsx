@@ -1,7 +1,7 @@
 import {} from 'react';
-import { useLocation } from 'react-router-dom'; //Took off Navigate
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import {} from './common/LoadingSpinner';
+import LoadingSpinner from './common/LoadingSpinner';
 
 const ProtectedRoute = ({ children }) => {
   const { user, isLoading } = useAuth();

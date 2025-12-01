@@ -27,7 +27,8 @@ const challengeController = {
         return res
           .status(404)
           .json({ success: false, message: 'Challenge not found' });
-      return res.status(200).json({ success: true, data: { challenge } });
+      // Return challenge directly as data, not wrapped in another object
+      return res.status(200).json({ success: true, data: challenge });
     } catch (err) {
       return next(err);
     }
@@ -50,7 +51,7 @@ const challengeController = {
       const id = req.params.id;
       const updated = await challengeService.updateChallenge(
         id,
-        req.body || {},
+        req.body || {}
       );
       if (!updated)
         return res
