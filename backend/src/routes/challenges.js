@@ -10,6 +10,9 @@ router.get('/', auth, challengeController.getChallenges);
 // GET /:id - single challenge
 router.get('/:id', auth, challengeController.getChallengeById);
 
+// POST /:id/complete - mark challenge as complete and award points
+router.post('/:id/complete', auth, challengeController.completeChallenge);
+
 // POST / - create challenge (admin only)
 router.post('/', auth, challengeController.createChallenge);
 

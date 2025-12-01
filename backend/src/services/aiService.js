@@ -1,9 +1,11 @@
 // AI Service using Google Gemini API
 const axios = require('axios');
 const db = require('../database/connection');
+const leaderboardService = require('./leaderboardService');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+const GEMINI_API_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 // Prompt templates for different AI operations
 const promptTemplates = {
@@ -39,7 +41,12 @@ Return ONLY a valid JSON array with this exact structure:
 Make the challenges practical, engaging, and appropriate for the difficulty level.
 `,
 
-  feedbackGeneration: (submissionText, challengeTitle, challengeDescription, submissionType) => `
+  feedbackGeneration: (
+    submissionText,
+    challengeTitle,
+    challengeDescription,
+    submissionType
+  ) => `
 You are an expert educational mentor providing constructive feedback. Analyze this submission:
 
 Challenge: ${challengeTitle}
@@ -70,7 +77,7 @@ ${question}
 
 Provide a clear, helpful answer that builds on your previous feedback. Be specific and actionable.
 Return only the answer text, no JSON formatting.
-`
+`,
 };
 
 const aiService = {
@@ -78,38 +85,55 @@ const aiService = {
    * Generate AI challenges based on parameters
    * Story 3.2 & 3.3 implementation
    */
-  generateChallenges: async (category, difficulty = 'medium', focusAreas = '', count = 1) => {
+  generateChallenges: async (
+    category,
+    difficulty = 'medium',
+    focusAreas = '',
+    count = 1
+  ) => {
     const startTime = Date.now();
-    const prompt = promptTemplates.challengeGeneration(category, difficulty, focusAreas, count);
+    const prompt = promptTemplates.challengeGeneration(
+      category,
+      difficulty,
+      focusAreas,
+      count
+    );
 
     try {
       const response = await axios.post(
         `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
         {
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }]
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
         },
         {
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         }
       );
 
       const processingTime = Date.now() - startTime;
       const generatedText = response.data.candidates[0].content.parts[0].text;
-      
+
       // Extract JSON from response (remove markdown code blocks if present)
       let jsonText = generatedText.trim();
       if (jsonText.startsWith('```json')) {
-        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        jsonText = jsonText
+          .replace(/```json\n?/g, '')
+          .replace(/```\n?/g, '')
+          .trim();
       } else if (jsonText.startsWith('```')) {
         jsonText = jsonText.replace(/```\n?/g, '').trim();
       }
-      
+
       const challenges = JSON.parse(jsonText);
 
       // Skip logging for challenge generation (submission_id is required for ai_feedback table)
@@ -118,11 +142,18 @@ const aiService = {
       return {
         success: true,
         challenges: Array.isArray(challenges) ? challenges : [challenges],
-        processingTime
+        processingTime,
       };
     } catch (error) {
-      console.error('AI Challenge Generation Error:', error.response?.data || error.message);
-      throw new Error(`Failed to generate challenges: ${error.response?.data?.error?.message || error.message}`);
+      console.error(
+        'AI Challenge Generation Error:',
+        error.response?.data || error.message
+      );
+      throw new Error(
+        `Failed to generate challenges: ${
+          error.response?.data?.error?.message || error.message
+        }`
+      );
     }
   },
 
@@ -130,38 +161,56 @@ const aiService = {
    * Generate AI feedback for submission
    * Story 3.5 implementation
    */
-  generateFeedback: async (submissionId, submissionText, challengeTitle, challengeDescription, submissionType = 'text') => {
+  generateFeedback: async (
+    submissionId,
+    submissionText,
+    challengeTitle,
+    challengeDescription,
+    submissionType = 'text'
+  ) => {
     const startTime = Date.now();
-    const prompt = promptTemplates.feedbackGeneration(submissionText, challengeTitle, challengeDescription, submissionType);
+    const prompt = promptTemplates.feedbackGeneration(
+      submissionText,
+      challengeTitle,
+      challengeDescription,
+      submissionType
+    );
 
     try {
       const response = await axios.post(
         `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
         {
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }]
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
         },
         {
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         }
       );
 
       const processingTime = Date.now() - startTime;
       const generatedText = response.data.candidates[0].content.parts[0].text;
-      
+
       // Extract JSON from response
       let jsonText = generatedText.trim();
       if (jsonText.startsWith('```json')) {
-        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        jsonText = jsonText
+          .replace(/```json\n?/g, '')
+          .replace(/```\n?/g, '')
+          .trim();
       } else if (jsonText.startsWith('```')) {
         jsonText = jsonText.replace(/```\n?/g, '').trim();
       }
-      
+
       const feedbackData = JSON.parse(jsonText);
 
       // Store feedback in database (Story 3.6)
@@ -180,7 +229,7 @@ const aiService = {
           feedbackData.strengths,
           feedbackData.improvements,
           'gemini-2.5-flash',
-          processingTime
+          processingTime,
         ]
       );
 
@@ -198,7 +247,7 @@ const aiService = {
 
       if (submissionData.rows.length > 0) {
         const { user_id, challenge_id } = submissionData.rows[0];
-        
+
         // Check if user has already earned points for this challenge
         const existingPointsCheck = await db.query(
           `SELECT points_earned FROM progress_events 
@@ -206,9 +255,11 @@ const aiService = {
            ORDER BY created_at DESC LIMIT 1`,
           [user_id, challenge_id]
         );
-        
-        const hasEarnedPoints = existingPointsCheck.rows.length > 0 && existingPointsCheck.rows[0].points_earned > 0;
-        
+
+        const hasEarnedPoints =
+          existingPointsCheck.rows.length > 0 &&
+          existingPointsCheck.rows[0].points_earned > 0;
+
         // Get challenge points and goal_id
         const challengeData = await db.query(
           `SELECT points_reward, goal_id FROM challenges WHERE id = $1`,
@@ -219,12 +270,24 @@ const aiService = {
           const points = challengeData.rows[0].points_reward || 0;
           const goalId = challengeData.rows[0].goal_id;
 
-          console.log(`📊 Challenge ${challenge_id}: goalId=${goalId}, points=${points}, score=${feedbackData.score}, hasEarnedPoints=${hasEarnedPoints}`);
+          console.log(
+            `📊 Challenge ${challenge_id}: goalId=${goalId}, points=${points}, score=${feedbackData.score}, hasEarnedPoints=${hasEarnedPoints}`
+          );
 
           // Only award points if score is 75 or above AND points haven't been earned yet
           if (feedbackData.score >= 75 && !hasEarnedPoints) {
             // Award full challenge points if passing
             const earnedPoints = points;
+
+            // Update user_statistics for leaderboard
+            await leaderboardService.updateUserPoints(
+              user_id,
+              earnedPoints,
+              'challenge_completed'
+            );
+            console.log(
+              `🏆 Awarded ${earnedPoints} points to user ${user_id} for challenge ${challenge_id}`
+            );
 
             // Track progress event (even if no goal_id - for general progress tracking)
             await db.query(
@@ -234,22 +297,22 @@ const aiService = {
                 user_id,
                 challenge_id,
                 JSON.stringify({ score: feedbackData.score, completed: true }),
-                earnedPoints
+                earnedPoints,
               ]
             );
 
             // Update goal progress if this challenge is linked to a goal
             if (goalId) {
               console.log(`🎯 Updating goal ${goalId} progress...`);
-              
+
               // Get goal's point requirements
               const goalData = await db.query(
                 `SELECT points_required FROM goals WHERE id = $1`,
                 [goalId]
               );
-              
+
               const pointsRequired = goalData.rows[0]?.points_required || 50;
-              
+
               // Get total points earned for this goal
               const goalProgressResult = await db.query(
                 `SELECT COALESCE(SUM(pe.points_earned), 0) as total_points
@@ -258,12 +321,17 @@ const aiService = {
                  WHERE c.goal_id = $1`,
                 [goalId]
               );
-              
+
               const totalPoints = goalProgressResult.rows[0]?.total_points || 0;
-              const progressPercentage = Math.min(Math.round((totalPoints / pointsRequired) * 100), 100);
-              
-              console.log(`🎯 Goal ${goalId}: totalPoints=${totalPoints}/${pointsRequired}, progress=${progressPercentage}%`);
-              
+              const progressPercentage = Math.min(
+                Math.round((totalPoints / pointsRequired) * 100),
+                100
+              );
+
+              console.log(
+                `🎯 Goal ${goalId}: totalPoints=${totalPoints}/${pointsRequired}, progress=${progressPercentage}%`
+              );
+
               await db.query(
                 `UPDATE goals 
                  SET progress_percentage = $1,
@@ -272,10 +340,17 @@ const aiService = {
                      completion_date = CASE WHEN $3 = true AND completion_date IS NULL THEN CURRENT_TIMESTAMP ELSE completion_date END,
                      updated_at = CURRENT_TIMESTAMP
                  WHERE id = $4`,
-                [progressPercentage, totalPoints, progressPercentage >= 100, goalId]
+                [
+                  progressPercentage,
+                  totalPoints,
+                  progressPercentage >= 100,
+                  goalId,
+                ]
               );
-              
-              console.log(`✅ Goal ${goalId} updated to ${progressPercentage}% (${totalPoints}/${pointsRequired} points)`);
+
+              console.log(
+                `✅ Goal ${goalId} updated to ${progressPercentage}% (${totalPoints}/${pointsRequired} points)`
+              );
             } else {
               console.log(`⚠️ No goal linked to challenge ${challenge_id}`);
             }
@@ -287,11 +362,17 @@ const aiService = {
               [
                 user_id,
                 challenge_id,
-                JSON.stringify({ score: feedbackData.score, completed: false, reason: 'Score below 75%' })
+                JSON.stringify({
+                  score: feedbackData.score,
+                  completed: false,
+                  reason: 'Score below 75%',
+                }),
               ]
             );
           } else if (hasEarnedPoints) {
-            console.log(`🔒 Challenge ${challenge_id} already completed with points - no new points awarded`);
+            console.log(
+              `🔒 Challenge ${challenge_id} already completed with points - no new points awarded`
+            );
           }
         }
       }
@@ -306,12 +387,19 @@ const aiService = {
           improvements: feedbackData.improvements,
           suggestions: feedbackData.suggestions,
           confidence_score: feedbackData.confidence_score,
-          processing_time_ms: processingTime
-        }
+          processing_time_ms: processingTime,
+        },
       };
     } catch (error) {
-      console.error('AI Feedback Generation Error:', error.response?.data || error.message);
-      throw new Error(`Failed to generate feedback: ${error.response?.data?.error?.message || error.message}`);
+      console.error(
+        'AI Feedback Generation Error:',
+        error.response?.data || error.message
+      );
+      throw new Error(
+        `Failed to generate feedback: ${
+          error.response?.data?.error?.message || error.message
+        }`
+      );
     }
   },
 
@@ -331,21 +419,28 @@ const aiService = {
       }
 
       const originalFeedback = JSON.stringify(feedbackResult.rows[0]);
-      const prompt = promptTemplates.followUpQuestion(originalFeedback, question);
+      const prompt = promptTemplates.followUpQuestion(
+        originalFeedback,
+        question
+      );
 
       const response = await axios.post(
         `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
         {
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }]
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
         },
         {
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         }
       );
 
@@ -353,10 +448,13 @@ const aiService = {
 
       return {
         success: true,
-        answer
+        answer,
       };
     } catch (error) {
-      console.error('Follow-up Question Error:', error.response?.data || error.message);
+      console.error(
+        'Follow-up Question Error:',
+        error.response?.data || error.message
+      );
       throw new Error(`Failed to answer follow-up: ${error.message}`);
     }
   },
@@ -377,13 +475,13 @@ const aiService = {
 
       return {
         success: true,
-        history: result.rows
+        history: result.rows,
       };
     } catch (error) {
       console.error('Get Feedback History Error:', error.message);
       throw new Error('Failed to retrieve feedback history');
     }
-  }
+  },
 };
 
 module.exports = aiService;

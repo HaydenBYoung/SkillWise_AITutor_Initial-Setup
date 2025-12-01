@@ -1,9 +1,16 @@
 // Submission business logic
 const db = require('../database/connection');
+const peerReviewService = require('./peerReviewService');
 
 const submissionService = {
   // Create a new submission
-  createSubmission: async ({ userId, challengeId, content, explanation, type = 'code' }) => {
+  createSubmission: async ({
+    userId,
+    challengeId,
+    content,
+    explanation,
+    type = 'code',
+  }) => {
     try {
       // Check if user has already earned points for this challenge (prevents resubmission if points awarded)
       const pointsCheck = await db.query(
@@ -11,11 +18,13 @@ const submissionService = {
          WHERE user_id = $1 AND related_challenge_id = $2 AND event_type = 'challenge_completed' AND points_earned > 0`,
         [userId, challengeId]
       );
-      
+
       if (parseInt(pointsCheck.rows[0].count) > 0) {
-        throw new Error('You have already earned points for this challenge and cannot resubmit.');
+        throw new Error(
+          'You have already earned points for this challenge and cannot resubmit.'
+        );
       }
-      
+
       // Get the next attempt number for this user and challenge
       const attemptQuery = `
         SELECT COALESCE(MAX(attempt_number), 0) + 1 as next_attempt
@@ -24,15 +33,28 @@ const submissionService = {
       `;
       const attemptResult = await db.query(attemptQuery, [userId, challengeId]);
       const nextAttempt = attemptResult.rows[0].next_attempt;
-      
+
       const query = `
         INSERT INTO submissions (user_id, challenge_id, submission_text, status, attempt_number)
         VALUES ($1, $2, $3, 'submitted', $4)
         RETURNING id, user_id, challenge_id, submission_text as content, status, submitted_at, score, attempt_number
       `;
-      
-      const result = await db.query(query, [userId, challengeId, content, nextAttempt]);
-      return result.rows[0];
+
+      const result = await db.query(query, [
+        userId,
+        challengeId,
+        content,
+        nextAttempt,
+      ]);
+      const submission = result.rows[0];
+
+      // Automatically assign peer reviewers (don't await - can happen async)
+      peerReviewService.assignReviewers(submission.id).catch((err) => {
+        console.error('Error auto-assigning reviewers:', err);
+        // Don't fail submission if reviewer assignment fails
+      });
+
+      return submission;
     } catch (error) {
       console.error('Error in createSubmission:', error);
       throw error;
@@ -58,7 +80,7 @@ const submissionService = {
       LEFT JOIN ai_feedback af ON af.submission_id = s.id
       WHERE s.id = $1
     `;
-    
+
     const result = await db.query(query, [submissionId]);
     return result.rows[0] || null;
   },
@@ -80,7 +102,7 @@ const submissionService = {
       WHERE s.user_id = $1
       ORDER BY s.submitted_at DESC
     `;
-    
+
     const result = await db.query(query, [userId]);
     return result.rows;
   },
@@ -101,7 +123,7 @@ const submissionService = {
       WHERE s.challenge_id = $1
       ORDER BY s.submitted_at DESC
     `;
-    
+
     const result = await db.query(query, [challengeId]);
     return result.rows;
   },
@@ -117,7 +139,7 @@ const submissionService = {
       WHERE id = $1
       RETURNING id, user_id, challenge_id, submission_text as content, status, score, submitted_at
     `;
-    
+
     const result = await db.query(query, [submissionId, status, score]);
     return result.rows[0] || null;
   },
@@ -130,7 +152,7 @@ const submissionService = {
       WHERE id = $1
       RETURNING id, status
     `;
-    
+
     const result = await db.query(query, [submissionId, status]);
     return result.rows[0] || null;
   },

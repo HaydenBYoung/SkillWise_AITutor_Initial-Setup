@@ -1,7 +1,8 @@
 const authService = require('../services/authService');
+const leaderboardService = require('../services/leaderboardService');
 
 // small helper to parse refreshToken from cookie header if cookie-parser isn't used
-function parseCookie (req, name) {
+function parseCookie(req, name) {
   const header = req.headers && req.headers.cookie;
   if (!header) return null;
   const pairs = header.split(';').map((p) => p.trim());
@@ -45,13 +46,25 @@ const authController = {
           ? '*'.repeat(Math.min(3, password.length))
           : '(no password)';
         console.log(
-          `[auth] Login attempt for email=${email} password_mask=${masked}`,
+          `[auth] Login attempt for email=${email} password_mask=${masked}`
         );
       } catch (e) {
         console.log('[auth] Login attempt (unable to log details)');
       }
 
       const result = await authService.login(email, password);
+
+      // Update streak on login (award 0 points to just update streak)
+      try {
+        await leaderboardService.updateUserPoints(
+          result.user.id,
+          0,
+          'login_streak'
+        );
+      } catch (streakErr) {
+        console.error('Error updating login streak:', streakErr);
+        // Don't fail login if streak update fails
+      }
 
       // set refresh cookie
       res.cookie(COOKIE_NAME, result.refreshToken, cookieOptions);

@@ -10,7 +10,7 @@ function ChallengeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  
+
   // Submission form state
   const [submissionType, setSubmissionType] = useState('code');
   const [content, setContent] = useState('');
@@ -29,23 +29,25 @@ function ChallengeDetailPage() {
       setLoading(true);
       const token = localStorage.getItem('access_token');
       const response = await axios.get(`/api/challenges/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setChallenge(response.data.data.challenge);
-      
+      // Backend returns challenge directly in data, not wrapped
+      const challengeData = response.data.data;
+      setChallenge(challengeData);
+
       // Check if user has earned points for this challenge
-      if (response.data.data.challenge.hasEarnedPoints) {
+      if (challengeData.hasEarnedPoints) {
         setHasEarnedPoints(true);
       }
-      
+
       // Track best score
-      if (response.data.data.challenge.submission?.score) {
-        setBestScore(response.data.data.challenge.submission.score);
+      if (challengeData.submission?.score) {
+        setBestScore(challengeData.submission.score);
       }
-      
+
       // If there's an existing submission, pre-fill the form
-      if (response.data.data.challenge.submission) {
-        const sub = response.data.data.challenge.submission;
+      if (challengeData.submission) {
+        const sub = challengeData.submission;
         setSubmissionType(sub.type || 'code');
         setContent(sub.content || '');
         setExplanation(sub.explanation || '');
@@ -64,7 +66,7 @@ function ChallengeDetailPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!content.trim()) {
       alert('Please provide your work before submitting');
       return;
@@ -73,47 +75,52 @@ function ChallengeDetailPage() {
     try {
       setSubmitting(true);
       const token = localStorage.getItem('access_token');
-      
-      const response = await axios.post('/api/submissions', {
-        challengeId: id,
-        type: submissionType,
-        content: content,
-        explanation: explanation
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+
+      const response = await axios.post(
+        '/api/submissions',
+        {
+          challengeId: id,
+          type: submissionType,
+          content: content,
+          explanation: explanation,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
       // Set the feedback and show modal immediately
       if (response.data.data.feedback) {
         const newScore = response.data.data.feedback.score;
         const previousBest = bestScore;
-        
+
         // Keep the higher score
         if (newScore > previousBest) {
           setBestScore(newScore);
         }
-        
+
         setFeedback({
           ...response.data.data.feedback,
           isResubmission: previousBest > 0,
           previousScore: previousBest,
-          improvedScore: newScore > previousBest
+          improvedScore: newScore > previousBest,
         });
         setShowFeedbackModal(true);
-        
+
         // Check if points were earned
         if (newScore >= 75 && !hasEarnedPoints) {
           setHasEarnedPoints(true);
         }
       }
-      
+
       // Refresh challenge to get updated submission
       await fetchChallenge();
-      
     } catch (err) {
       console.error('Error submitting:', err);
       if (err.response?.data?.message?.includes('already earned points')) {
-        alert('You have already earned points for this challenge and cannot resubmit.');
+        alert(
+          'You have already earned points for this challenge and cannot resubmit.'
+        );
       } else {
         alert('Failed to submit. Please try again.');
       }
@@ -126,7 +133,7 @@ function ChallengeDetailPage() {
     const colors = {
       beginner: '#4caf50',
       intermediate: '#ff9800',
-      advanced: '#f44336'
+      advanced: '#f44336',
     };
     return colors[difficulty] || '#999';
   };
@@ -148,7 +155,9 @@ function ChallengeDetailPage() {
         <div className="error-state">
           <h2>Error</h2>
           <p>{error}</p>
-          <button onClick={() => navigate('/challenges')}>Back to Challenges</button>
+          <button onClick={() => navigate('/challenges')}>
+            Back to Challenges
+          </button>
         </div>
       </div>
     );
@@ -159,7 +168,9 @@ function ChallengeDetailPage() {
       <div className="challenge-detail-page">
         <div className="error-state">
           <h2>Challenge Not Found</h2>
-          <button onClick={() => navigate('/challenges')}>Back to Challenges</button>
+          <button onClick={() => navigate('/challenges')}>
+            Back to Challenges
+          </button>
         </div>
       </div>
     );
@@ -173,9 +184,11 @@ function ChallengeDetailPage() {
         </button>
         <h1>{challenge.title}</h1>
         <div className="challenge-meta">
-          <span 
+          <span
             className="difficulty-badge"
-            style={{ backgroundColor: getDifficultyColor(challenge.difficulty) }}
+            style={{
+              backgroundColor: getDifficultyColor(challenge.difficulty),
+            }}
           >
             {challenge.difficulty}
           </span>
@@ -200,16 +213,17 @@ function ChallengeDetailPage() {
             </section>
           )}
 
-          {challenge.learning_objectives && challenge.learning_objectives.length > 0 && (
-            <section className="objectives-section">
-              <h2>Learning Objectives</h2>
-              <ul>
-                {challenge.learning_objectives.map((obj, index) => (
-                  <li key={index}>{obj}</li>
-                ))}
-              </ul>
-            </section>
-          )}
+          {challenge.learning_objectives &&
+            challenge.learning_objectives.length > 0 && (
+              <section className="objectives-section">
+                <h2>Learning Objectives</h2>
+                <ul>
+                  {challenge.learning_objectives.map((obj, index) => (
+                    <li key={index}>{obj}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
           {challenge.requirements && challenge.requirements.length > 0 && (
             <section className="requirements-section">
@@ -227,7 +241,9 @@ function ChallengeDetailPage() {
               <h3>Tags</h3>
               <div className="tags">
                 {challenge.tags.map((tag, index) => (
-                  <span key={index} className="tag">{tag}</span>
+                  <span key={index} className="tag">
+                    {tag}
+                  </span>
                 ))}
               </div>
             </section>
@@ -236,7 +252,7 @@ function ChallengeDetailPage() {
 
         <div className="submission-panel">
           <h2>Your Work</h2>
-          
+
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="submission-type">Submission Type</label>
@@ -244,7 +260,7 @@ function ChallengeDetailPage() {
                 id="submission-type"
                 value={submissionType}
                 onChange={(e) => setSubmissionType(e.target.value)}
-                disabled={challenge.status === 'completed'}
+                disabled={hasEarnedPoints}
               >
                 <option value="code">Code</option>
                 <option value="text">Text</option>
@@ -259,15 +275,15 @@ function ChallengeDetailPage() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={
-                  submissionType === 'code' 
-                    ? '// Enter your code here...' 
+                  submissionType === 'code'
+                    ? '// Enter your code here...'
                     : submissionType === 'url'
                     ? 'https://github.com/yourusername/project'
                     : 'Describe your solution...'
                 }
                 rows={15}
                 required
-                disabled={challenge.status === 'completed'}
+                disabled={hasEarnedPoints}
               />
             </div>
 
@@ -283,23 +299,43 @@ function ChallengeDetailPage() {
               />
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="submit-button"
               disabled={submitting || hasEarnedPoints}
             >
-              {submitting ? 'Submitting...' : hasEarnedPoints ? '🔒 Points Already Earned' : bestScore > 0 ? 'Resubmit for Better Score' : 'Submit Work'}
+              {submitting
+                ? 'Submitting...'
+                : hasEarnedPoints
+                ? '🔒 Points Already Earned'
+                : bestScore > 0
+                ? 'Resubmit for Better Score'
+                : 'Submit Work'}
             </button>
-            
+
             {hasEarnedPoints && (
-              <p style={{ color: '#4caf50', marginTop: '10px', fontWeight: '500' }}>
-                ✅ You've earned points for this challenge! Score: {bestScore}/100
+              <p
+                style={{
+                  color: '#4caf50',
+                  marginTop: '10px',
+                  fontWeight: '500',
+                }}
+              >
+                ✅ You've earned points for this challenge! Score: {bestScore}
+                /100
               </p>
             )}
-            
+
             {bestScore > 0 && !hasEarnedPoints && (
-              <p style={{ color: '#ff9800', marginTop: '10px', fontWeight: '500' }}>
-                📊 Current best score: {bestScore}/100 - You can resubmit to try for a better grade!
+              <p
+                style={{
+                  color: '#ff9800',
+                  marginTop: '10px',
+                  fontWeight: '500',
+                }}
+              >
+                📊 Current best score: {bestScore}/100 - You can resubmit to try
+                for a better grade!
               </p>
             )}
           </form>
@@ -307,7 +343,7 @@ function ChallengeDetailPage() {
           {feedback && (
             <div className="ai-feedback-section">
               <h3>🤖 AI Feedback</h3>
-              
+
               {feedback.overall && (
                 <div className="feedback-overall">
                   <p>{feedback.overall}</p>
@@ -359,33 +395,58 @@ function ChallengeDetailPage() {
 
       {/* AI Feedback Modal */}
       {showFeedbackModal && feedback && (
-        <div className="feedback-modal-overlay" onClick={() => setShowFeedbackModal(false)}>
+        <div
+          className="feedback-modal-overlay"
+          onClick={() => setShowFeedbackModal(false)}
+        >
           <div className="feedback-modal" onClick={(e) => e.stopPropagation()}>
             <div className="feedback-modal-header">
               <h2>🤖 AI Feedback Results</h2>
-              <button className="modal-close" onClick={() => setShowFeedbackModal(false)}>×</button>
+              <button
+                className="modal-close"
+                onClick={() => setShowFeedbackModal(false)}
+              >
+                ×
+              </button>
             </div>
-            
+
             <div className="feedback-modal-body">
               {feedback.score !== undefined && (
                 <div className="feedback-score-display">
                   <h3>Your Score</h3>
-                  <div className={`score-circle ${feedback.score >= 75 ? 'passing' : 'needs-work'}`}>
+                  <div
+                    className={`score-circle ${
+                      feedback.score >= 75 ? 'passing' : 'needs-work'
+                    }`}
+                  >
                     <span className="score-number">{feedback.score}</span>
                     <span className="score-total">/100</span>
                   </div>
-                  
+
                   {feedback.isResubmission && (
-                    <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+                    <div
+                      style={{
+                        marginBottom: '15px',
+                        padding: '10px',
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '6px',
+                      }}
+                    >
                       <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
                         Previous Score: {feedback.previousScore}/100
                         {feedback.improvedScore ? (
-                          <span style={{ color: '#4caf50', marginLeft: '10px' }}>
-                            ⬆️ Improved by {feedback.score - feedback.previousScore} points!
+                          <span
+                            style={{ color: '#4caf50', marginLeft: '10px' }}
+                          >
+                            ⬆️ Improved by{' '}
+                            {feedback.score - feedback.previousScore} points!
                           </span>
                         ) : feedback.score < feedback.previousScore ? (
-                          <span style={{ color: '#ff9800', marginLeft: '10px' }}>
-                            ⬇️ Lower than previous - keeping your best score of {feedback.previousScore}
+                          <span
+                            style={{ color: '#ff9800', marginLeft: '10px' }}
+                          >
+                            ⬇️ Lower than previous - keeping your best score of{' '}
+                            {feedback.previousScore}
                           </span>
                         ) : (
                           <span style={{ color: '#999', marginLeft: '10px' }}>
@@ -395,15 +456,23 @@ function ChallengeDetailPage() {
                       </p>
                     </div>
                   )}
-                  
+
                   {feedback.score >= 75 ? (
                     hasEarnedPoints ? (
-                      <p className="score-message">Points already earned on a previous submission!</p>
+                      <p className="score-message">
+                        Points already earned on a previous submission!
+                      </p>
                     ) : (
-                      <p className="score-message success">🎉 Great job! You've passed this challenge and earned points!</p>
+                      <p className="score-message success">
+                        🎉 Great job! You've passed this challenge and earned
+                        points!
+                      </p>
                     )
                   ) : (
-                    <p className="score-message">Keep working on it! You need 75+ to earn points. {!hasEarnedPoints && 'You can resubmit to try again!'}</p>
+                    <p className="score-message">
+                      Keep working on it! You need 75+ to earn points.{' '}
+                      {!hasEarnedPoints && 'You can resubmit to try again!'}
+                    </p>
                   )}
                 </div>
               )}
@@ -450,7 +519,10 @@ function ChallengeDetailPage() {
             </div>
 
             <div className="feedback-modal-footer">
-              <button className="btn-primary" onClick={() => setShowFeedbackModal(false)}>
+              <button
+                className="btn-primary"
+                onClick={() => setShowFeedbackModal(false)}
+              >
                 Close
               </button>
             </div>
