@@ -32,6 +32,17 @@ const achievementController = {
       next(new AppError('Failed to fetch user achievements', 500, 'FETCH_ERROR'));
     }
   },
+
+  async getRecentAchievements (req, res, next) {
+    try {
+      const limit = parseInt(req.query.limit || '10', 10);
+      const days = parseInt(req.query.days || '7', 10);
+      const achievements = await achievementService.getRecentAchievements(limit, days);
+      res.json({ achievements });
+    } catch (err) {
+      next(new AppError('Failed to fetch recent achievements', 500, 'FETCH_ERROR'));
+    }
+  },
 };
 
 module.exports = achievementController;

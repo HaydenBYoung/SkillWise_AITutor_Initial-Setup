@@ -17,6 +17,7 @@ const LeaderboardPage = () => {
   const [category, setCategory] = useState('overall');
   const [showTrophies, setShowTrophies] = useState(false);
   const [userRank, setUserRank] = useState(null);
+  const [recentAchievements, setRecentAchievements] = useState([]);
   const { user: authUser } = useAuth();
 
   useEffect(() => {
@@ -79,7 +80,19 @@ const LeaderboardPage = () => {
       }
     };
 
+    const fetchRecentAchievements = async () => {
+      try {
+        const response = await apiService.achievements.getRecent({ limit: 6, days: 7 });
+        const achievements = response?.achievements || [];
+        setRecentAchievements(achievements);
+      } catch (err) {
+        console.error('Failed to fetch recent achievements:', err);
+        setRecentAchievements([]);
+      }
+    };
+
     fetchLeaderboardData();
+    fetchRecentAchievements();
   }, [timeframe, category, authUser]);
 
   const getRankIcon = (rank) => {
@@ -263,26 +276,25 @@ const LeaderboardPage = () => {
             <div className="achievements-section">
               <h2>Top Achievements This Week</h2>
               <div className="achievements-grid">
-                <div className="achievement-card">
-                  <div className="achievement-icon">🚀</div>
-                  <h4>Challenge Master</h4>
-                  <p>Completed 5 challenges in one day</p>
-                  <small>Earned by Alex Johnson</small>
-                </div>
-
-                <div className="achievement-card">
-                  <div className="achievement-icon">🔥</div>
-                  <h4>Streak Legend</h4>
-                  <p>30-day learning streak</p>
-                  <small>Earned by Sarah Kim</small>
-                </div>
-
-                <div className="achievement-card">
-                  <div className="achievement-icon">🎯</div>
-                  <h4>Goal Crusher</h4>
-                  <p>Completed 3 learning goals</p>
-                  <small>Earned by Mike Chen</small>
-                </div>
+                {recentAchievements.length > 0 ? (
+                  recentAchievements.slice(0, 6).map((achievement, index) => (
+                    <div key={achievement.id || index} className="achievement-card">
+                      <div className="achievement-icon">
+                        {achievement.key?.includes('streak') ? '🔥' :
+                         achievement.key?.includes('challenge') ? '🚀' :
+                         achievement.key?.includes('goal') ? '🎯' : '🏆'}
+                      </div>
+                      <h4>{achievement.title}</h4>
+                      <p>{achievement.description}</p>
+                      <small>Earned by {achievement.earned_by}</small>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <p>No achievements earned this week yet.</p>
+                    <p>Be the first to unlock an achievement!</p>
+                  </div>
+                )}
               </div>
             </div>
           </>

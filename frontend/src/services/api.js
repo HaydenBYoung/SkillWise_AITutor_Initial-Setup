@@ -303,6 +303,13 @@ export const apiService = {
     suggest: async (payload) => (await api.post('/ai/suggestions', payload)).data,
     publishSuggestion: async (suggestion) => (await api.post('/ai/suggestions/publish', { suggestion })).data,
   },
+
+  // Achievements methods
+  achievements: {
+    getAll: async () => (await api.get('/achievements')).data,
+    getRecent: async (params) => (await api.get('/achievements/recent', { params })).data,
+    getUserAchievements: async () => (await api.get('/achievements/user/progress')).data,
+  },
 };
 
 // Export utilities for external use

@@ -6,6 +6,9 @@ const auth = require('../middleware/auth');
 // Protected GET /api/achievements - List all achievements
 router.get('/', auth, achievementController.getAllAchievements);
 
+// Protected GET /api/achievements/recent - Get recent achievements from all users
+router.get('/recent', auth, achievementController.getRecentAchievements);
+
 // Protected GET /api/achievements/:id - Get specific achievement
 router.get('/:id', auth, achievementController.getAchievementById);
 

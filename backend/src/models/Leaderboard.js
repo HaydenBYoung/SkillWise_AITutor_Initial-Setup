@@ -6,7 +6,7 @@ class Leaderboard {
       const query = `
         SELECT 
           u.id,
-          u.username,
+          u.email,
           u.first_name,
           u.last_name,
           COALESCE(SUM(pe.points_earned), 0) as total_points,
@@ -15,8 +15,8 @@ class Leaderboard {
           u.created_at as join_date
         FROM users u
         LEFT JOIN progress_events pe ON u.id = pe.user_id
-        WHERE u.active = true
-        GROUP BY u.id, u.username, u.first_name, u.last_name, u.created_at
+        WHERE u.is_active = true
+        GROUP BY u.id, u.email, u.first_name, u.last_name, u.created_at
         ORDER BY total_points DESC, challenges_completed DESC, average_score DESC
         LIMIT $1
       `;
@@ -32,16 +32,16 @@ class Leaderboard {
       const query = `
         SELECT 
           u.id,
-          u.username,
+          u.email,
           u.first_name,
           u.last_name,
           COALESCE(SUM(pe.points_earned), 0) as weekly_points,
           COUNT(CASE WHEN pe.event_type = 'challenge_completed' THEN 1 END) as weekly_completions
         FROM users u
         LEFT JOIN progress_events pe ON u.id = pe.user_id
-        WHERE u.active = true 
+        WHERE u.is_active = true 
         AND pe.timestamp_occurred >= DATE_TRUNC('week', CURRENT_DATE)
-        GROUP BY u.id, u.username, u.first_name, u.last_name
+        GROUP BY u.id, u.email, u.first_name, u.last_name
         ORDER BY weekly_points DESC, weekly_completions DESC
         LIMIT $1
       `;
@@ -57,16 +57,16 @@ class Leaderboard {
       const query = `
         SELECT 
           u.id,
-          u.username,
+          u.email,
           u.first_name,
           u.last_name,
           COALESCE(SUM(pe.points_earned), 0) as monthly_points,
           COUNT(CASE WHEN pe.event_type = 'challenge_completed' THEN 1 END) as monthly_completions
         FROM users u
         LEFT JOIN progress_events pe ON u.id = pe.user_id
-        WHERE u.active = true 
+        WHERE u.is_active = true 
         AND pe.timestamp_occurred >= DATE_TRUNC('month', CURRENT_DATE)
-        GROUP BY u.id, u.username, u.first_name, u.last_name
+        GROUP BY u.id, u.email, u.first_name, u.last_name
         ORDER BY monthly_points DESC, monthly_completions DESC
         LIMIT $1
       `;
@@ -87,7 +87,7 @@ class Leaderboard {
             RANK() OVER (ORDER BY COALESCE(SUM(pe.points_earned), 0) DESC) as rank
           FROM users u
           LEFT JOIN progress_events pe ON u.id = pe.user_id
-          WHERE u.active = true
+          WHERE u.is_active = true
           GROUP BY u.id
         )
         SELECT rank, total_points
@@ -106,7 +106,7 @@ class Leaderboard {
       const query = `
         SELECT 
           u.id,
-          u.username,
+          u.email,
           u.first_name,
           u.last_name,
           COALESCE(SUM(pe.points_earned), 0) as subject_points,
@@ -114,9 +114,9 @@ class Leaderboard {
         FROM users u
         LEFT JOIN progress_events pe ON u.id = pe.user_id
         LEFT JOIN challenges c ON pe.related_challenge_id = c.id
-        WHERE u.active = true 
+        WHERE u.is_active = true 
         AND c.subject = $1
-        GROUP BY u.id, u.username, u.first_name, u.last_name
+        GROUP BY u.id, u.email, u.first_name, u.last_name
         ORDER BY subject_points DESC, subject_completions DESC
         LIMIT $2
       `;

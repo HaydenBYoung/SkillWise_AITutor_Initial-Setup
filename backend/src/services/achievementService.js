@@ -99,6 +99,42 @@ const achievementService = {
     }
     return { alreadyAwarded: false, achievement, awardedAt: awarded[0].achieved_at };
   },
+
+  async getRecentAchievements (limit = 10, days = 7) {
+    try {
+      const { rows } = await db.query(`
+        SELECT 
+          a.id,
+          a.key,
+          a.title,
+          a.description,
+          a.points,
+          ua.achieved_at,
+          u.first_name,
+          u.last_name,
+          u.email
+        FROM user_achievements ua
+        JOIN achievements a ON ua.achievement_id = a.id
+        JOIN users u ON ua.user_id = u.id
+        WHERE ua.achieved_at >= NOW() - INTERVAL '${days} days'
+        ORDER BY ua.achieved_at DESC
+        LIMIT $1
+      `, [limit]);
+      return rows.map(row => ({
+        id: row.id,
+        key: row.key,
+        title: row.title,
+        description: row.description,
+        points: row.points,
+        achieved_at: row.achieved_at,
+        earned_by: `${row.first_name} ${row.last_name}`.trim() || row.email,
+      }));
+    } catch (err) {
+      console.error('Error fetching recent achievements:', err);
+      // Return empty array on error
+      return [];
+    }
+  },
 };
 
 module.exports = achievementService;
