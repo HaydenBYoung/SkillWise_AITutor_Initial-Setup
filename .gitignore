@@ -198,3 +198,4 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+frontend/cypress/screenshots/

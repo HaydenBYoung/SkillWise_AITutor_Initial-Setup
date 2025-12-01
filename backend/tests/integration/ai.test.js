@@ -3,16 +3,28 @@ const request = require('supertest');
 const jwt = require('../../src/utils/jwt');
 
 // Create mocks for controller functions before app is required
+const mockGenerateChallenge = jest.fn();
+const mockSubmitForFeedback = jest.fn();
 const mockGenerateFeedback = jest.fn();
 const mockGetHints = jest.fn();
 const mockSuggestChallenges = jest.fn();
 const mockAnalyzeProgress = jest.fn();
+const mockGetFeedbackHistory = jest.fn();
+const mockAskFollowUp = jest.fn();
+const mockSaveGeneratedChallenge = jest.fn();
 
 jest.mock('../../src/controllers/aiController', () => ({
+  generateChallenge: (req, res, next) => mockGenerateChallenge(req, res, next),
+  submitForFeedback: (req, res, next) => mockSubmitForFeedback(req, res, next),
   generateFeedback: (req, res, next) => mockGenerateFeedback(req, res, next),
   getHints: (req, res, next) => mockGetHints(req, res, next),
   suggestChallenges: (req, res, next) => mockSuggestChallenges(req, res, next),
   analyzeProgress: (req, res, next) => mockAnalyzeProgress(req, res, next),
+  getFeedbackHistory: (req, res, next) =>
+    mockGetFeedbackHistory(req, res, next),
+  askFollowUp: (req, res, next) => mockAskFollowUp(req, res, next),
+  saveGeneratedChallenge: (req, res, next) =>
+    mockSaveGeneratedChallenge(req, res, next),
 }));
 
 const app = require('../../src/app');
@@ -33,12 +45,10 @@ describe('AI Integration Tests', () => {
   describe('POST /api/ai/feedback', () => {
     test('should generate AI feedback for submission', async () => {
       mockGenerateFeedback.mockImplementation((req, res) => {
-        return res
-          .status(200)
-          .json({
-            success: true,
-            data: { feedback: 'Good attempt. Consider edge cases.' },
-          });
+        return res.status(200).json({
+          success: true,
+          data: { feedback: 'Good attempt. Consider edge cases.' },
+        });
       });
 
       const res = await request(app)
@@ -73,12 +83,10 @@ describe('AI Integration Tests', () => {
   describe('GET /api/ai/hints/:challengeId', () => {
     test('should provide AI-generated hints', async () => {
       mockGetHints.mockImplementation((req, res) => {
-        return res
-          .status(200)
-          .json({
-            success: true,
-            data: { hints: ['Try breaking the problem down'] },
-          });
+        return res.status(200).json({
+          success: true,
+          data: { hints: ['Try breaking the problem down'] },
+        });
       });
 
       const res = await request(app)
@@ -110,12 +118,10 @@ describe('AI Integration Tests', () => {
 
   test('GET /api/ai/analysis returns user learning analysis', async () => {
     mockAnalyzeProgress.mockImplementation((req, res) => {
-      return res
-        .status(200)
-        .json({
-          success: true,
-          data: { strength: 'loops', weakness: 'recursion' },
-        });
+      return res.status(200).json({
+        success: true,
+        data: { strength: 'loops', weakness: 'recursion' },
+      });
     });
 
     const res = await request(app)

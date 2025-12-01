@@ -25,6 +25,7 @@ class Goal {
   static async create (goalData) {
     try {
       // Accept both legacy (target_date) and canonical (target_completion_date)
+      // Accept both 'type' and 'category' (map type -> category for DB)
       const {
         title,
         description,
@@ -32,11 +33,19 @@ class Goal {
         target_date,
         target_completion_date,
         type,
+        category,
+        difficulty_level,
       } = goalData;
       const targetDate = target_completion_date || target_date;
+      const categoryValue = category || type; // Use category if provided, else type
+      const difficultyLevel = difficulty_level || 'medium';
+      
+      // Set point requirements based on difficulty
+      const pointsRequired = difficultyLevel === 'easy' ? 20 : difficultyLevel === 'hard' ? 80 : 50;
+      
       const query = `
-        INSERT INTO goals (title, description, user_id, target_completion_date, type, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        INSERT INTO goals (title, description, user_id, target_completion_date, category, difficulty_level, points_required, points_earned, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 0, NOW(), NOW())
         RETURNING *
       `;
       const result = await db.query(query, [
@@ -44,7 +53,9 @@ class Goal {
         description,
         user_id,
         targetDate,
-        type,
+        categoryValue,
+        difficultyLevel,
+        pointsRequired,
       ]);
       return result.rows[0];
     } catch (error) {

@@ -1,19 +1,22 @@
-// TODO: Implement leaderboard routes
 const express = require('express');
 const router = express.Router();
 const leaderboardController = require('../controllers/leaderboardController');
 const auth = require('../middleware/auth');
 
-// TODO: Add GET / route for global leaderboard
+// Get global leaderboard with optional filtering
+// GET /api/leaderboard?timeframe=weekly&limit=50&offset=0
 router.get('/', auth, leaderboardController.getLeaderboard);
 
-// TODO: Add GET /ranking route for user ranking
-router.get('/ranking', auth, leaderboardController.getUserRanking);
+// Get current user's ranking and stats
+// GET /api/leaderboard/me?timeframe=all-time
+router.get('/me', auth, leaderboardController.getUserRanking);
 
-// TODO: Add GET /points route for points breakdown
-router.get('/points', auth, leaderboardController.getPointsBreakdown);
+// Get surrounding players (players ranked around current user)
+// GET /api/leaderboard/surrounding?timeframe=all-time&range=5
+router.get('/surrounding', auth, leaderboardController.getSurroundingPlayers);
 
-// TODO: Add GET /achievements route for achievements
-router.get('/achievements', auth, leaderboardController.getAchievements);
+// Recalculate rankings (can be called by cron job or admin)
+// POST /api/leaderboard/recalculate
+router.post('/recalculate', auth, leaderboardController.recalculateRankings);
 
 module.exports = router;

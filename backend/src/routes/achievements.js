@@ -12,4 +12,13 @@ router.get('/:id', auth, achievementController.getAchievementById);
 // Protected GET /api/achievements/user/progress - Get authenticated user's achievements
 router.get('/user/progress', auth, achievementController.getUserAchievements);
 
+// Development-only route for testing achievement triggers
+if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+  router.post(
+    '/dev/trigger/:id',
+    auth,
+    achievementController.triggerAchievement
+  );
+}
+
 module.exports = router;

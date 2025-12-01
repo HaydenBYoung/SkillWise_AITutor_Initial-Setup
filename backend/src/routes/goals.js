@@ -10,6 +10,9 @@ router.get('/', auth, goalController.getGoals);
 // GET /:id - single goal
 router.get('/:id', auth, goalController.getGoalById);
 
+// POST /:id/complete - mark goal as complete and award points
+router.post('/:id/complete', auth, goalController.completeGoal);
+
 // POST / - create goal
 router.post('/', auth, goalController.createGoal);
 

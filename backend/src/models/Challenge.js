@@ -1,7 +1,7 @@
 const db = require('../database/connection');
 
 class Challenge {
-  static async findAll () {
+  static async findAll() {
     try {
       const query = 'SELECT * FROM challenges ORDER BY created_at DESC';
       const result = await db.query(query);
@@ -11,17 +11,19 @@ class Challenge {
     }
   }
 
-  static async findById (id) {
+  static async findById(id) {
     try {
+      // Convert id to integer if it's a numeric string
+      const challengeId = isNaN(id) ? id : parseInt(id);
       const query = 'SELECT * FROM challenges WHERE id = $1';
-      const result = await db.query(query, [id]);
+      const result = await db.query(query, [challengeId]);
       return result.rows[0];
     } catch (err) {
       throw new Error(`Error fetching challenge: ${err.message}`);
     }
   }
 
-  static async findByDifficulty (level) {
+  static async findByDifficulty(level) {
     try {
       const query =
         'SELECT * FROM challenges WHERE LOWER(difficulty_level) = LOWER($1) ORDER BY created_at DESC';
@@ -29,12 +31,12 @@ class Challenge {
       return result.rows;
     } catch (err) {
       throw new Error(
-        `Error fetching challenges by difficulty: ${err.message}`,
+        `Error fetching challenges by difficulty: ${err.message}`
       );
     }
   }
 
-  static async findBySubject (subject) {
+  static async findBySubject(subject) {
     try {
       const query =
         'SELECT * FROM challenges WHERE LOWER(category) = LOWER($1) ORDER BY created_at DESC';
@@ -45,7 +47,7 @@ class Challenge {
     }
   }
 
-  static async findByGoalId (goalId) {
+  static async findByGoalId(goalId) {
     try {
       const query =
         'SELECT * FROM challenges WHERE goal_id = $1 ORDER BY created_at DESC';
@@ -53,12 +55,12 @@ class Challenge {
       return result.rows;
     } catch (err) {
       throw new Error(
-        `Error fetching challenges for goal ${goalId}: ${err.message}`,
+        `Error fetching challenges for goal ${goalId}: ${err.message}`
       );
     }
   }
 
-  static async create (data) {
+  static async create(data) {
     try {
       const {
         title,
@@ -111,7 +113,7 @@ class Challenge {
     }
   }
 
-  static async update (id, updateData) {
+  static async update(id, updateData) {
     try {
       const {
         title,
@@ -176,8 +178,26 @@ class Challenge {
     }
   }
 
-  static async delete (id) {
+  static async delete(id) {
     try {
+      // Delete in order: ai_feedback -> submissions -> progress_events -> challenges
+      // First delete AI feedback for submissions of this challenge
+      await db.query(
+        `DELETE FROM ai_feedback 
+         WHERE submission_id IN (SELECT id FROM submissions WHERE challenge_id = $1)`,
+        [id]
+      );
+
+      // Delete submissions for this challenge
+      await db.query('DELETE FROM submissions WHERE challenge_id = $1', [id]);
+
+      // Delete progress events for this challenge
+      await db.query(
+        'DELETE FROM progress_events WHERE related_challenge_id = $1',
+        [id]
+      );
+
+      // Finally delete the challenge
       const query = 'DELETE FROM challenges WHERE id = $1 RETURNING *';
       const result = await db.query(query, [id]);
       return result.rows[0];

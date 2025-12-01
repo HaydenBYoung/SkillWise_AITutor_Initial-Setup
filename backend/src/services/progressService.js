@@ -10,15 +10,31 @@ const progressService = {
     const rows = await Progress.findByUserId(userId);
     const stats = await Progress.getUserStats(userId);
 
-    // Recent activity: map last 10 events
-    const recentActivity = (rows || []).slice(0, 10).map((r) => ({
-      id: r.id,
-      type: r.completed ? 'challenge_completed' : 'challenge_attempt',
-      title: r.challenge_id ? `Challenge ${r.challenge_id}` : 'Activity',
-      points: r.points_earned || 0,
-      progress: r.completed ? 100 : 0,
-      timestamp: r.created_at || r.updated_at || new Date().toISOString(),
-    }));
+    // Get database connection for challenge titles
+    const db = require('../database/connection');
+    
+    // Recent activity: map last 10 events with actual challenge titles
+    const recentActivity = await Promise.all(
+      (rows || []).slice(0, 10).map(async (r) => {
+        let title = 'Activity';
+        if (r.challenge_id) {
+          const challengeResult = await db.query(
+            'SELECT title FROM challenges WHERE id = $1',
+            [r.challenge_id]
+          );
+          title = challengeResult.rows[0]?.title || `Challenge ${r.challenge_id}`;
+        }
+        
+        return {
+          id: r.id,
+          type: r.completed ? 'challenge_completed' : 'challenge_attempt',
+          title,
+          points: r.points_earned || 0,
+          progress: r.completed ? 100 : 0,
+          timestamp: r.created_at || r.updated_at || new Date().toISOString(),
+        };
+      })
+    );
 
     // Weekly progress: simple last-7-days points bucket (best-effort)
     const today = new Date();
@@ -41,13 +57,20 @@ const progressService = {
     // Skill breakdown: not available from Progress table, return empty placeholder
     const skillBreakdown = [];
 
+    // Get completed goals count (only count goals that are marked as completed)
+    const completedGoalsResult = await db.query(
+      'SELECT COUNT(*) as count FROM goals WHERE user_id = $1 AND is_completed = true',
+      [userId]
+    );
+    const completedGoalsCount = parseInt(completedGoalsResult.rows[0]?.count) || 0;
+
     const overall = {
       totalPoints: Number(stats.total_points) || 0,
       level: Math.floor((Number(stats.total_points) || 0) / 100) + 1,
       experiencePoints: Number(stats.total_points) || 0,
       nextLevelXP:
         (Math.floor((Number(stats.total_points) || 0) / 100) + 1) * 100,
-      completedGoals: 0,
+      completedGoals: completedGoalsCount,
       completedChallenges: Number(stats.completed_challenges) || 0,
       currentStreak: 0,
       longestStreak: 0,

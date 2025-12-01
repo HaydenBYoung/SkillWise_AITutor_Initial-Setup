@@ -6,7 +6,9 @@
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@hookform/resolvers": "^3.3.2",
+    "@sentry/react": "^7.81.1",
     "axios": "^1.6.2",
+    "lucide-react": "^0.555.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
@@ -24,7 +26,8 @@
     "lint": "eslint src --ext .js,.jsx",
     "lint:fix": "eslint src --ext .js,.jsx --fix",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run",
+    "cypress:headless": "xvfb-run --auto-servernum --server-args='-screen 0 1280x720x24' cypress run"
   },
   "devDependencies": {
     "@axe-core/react": "^4.8.2",
@@ -57,5 +60,5 @@
   ],
   "author": "SkillWise Team",
   "license": "MIT",
-  "proxy": "http://localhost:3001"
+  "proxy": "http://backend:3001"
 }

@@ -15,6 +15,7 @@ const GoalForm = ({ defaultValues, onSubmitSuccess, onCancel }) => {
       description: '',
       target_date: '',
       type: '',
+      difficulty_level: 'medium',
     },
   });
 
@@ -65,6 +66,13 @@ const GoalForm = ({ defaultValues, onSubmitSuccess, onCancel }) => {
           <option value="personal">Personal</option>
           <option value="career">Career</option>
           <option value="education">Education</option>
+        </select>
+
+        <label>Difficulty Level</label>
+        <select id="difficulty_level" {...register('difficulty_level')}>
+          <option value="easy">Easy (20 points to complete)</option>
+          <option value="medium">Medium (50 points to complete)</option>
+          <option value="hard">Hard (80 points to complete)</option>
         </select>
 
         <div className="form-actions">

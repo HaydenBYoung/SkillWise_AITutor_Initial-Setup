@@ -70,9 +70,9 @@ describe('Challenges linked to Goals (integration)', () => {
     expect(ch.body.success).toBe(true);
     expect(ch.body.data).toHaveProperty('id');
     // API should return goal linkage in challenge record
-    expect(Number(ch.body.data.goal_id || ch.body.data.goalId)).toBe(
-      Number(goalId),
-    );
+    const challengeGoalId = ch.body.data.goal_id || ch.body.data.goalId;
+    expect(challengeGoalId).toBeDefined();
+    expect(Number(challengeGoalId)).toBe(Number(goalId));
 
     // fetch challenge by id and verify goal link remains
     const fetch = await request(app)
@@ -81,9 +81,9 @@ describe('Challenges linked to Goals (integration)', () => {
       .expect(200);
 
     expect(fetch.body.success).toBe(true);
-    expect(Number(fetch.body.data.goal_id || fetch.body.data.goalId)).toBe(
-      Number(goalId),
-    );
+    const fetchedGoalId = fetch.body.data.goal_id || fetch.body.data.goalId;
+    expect(fetchedGoalId).toBeDefined();
+    expect(Number(fetchedGoalId)).toBe(Number(goalId));
   });
 });
 

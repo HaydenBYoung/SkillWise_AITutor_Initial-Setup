@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AI Prompt Templates Snapshot should match challenge generation prompt snapshot 1`] = `
+"
+You are an expert educational content creator. Generate 1 high-quality learning challenge(s) for the following:
+
+Category: JavaScript
+Difficulty Level: medium
+Focus Areas: async/await, promises
+
+For each challenge, provide:
+1. A clear, engaging title
+2. A detailed description explaining what the learner will accomplish
+3. Step-by-step instructions
+4. Learning objectives (as an array)
+5. Estimated time in minutes
+6. Points reward (based on difficulty: easy=5, medium=10, hard=15)
+7. Relevant tags (as an array)
+
+Return ONLY a valid JSON array with this exact structure:
+[{
+  "title": "string",
+  "description": "string",
+  "instructions": "string",
+  "category": "JavaScript",
+  "difficulty_level": "medium",
+  "estimated_time_minutes": number,
+  "points_reward": number,
+  "learning_objectives": ["string"],
+  "tags": ["string"]
+}]
+
+Make the challenges practical, engaging, and appropriate for the difficulty level.
+"
+`;
+
+exports[`AI Prompt Templates Snapshot should match feedback generation prompt snapshot 1`] = `
+"
+You are an expert educational mentor providing constructive feedback. Analyze this submission:
+
+Challenge: Build a REST API
+Description: Create a RESTful API using Express
+Submission Type: code
+Submission Content:
+function createAPI() { return 'API'; }
+
+Provide detailed feedback in JSON format with this exact structure:
+{
+  "score": number (0-100),
+  "feedback_text": "Overall evaluation in 2-3 sentences",
+  "strengths": ["specific positive point 1", "specific positive point 2"],
+  "improvements": ["specific improvement suggestion 1", "specific improvement suggestion 2"],
+  "suggestions": ["actionable next step 1", "actionable next step 2"],
+  "confidence_score": number (0.0-1.0)
+}
+
+Be constructive, specific, and encouraging. Focus on both what was done well and how to improve.
+"
+`;

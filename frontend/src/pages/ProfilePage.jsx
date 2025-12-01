@@ -14,77 +14,145 @@ const ProfilePage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { user, updateProfile, logout } = useAuth();
 
-  // Currently uses mockProfileData for development; replace with an API call (e.g. apiService.user.getProfile)
+  // Fetch real profile data from API
   useEffect(() => {
-    const mockProfileData = {
-      id: user?.id || 1,
-      firstName: user?.firstName || 'User',
-      lastName: user?.lastName || 'Name',
-      email: user?.email || 'user@example.com',
-      avatar: '👤',
-      bio: '',
-      location: '',
-      website: '',
-      joinedDate: user?.createdAt || new Date().toISOString(),
-      level: 1,
-      totalPoints: 0,
-      completedChallenges: 0,
-      goalsAchieved: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-      badges: [
-        {
-          id: 1,
-          name: 'First Steps',
-          icon: '🚀',
-          description: 'Complete your first challenge',
-          earned: false,
-        },
-        {
-          id: 2,
-          name: 'Streak Master',
-          icon: '🔥',
-          description: 'Maintain a 7-day learning streak',
-          earned: false,
-        },
-        {
-          id: 3,
-          name: 'Goal Crusher',
-          icon: '🎯',
-          description: 'Complete 5 learning goals',
-          earned: false,
-        },
-        {
-          id: 4,
-          name: 'Code Reviewer',
-          icon: '👥',
-          description: 'Provide 10 peer reviews',
-          earned: false,
-        },
-        {
-          id: 5,
-          name: 'Challenge Master',
-          icon: '💪',
-          description: 'Complete 50 challenges',
-          earned: false,
-        },
-      ],
-      skills: [],
-      recentActivity: [],
-      preferences: {
-        emailNotifications: true,
-        pushNotifications: false,
-        weeklyDigest: true,
-        publicProfile: true,
-        showProgress: true,
-      },
+    const fetchProfileData = async () => {
+      try {
+        setLoading(true);
+        // Fetch both user profile and statistics
+        const [userProfile, stats] = await Promise.all([
+          apiService.user.getProfile(),
+          apiService.user.getStatistics(),
+        ]);
+
+        console.log('=== PROFILE DEBUG ===');
+        console.log('User Profile:', userProfile);
+        console.log('Stats:', stats);
+        console.log('===================');
+
+        const profileData = {
+          id: userProfile.id,
+          firstName: userProfile.first_name || userProfile.firstName || 'User',
+          lastName: userProfile.last_name || userProfile.lastName || 'Name',
+          email: userProfile.email || 'user@example.com',
+          avatar: '👤',
+          bio: '',
+          location: '',
+          website: '',
+          joinedDate:
+            userProfile.created_at ||
+            userProfile.createdAt ||
+            new Date().toISOString(),
+          level: stats.level || 1,
+          totalPoints: stats.total_points || stats.totalPoints || 0,
+          completedChallenges:
+            stats.total_challenges_completed ||
+            stats.totalChallengesCompleted ||
+            0,
+          goalsAchieved:
+            stats.total_goals_completed || stats.totalGoalsCompleted || 0,
+          currentStreak:
+            stats.current_streak_days || stats.currentStreakDays || 0,
+          longestStreak:
+            stats.longest_streak_days || stats.longestStreakDays || 0,
+          badges: [
+            {
+              id: 1,
+              name: 'First Steps',
+              icon: '🚀',
+              description: 'Complete your first challenge',
+              earned:
+                (stats.total_challenges_completed ||
+                  stats.totalChallengesCompleted ||
+                  0) >= 1,
+            },
+            {
+              id: 2,
+              name: 'Streak Master',
+              icon: '🔥',
+              description: 'Maintain a 7-day learning streak',
+              earned:
+                (stats.longest_streak_days || stats.longestStreakDays || 0) >=
+                7,
+            },
+            {
+              id: 3,
+              name: 'Goal Crusher',
+              icon: '🎯',
+              description: 'Complete 5 learning goals',
+              earned:
+                (stats.total_goals_completed ||
+                  stats.totalGoalsCompleted ||
+                  0) >= 5,
+            },
+            {
+              id: 4,
+              name: 'Code Reviewer',
+              icon: '👥',
+              description: 'Provide 10 peer reviews',
+              earned:
+                (stats.total_peer_reviews_given ||
+                  stats.totalPeerReviewsGiven ||
+                  0) >= 10,
+            },
+            {
+              id: 5,
+              name: 'Challenge Master',
+              icon: '💪',
+              description: 'Complete 50 challenges',
+              earned:
+                (stats.total_challenges_completed ||
+                  stats.totalChallengesCompleted ||
+                  0) >= 50,
+            },
+          ],
+          skills: [],
+          recentActivity: [],
+          preferences: {
+            emailNotifications: true,
+            pushNotifications: false,
+            weeklyDigest: true,
+            publicProfile: true,
+            showProgress: true,
+          },
+        };
+
+        setProfileData(profileData);
+        setFormData(profileData);
+      } catch (error) {
+        console.error('Failed to fetch profile data:', error);
+        // Fallback to basic user data
+        const basicProfile = {
+          id: user?.id || 1,
+          firstName: user?.firstName || 'User',
+          lastName: user?.lastName || 'Name',
+          email: user?.email || 'user@example.com',
+          avatar: '👤',
+          level: 1,
+          totalPoints: 0,
+          completedChallenges: 0,
+          goalsAchieved: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          badges: [],
+          skills: [],
+          recentActivity: [],
+          preferences: {
+            emailNotifications: true,
+            pushNotifications: false,
+            weeklyDigest: true,
+            publicProfile: true,
+            showProgress: true,
+          },
+        };
+        setProfileData(basicProfile);
+        setFormData(basicProfile);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setTimeout(() => {
-      setProfileData(mockProfileData);
-      setFormData(mockProfileData);
-      setLoading(false);
-    }, 1000);
+    fetchProfileData();
   }, [user]);
 
   const handleInputChange = (e) => {

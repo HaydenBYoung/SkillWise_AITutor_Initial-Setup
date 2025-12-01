@@ -51,7 +51,7 @@ describe('ChallengeController', () => {
 
       await challengeController.getChallengeById(req, res, next);
 
-      expect(challengeService.getById).toHaveBeenCalledWith('c1');
+      expect(challengeService.getById).toHaveBeenCalledWith('c1', undefined);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: challenge });
     });
@@ -114,7 +114,7 @@ describe('ChallengeController', () => {
 
       expect(challengeService.updateChallenge).toHaveBeenCalledWith(
         'c1',
-        req.body,
+        req.body
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: updated });

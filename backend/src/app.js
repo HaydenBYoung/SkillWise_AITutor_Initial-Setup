@@ -6,14 +6,31 @@ const rateLimit = require('express-rate-limit');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
 
+// Import Sentry for error tracking
+const {
+  initSentry,
+  sentryRequestHandler,
+  sentryTracingHandler,
+  sentryErrorHandler,
+} = require('./utils/sentry');
+
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
 
 // Import routes
 const routes = require('./routes/index');
 
+// Initialize Sentry (must be first)
+initSentry();
+
 // Create Express app
 const app = express();
+
+// Sentry request handler must be the first middleware
+app.use(sentryRequestHandler());
+
+// Sentry tracing middleware
+app.use(sentryTracingHandler());
 
 // Create logger
 const logger = pino({
@@ -116,6 +133,9 @@ app.use('*', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Sentry error handler must be before other error handlers
+app.use(sentryErrorHandler());
 
 // Global error handler (must be last)
 app.use(errorHandler);
